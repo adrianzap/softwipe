@@ -213,6 +213,7 @@ def compile_program_clang(program_dir_abs, targets, cpp=False):
         clang_call.append(wflag)
     for target in targets:
         clang_call.append(target)
+
     output = subprocess.check_output(clang_call, cwd=program_dir_abs, universal_newlines=True, stderr=subprocess.STDOUT)
     warning_lines = output.split('\n')
     warning_list = get_warning_list_from_warning_lines(warning_lines, program_dir_abs)

@@ -176,7 +176,6 @@ def get_clang_tidy_warning_count_from_clang_tidy_warning_lines(warning_lines):
         if line.endswith('generated.'):  # "n warnings generated"
             count_on_this_line = int(line.split()[0])  # get n
             total_warning_count = count_on_this_line if count_on_this_line > total_warning_count else total_warning_count
-
         elif line.startswith('Suppressed'):  # "Suppressed m warnings"
             supressed_warning_count = int(line.split()[1])  # get m
 
