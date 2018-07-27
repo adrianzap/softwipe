@@ -1,4 +1,5 @@
 import subprocess
+import os
 
 import strings
 import output_classes
@@ -68,6 +69,8 @@ def get_cppcheck_warning_type_list_from_warning_lines(warning_lines):
 
 
 def run_cppcheck(source_files):
+    # TODO cppcheck doesn't know about boost so for boost calls it outputs an error "invalid C code" --> ignore these
+    #  errors
     # TODO cppcheck --force checks all IFDEF configurations. Consider this. Profile whether it slows down the program
     #  notably!
     print(strings.RUN_CPPCHECK_HEADER)
@@ -219,10 +222,68 @@ def run_qmcalc(source_files):
     return qmcalc_output
 
 
-def run_static_analysis(program_dir_abs, cpp):
+def get_lines_and_tokens_from_found_line_in_cpd_output(line):
+    split_line = line.split()
+    lines = int(split_line[2])
+    tokens = int(split_line[4][1:])  # [1:] cuts off the '(' where it says (n tokens)
+    return lines, tokens
+
+
+def get_occurrence_tupel_from_occurrence_line_in_cpd_output(line):
+    split_line = line.split()
+    line = split_line[3]
+    # TODO Check how the output looks like if there are spaces in the path. Handle that case.
+    file = os.path.abspath(split_line[5])
+    return file, line
+
+
+def get_code_duplicates_from_cpd_output(output):
+    code_duplicates = []
+
+    output_lines = output.split('\n')
+    currently_parsing_a_duplicate = False
+    cur_duplicate_lines = 0
+    cur_duplicate_tokens = 0
+    cur_duplicate_occurrences = []
+    for line in output_lines:
+        if not currently_parsing_a_duplicate:
+            if line.startswith('Found'):
+                currently_parsing_a_duplicate = True
+                cur_duplicate_lines, cur_duplicate_tokens = get_lines_and_tokens_from_found_line_in_cpd_output(line)
+        else:
+            if line.startswith('Starting'):
+                cur_duplicate_occurrences.append(get_occurrence_tupel_from_occurrence_line_in_cpd_output(line))
+            else:
+                cur_duplicate = output_classes.CodeDuplicate(cur_duplicate_lines, cur_duplicate_tokens,
+                                                             cur_duplicate_occurrences)
+                code_duplicates.append(cur_duplicate)
+                currently_parsing_a_duplicate = False
+                cur_duplicate_occurrences = []  # Reset the list
+
+    return code_duplicates
+
+
+def run_cpd(source_files, pmd_bin_dir):
+    print(strings.RUN_CPD_HEADER)
+    pmd_binary_abs = os.path.join(os.path.abspath(pmd_bin_dir), 'run.sh')  # TODO Maybe support Windows here, too?
+    cpd_call = [pmd_binary_abs, 'cpd', '--minimum-tokens', '100', '--language', 'cpp', '--failOnViolation', 'false',
+                '--files']
+    for file in source_files:
+        cpd_call.append(file)
+
+    output = subprocess.check_output(cpd_call, universal_newlines=True, stderr=subprocess.STDOUT)
+    code_duplicates = get_code_duplicates_from_cpd_output(output)
+    for duplicate in code_duplicates:
+        duplicate.print_information()
+
+    return code_duplicates
+
+
+def run_static_analysis(program_dir_abs, pmd_bin_dir, cpp):
     """
     Run all the static code analysis.
     :param program_dir_abs: The absolute path to the root directory of the program.
+    :param pmd_bin_dir: The path to the bin directory of PMD
     :param cpp: Whether we're using C++ or not. True if C++ is used, False if C is used.
     """
     source_files = util.find_all_source_files(program_dir_abs)
@@ -235,3 +296,4 @@ def run_static_analysis(program_dir_abs, cpp):
     flawfinder_warning_level_counts = run_flawfinder(program_dir_abs)
     clang_tidy_warning_count = run_clang_tidy(source_files, cpp)
     qmcalc_output = run_qmcalc(source_files)
+    code_duplicates = run_cpd(source_files, pmd_bin_dir)

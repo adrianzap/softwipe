@@ -25,3 +25,25 @@ class QmcalcOutput:
         print('Minimum cyclomatic complexity:', self.cyclomatic_min)
         print('Maximum cyclomatic complexity:', self.cyclomatic_max)
         print('Mean cyclomatic complexity:', self.cyclomatic_mean)
+
+
+class CodeDuplicate:
+    """
+    Contains information about one detected piece of duplicate code as found by PMD CPD (Copy-Paste Detector).
+
+    Attributes:
+        lines: How many lines does the duplicate section span?
+        tokens: How many tokens does the duplicate section include?
+        occurrences: A list of tupels that describe the occurrences of the duplicate code. The tupel should look like
+                     this: (file, line), where file is the file in which the duplicate occurs and line is the line at
+                     which it starts. The whole list contains all such occurrences.
+    """
+    def __init__(self, lines, tokens, occurrences):
+        self.lines = lines
+        self.tokens = tokens
+        self.occurrences = occurrences
+
+    def print_information(self):
+        print(str(self.lines), 'line and', str(self.tokens), 'tokens duplicate in:')
+        for occurrence in self.occurrences:
+            print('  ', occurrence[0], 'starting at line', occurrence[1])

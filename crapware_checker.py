@@ -36,6 +36,9 @@ def parse_arguments():
     c.add_argument('-c', '--cc', action='store_true', help='use C. This is the default option')
     c.add_argument('-C', '--cpp', action='store_true', help='use C++')
 
+    parser.add_argument('-p', '--pmdbindir', nargs=1, help='the path to the bin directory of PMD, where the PMD '
+                                                           'run.sh is located')
+
     args = parser.parse_args()
     return args
 
@@ -60,7 +63,8 @@ def compile_program(args, cpp):
 
 def static_analysis(args, cpp):
     program_dir_abs = os.path.abspath(args.programdir)
-    static_analysis_phase.run_static_analysis(program_dir_abs, cpp)
+    pmd_bin_dir = args.pmdbindir[0] if args.pmdbindir else os.getcwd()
+    static_analysis_phase.run_static_analysis(program_dir_abs, pmd_bin_dir, cpp)
 
 
 def main():
