@@ -69,6 +69,14 @@ def get_cppcheck_warning_type_list_from_warning_lines(warning_lines):
 
 
 def run_cppcheck(source_files):
+    """
+    Runs cppcheck.
+    :param source_files: The list of source files to analyze.
+    :return: A list of the types of warnings cppcheck outputs. E.g., if cppcheck outputs 2 (warning),
+    1 (performance), and 4 (style), then this list looks like this: [(warning), (warning), (performance), (style),
+    (style), (style), (style)].
+    """
+    # TODO The output of this is a bit awkward... Think about a better way to do this!
     # TODO cppcheck doesn't know about boost so for boost calls it outputs an error "invalid C code" --> ignore these
     #  errors
     # TODO cppcheck --force checks all IFDEF configurations. Consider this. Profile whether it slows down the program
@@ -89,6 +97,10 @@ def run_cppcheck(source_files):
 
 
 def run_splint(source_files):
+    """
+    Runs splint.
+    :param source_files: The list of source files to analyze.
+    """
     # TODO Do we really want Splint?
     # TODO If yes, parse the output.
     print(strings.RUN_SPLINT_HEADER)
@@ -140,6 +152,13 @@ def get_flawfinder_warning_level_counts_from_flawfinder_output(output):
 
 
 def run_flawfinder(program_dir_abs):
+    """
+    Runs Flawfinder.
+    :param program_dir_abs: The absolute path to the root directory of the target program.
+    :return: A list of integers where each integer is the count of the warning level that corresponds to its position in
+    the list. For more detail about this list, see the doc of the
+    get_flawfinder_warning_level_counts_from_flawfinder_output function.
+    """
     print(strings.RUN_FLAWFINDER_HEADER)
     flawfinder_call = [strings.FLAWFINDER, program_dir_abs]
 
@@ -188,6 +207,12 @@ def get_clang_tidy_warning_count_from_clang_tidy_warning_lines(warning_lines):
 
 
 def run_clang_tidy(source_files, cpp):
+    """
+    Runs clang-tidy.
+    :param source_files: The list of source files to analyze.
+    :param cpp: Whether C++ is used or not. True if C++, false if C.
+    :return: The amount of warnings clang-tidy outputs.
+    """
     print(strings.RUN_CLANG_TIDY_HEADER)
     clang_tidy_call = [strings.CLANG_TIDY]
     for file in source_files:
@@ -210,6 +235,12 @@ def run_clang_tidy(source_files, cpp):
 
 
 def run_qmcalc(source_files):
+    """
+    Runs qmcalc (CQMetrics).
+    :param source_files: The list of source files to analyze.
+    :return: A output_classes.QmcalcOutput object which contains the (for the purposes of this tool) important
+    information of the qmcalc output.
+    """
     print(strings.RUN_QMCALC_HEADER)
     qmcalc_call = [strings.QMCALC]
     for file in source_files:
@@ -264,6 +295,13 @@ def get_code_duplicates_from_cpd_output(output):
 
 
 def run_cpd(source_files, pmd_bin_dir):
+    """
+    Runs the PMD CPD (Copy-Paste detector).
+    :param source_files: The list of source files to analyze.
+    :param pmd_bin_dir: The PMD bin/ directory where the run.sh is located.
+    :return: A list of output_classes.CodeDuplicate objects which contains information about duplicate pieces of code in
+    the source files.
+    """
     print(strings.RUN_CPD_HEADER)
     pmd_binary_abs = os.path.join(os.path.abspath(pmd_bin_dir), 'run.sh')  # TODO Maybe support Windows here, too?
     cpd_call = [pmd_binary_abs, 'cpd', '--minimum-tokens', '100', '--language', 'cpp', '--failOnViolation', 'false',
@@ -283,7 +321,7 @@ def run_static_analysis(program_dir_abs, pmd_bin_dir, cpp):
     """
     Run all the static code analysis.
     :param program_dir_abs: The absolute path to the root directory of the program.
-    :param pmd_bin_dir: The path to the bin directory of PMD
+    :param pmd_bin_dir: The path to the bin directory of PMD.
     :param cpp: Whether we're using C++ or not. True if C++ is used, False if C is used.
     """
     source_files = util.find_all_source_files(program_dir_abs)
