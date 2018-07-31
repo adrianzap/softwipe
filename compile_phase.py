@@ -157,8 +157,7 @@ def compile_program_make(program_dir_abs, make_commands_file=None):
     using make.
     :return: A list which contains the names of all warnings that have been generated when compiling.
     """
-    #compiler = strings.CLANGPP if cpp else strings.CLANG
-    #make_flags = ['CC=' + compiler + ' -Weverything"']
+    # TODO Add properly the compiler warnings flag (-Weverything)!
     warning_list = []
     if make_commands_file:
         # Parse the file and run all the commands in it

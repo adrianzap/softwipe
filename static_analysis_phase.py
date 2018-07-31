@@ -76,13 +76,11 @@ def run_cppcheck(source_files):
     1 (performance), and 4 (style), then this list looks like this: [(warning), (warning), (performance), (style),
     (style), (style), (style)].
     """
-    # TODO The output of this is a bit awkward... Think about a better way to do this!
+    # TODO The return value of this (that list) is a bit awkward... Think about a better way to do this!
     # TODO cppcheck doesn't know about boost so for boost calls it outputs an error "invalid C code" --> ignore these
     #  errors
-    # TODO cppcheck --force checks all IFDEF configurations. Consider this. Profile whether it slows down the program
-    #  notably!
     print(strings.RUN_CPPCHECK_HEADER)
-    cppcheck_call = [strings.CPPCHECK, '--enable=all']
+    cppcheck_call = [strings.CPPCHECK, '--enable=all', '--force']
     for file in source_files:
         cppcheck_call.append(file)
 
