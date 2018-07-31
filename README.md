@@ -9,6 +9,7 @@ This tool runs a bunch of other tools that must be installed:
 * flawfinder (<https://www.dwheeler.com/flawfinder/>, available in pip)
 * clang-tidy (part of LLVM tools (<http://llvm.org>), LLVM is probably available in your package manager)
 * cqmetrics (<https://github.com/dspinellis/cqmetrics>)
+* PMD (<https://pmd.github.io>)
 
 For make-based projects, you also need:
 * compiledb (<https://github.com/nickdiego/compiledb-generator>, available in pip)
