@@ -51,12 +51,12 @@ def line_is_comment(line, block_comment_has_started):
         is_comment = True
 
     # Block (or multi-line) comments ("/* \n comment \n comment \n */")
-    if stripped_line.startswith('/*'):
-        is_comment = True
+    elif stripped_line.startswith('/*'):
         block_comment_has_started = True
+
     if block_comment_has_started:
         is_comment = True
-        if stripped_line.startswith('*/'):
+        if stripped_line.endswith('*/'):
             block_comment_has_started = False
 
     return is_comment, block_comment_has_started
@@ -78,6 +78,7 @@ def count_lines_of_code_in_one_file(file):
             continue
         lines_of_code += 1
 
+    print(file, lines_of_code)
     return lines_of_code
 
 
