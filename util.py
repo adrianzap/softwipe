@@ -78,7 +78,6 @@ def count_lines_of_code_in_one_file(file):
             continue
         lines_of_code += 1
 
-    print(file, lines_of_code)
     return lines_of_code
 
 

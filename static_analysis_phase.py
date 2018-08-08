@@ -7,10 +7,10 @@ import output_classes
 import util
 
 
-def check_assert_usage_in_code_line(line):
+def assertion_used_in_code_line(line):
     """
     Check whether a line of code contains an assertion. Finds both C assert() calls and C++ static_assert().
-    :return: 1 if there is an assertion, else 0.
+    :return: True if there is an assertion, else False.
     """
     # This regex should match _all_ ways in which assertions could occur.
     # It spits out false positives for ultra specific cases: when someone literally puts "assert(" in a string or the
@@ -18,10 +18,10 @@ def check_assert_usage_in_code_line(line):
     # Breakdown of the regex: The first two negative lookaheads "(?! )" exclude commented assertions. Then,
     # match assert( and static_assert( while allowing for whitespace or code (e.g. ";" or "}") before the call.
     regex = r'(?!^.*\/\/.*assert\s*\()(?!^.*\/\*.*assert\s*\()^.*(\W|^)(static_)?assert\s*\('
-    asserts = 0
+    line_includes_assertion = False
     if re.match(regex, line):
-        asserts = 1
-    return asserts
+        line_includes_assertion = True
+    return line_includes_assertion
 
 
 def check_assert_usage(source_files, lines_of_code):
@@ -39,7 +39,8 @@ def check_assert_usage(source_files, lines_of_code):
 
         file_lines = f.readlines()
         for line in file_lines:
-            assert_count += check_assert_usage_in_code_line(line)
+            if assertion_used_in_code_line(line):
+                assert_count += 1
 
         f.close()
 
