@@ -1,5 +1,6 @@
 import subprocess
 import os
+import re
 
 import strings
 import output_classes
@@ -11,8 +12,14 @@ def check_assert_usage_in_code_line(line):
     Check whether a line of code contains an assertion. Finds both C assert() calls and C++ static_assert().
     :return: 1 if there is an assertion, else 0.
     """
+    # This regex should match _all_ ways in which assertions could occur.
+    # It spits out false positives for ultra specific cases: when someone literally puts "assert(" in a string or the
+    # mid of a block comment etc. This is fine though.
+    # Breakdown of the regex: The first two negative lookaheads "(?! )" exclude commented assertions. Then,
+    # match assert( and static_assert( while allowing for whitespace or code (e.g. ";" or "}") before the call.
+    regex = r'(?!^.*\/\/.*assert\s*\()(?!^.*\/\*.*assert\s*\()^.*(\W|^)(static_)?assert\s*\('
     asserts = 0
-    if 'assert(' in line:
+    if re.match(regex, line):
         asserts = 1
     return asserts
 
