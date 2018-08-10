@@ -110,32 +110,36 @@ def get_warning_list_from_warning_lines(warning_lines, program_dir_abs):
     return warning_list
 
 
-def run_compiledb(build_path):
+def run_compiledb(build_path, make_command):
     """
     Run compiledb (Compilation Database Generator) which creates the JSON compilation database (that is required for
     most clang tools) for make-based projects.
     :param build_path: The build path, where the Makefile is located.
+    :param make_command: The make command that must be executed to build the program. Must be given as a list,
+    e.g. ['make', 'mybuildtarget']. Compiledb uses the command to build the compilation database.
     """
-    compiledb_call = [strings.COMPILEDB]
+    compiledb_call = [strings.COMPILEDB, '--no-build']
+    for command in make_command:
+        compiledb_call.append(command)
     subprocess.call(compiledb_call, cwd=build_path)
 
 
-def run_make(program_dir_abs, build_path, make_call_options=None, make_verbose=False):
+def run_make(program_dir_abs, build_path, make_flags=None, make_verbose=False):
     """
     Run the make command and print the warnings that it outputs while compiling.
     :param program_dir_abs: The absolute path to the root directory of the target program.
     :param build_path: The build path, where the Makefile is located.
-    :param make_call_options: A list of options passed to the make command. E.g., if make_call_options=['-foobar'],
+    :param make_flags: A list of options passed to the make command. E.g., if make_call_options=['-foobar'],
     then this method will call "make -foobar"
     :param make_verbose: Whether the make command output should be verbose or not.
     TODO Setting make_verbose True might mess with get_warning_lines_from_make_output --> check that
     :return: A list which contains the names of all warnings that have been generated when compiling.
     """
-    if make_call_options is None:
-        make_call_options = []
+    if make_flags is None:
+        make_flags = []
     make_call = [strings.MAKE]
-    for option in make_call_options:
-        make_call.append(option)
+    for flag in make_flags:
+        make_call.append(flag)
     if make_verbose:
         make_call.append('VERBOSE=1')
 
@@ -160,20 +164,32 @@ def compile_program_make(program_dir_abs, make_commands_file=None):
     # TODO Add properly the compiler warnings flag (-Weverything)!
     warning_list = []
     if make_commands_file:
+        working_directory = program_dir_abs  # This will be used as the build path, which might get changed
+
         # Parse the file and run all the commands in it
         commands = open(make_commands_file, 'r').readlines()
         for command in commands:
             if command.startswith('make'):
                 split_command = command.split()
                 make_flags = split_command[1:]
-                cur_warning_list = run_make(program_dir_abs, program_dir_abs, make_flags)
+                cur_warning_list = run_make(program_dir_abs, working_directory, make_flags)
                 warning_list.append(cur_warning_list)
+
+                run_compiledb(working_directory, split_command)
             else:
-                subprocess.run([command], cwd=program_dir_abs)
+                split_command = command.split()
+                subprocess.run(split_command, cwd=working_directory)
+
+                if command.startswith('cd'):
+                    cd_target = split_command[1]
+                    # TODO If the cd_target directory contains spaces, it will completely screw this
+                    if cd_target.startswith('/'):  # cd to an absolute path
+                        working_directory = cd_target
+                    else:  # cd to a relative path
+                        working_directory = os.path.join(program_dir_abs, cd_target)
     else:
         warning_list = run_make(program_dir_abs, program_dir_abs)
-
-    run_compiledb(program_dir_abs)
+        run_compiledb(program_dir_abs, ['make'])
 
     return warning_list
 
@@ -211,7 +227,8 @@ def compile_program_clang(program_dir_abs, targets, cpp=False):
     for wflag in warning_flags:
         clang_call.append(wflag)
     for target in targets:
-        clang_call.append(target)
+        target_abs = os.path.abspath(target)
+        clang_call.append(target_abs)
 
     output = subprocess.check_output(clang_call, cwd=program_dir_abs, universal_newlines=True, stderr=subprocess.STDOUT)
     warning_lines = output.split('\n')

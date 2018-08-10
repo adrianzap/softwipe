@@ -46,7 +46,7 @@ def parse_arguments():
 def compile_program(args, cpp):
     print(strings.RUN_COMPILER_HEADER)
     program_dir_abs = os.path.abspath(args.programdir)
-    make_commands_file = args.makecommandsfile
+    make_commands_file = args.makecommandsfile[0]
 
     if args.make:
         if make_commands_file:
@@ -71,7 +71,7 @@ def main():
     args = parse_arguments()
     # TODO Check if clang etc (all the tools we use in the pipeline) are installed and working here
     cpp = True if args.cpp else False
-    # compiler_warning_list = compile_program(args, cpp)
+    compiler_warning_list = compile_program(args, cpp)
     # valgrind / gcc mem sanity check?
     static_analysis(args, cpp)
 

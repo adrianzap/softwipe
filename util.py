@@ -70,6 +70,7 @@ def count_lines_of_code_in_one_file(file):
     """
     lines_of_code = 0
 
+    print("cur file", file)
     file_lines = open(file, 'r').readlines()
     block_comment_has_started = False
     for line in file_lines:
