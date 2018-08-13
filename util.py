@@ -27,7 +27,8 @@ def find_all_source_files(program_dir_abs):
 
     for dirpath, dirs, files in os.walk(program_dir_abs):
         if dirpath.startswith((os.path.join(program_dir_abs, 'build'),
-                               os.path.join(program_dir_abs, 'cmake-build-debug'))):
+                               os.path.join(program_dir_abs, 'cmake-build-debug'),
+                               os.path.join(program_dir_abs, 'compile'))):  # TODO Let the user exclude his own!!!
             continue
 
         for file in files:
@@ -70,8 +71,7 @@ def count_lines_of_code_in_one_file(file):
     """
     lines_of_code = 0
 
-    print("cur file", file)
-    file_lines = open(file, 'r').readlines()
+    file_lines = open(file, 'r', encoding='latin-1').readlines()
     block_comment_has_started = False
     for line in file_lines:
         is_comment, block_comment_has_started = line_is_comment(line, block_comment_has_started)

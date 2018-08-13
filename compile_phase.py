@@ -124,11 +124,12 @@ def run_compiledb(build_path, make_command):
     subprocess.call(compiledb_call, cwd=build_path)
 
 
-def run_make(program_dir_abs, build_path, make_flags=None, make_verbose=False):
+def run_make(program_dir_abs, build_path, cpp, make_flags=None, make_verbose=False):
     """
     Run the make command and print the warnings that it outputs while compiling.
     :param program_dir_abs: The absolute path to the root directory of the target program.
     :param build_path: The build path, where the Makefile is located.
+    :param cpp: Whether C++ is used or not.
     :param make_flags: A list of options passed to the make command. E.g., if make_call_options=['-foobar'],
     then this method will call "make -foobar"
     :param make_verbose: Whether the make command output should be verbose or not.
@@ -142,6 +143,10 @@ def run_make(program_dir_abs, build_path, make_flags=None, make_verbose=False):
         make_call.append(flag)
     if make_verbose:
         make_call.append('VERBOSE=1')
+    if cpp:
+        make_call.append("CXXFLAGS='-Weverything'")
+    else:
+        make_call.append("CFLAGS='-Weverything'")
 
     output = subprocess.check_output(make_call, cwd=build_path, universal_newlines=True, stderr=subprocess.STDOUT)
     warning_lines = get_warning_lines_from_make_output(output, program_dir_abs)
@@ -152,16 +157,16 @@ def run_make(program_dir_abs, build_path, make_flags=None, make_verbose=False):
     return warning_list
 
 
-def compile_program_make(program_dir_abs, make_commands_file=None):
+def compile_program_make(program_dir_abs, cpp, make_commands_file=None):
     """
     Compile the program using Make (i.e. plain old Makefiles).
     :param program_dir_abs: The absolute path to the root directory of the target program, where the Makefile is
     located.
+    :param cpp: Whether C++ is used or not.
     :param make_commands_file: The path to a file containing the commands used to successfully compile the program
     using make.
     :return: A list which contains the names of all warnings that have been generated when compiling.
     """
-    # TODO Add properly the compiler warnings flag (-Weverything)!
     warning_list = []
     if make_commands_file:
         working_directory = program_dir_abs  # This will be used as the build path, which might get changed
@@ -172,7 +177,7 @@ def compile_program_make(program_dir_abs, make_commands_file=None):
             if command.startswith('make'):
                 split_command = command.split()
                 make_flags = split_command[1:]
-                cur_warning_list = run_make(program_dir_abs, working_directory, make_flags)
+                cur_warning_list = run_make(program_dir_abs, working_directory, cpp, make_flags=make_flags)
                 warning_list.append(cur_warning_list)
 
                 run_compiledb(working_directory, split_command)
@@ -188,24 +193,25 @@ def compile_program_make(program_dir_abs, make_commands_file=None):
                     else:  # cd to a relative path
                         working_directory = os.path.join(program_dir_abs, cd_target)
     else:
-        warning_list = run_make(program_dir_abs, program_dir_abs)
+        warning_list = run_make(program_dir_abs, program_dir_abs, cpp)
         run_compiledb(program_dir_abs, ['make'])
 
     return warning_list
 
 
-def compile_program_cmake(program_dir_abs):
+def compile_program_cmake(program_dir_abs, cpp):
     """
     Compile the program using CMake.
     :param program_dir_abs: The absolute path to the root directory of the target program, where the CMakeLists.txt
     is located.
+    :param cpp Whether C++ is used or not.
     :return: A list which contains the names of all warnings that have been generated when compiling.
     """
     build_path = create_build_directory(program_dir_abs)
     cmakelists_file = os.path.join(program_dir_abs, 'CMakeLists.txt')
     add_compiler_warning_flags_to_cmakelists_file(cmakelists_file)
     run_cmake(program_dir_abs, build_path)
-    warning_list = run_make(program_dir_abs, build_path)
+    warning_list = run_make(program_dir_abs, build_path, cpp)
     remove_compiler_warning_flags_from_cmakelists_file(cmakelists_file)
 
     return warning_list

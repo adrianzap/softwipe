@@ -46,17 +46,18 @@ def parse_arguments():
 def compile_program(args, cpp):
     print(strings.RUN_COMPILER_HEADER)
     program_dir_abs = os.path.abspath(args.programdir)
-    make_commands_file = args.makecommandsfile[0]
+    make_commands_file = args.makecommandsfile
 
     if args.make:
         if make_commands_file:
-            compiler_warning_list = compile_phase.compile_program_make(program_dir_abs, make_commands_file)
+            compiler_warning_list = compile_phase.compile_program_make(program_dir_abs, cpp,
+                                                                       make_commands_file=make_commands_file[0])
         else:
-            compiler_warning_list = compile_phase.compile_program_make(program_dir_abs)
+            compiler_warning_list = compile_phase.compile_program_make(program_dir_abs, cpp)
     elif args.clang:
         compiler_warning_list = compile_phase.compile_program_clang(program_dir_abs, args.clang, cpp)
     else:
-        compiler_warning_list = compile_phase.compile_program_cmake(program_dir_abs)
+        compiler_warning_list = compile_phase.compile_program_cmake(program_dir_abs, cpp)
 
     return compiler_warning_list
 

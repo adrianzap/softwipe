@@ -35,7 +35,7 @@ def check_assert_usage(source_files, lines_of_code):
     assert_count = 0
 
     for file in source_files:
-        f = open(file, 'r')
+        f = open(file, 'r', encoding='latin-1')
 
         file_lines = f.readlines()
         for line in file_lines:
