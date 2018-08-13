@@ -21,7 +21,6 @@ def add_compiler_warning_flags_to_cmakelists_file(cmakelists_file):
 
 
 def remove_compiler_warning_flags_from_cmakelists_file(cmakelists_file):
-    # TODO Can these files get so large that this becomes inefficient? Maybe call sed then
     # Read the whole file
     cmakelists_file_read = open(cmakelists_file, 'r')
     lines = cmakelists_file_read.readlines()
@@ -51,8 +50,9 @@ def run_cmake(program_dir_abs, build_path):
 
 
 def line_is_warning_line(line, program_dir_abs):
-    regex = r'.+\.(c|cpp):[0-9]+:[0-9]+:.*'  # Matches e.g. 'foo.cpp:x:y: ...' or '/path/to/bar.c:x:y: ...' because
-    # warning lines start with the file (foo or bar here), then the line (x) and column (y) which caused the warning
+    regex = r'.+\.(c|cpp|h|hpp):[0-9]+:[0-9]+:.*'  # Matches e.g. 'foo.cpp:x:y: ...' or '/path/to/bar.c:x:y: ...'
+    # because warning lines start with the file (foo or bar here), then the line (x) and column (y) which caused the
+    # warning
     return line.startswith(program_dir_abs) or line.startswith(os.path.basename(program_dir_abs)) or re.match(regex,
                                                                                                               line)
 
@@ -133,7 +133,6 @@ def run_make(program_dir_abs, build_path, cpp, make_flags=None, make_verbose=Fal
     :param make_flags: A list of options passed to the make command. E.g., if make_call_options=['-foobar'],
     then this method will call "make -foobar"
     :param make_verbose: Whether the make command output should be verbose or not.
-    TODO Setting make_verbose True might mess with get_warning_lines_from_make_output --> check that
     :return: A list which contains the names of all warnings that have been generated when compiling.
     """
     if make_flags is None:
@@ -174,8 +173,7 @@ def parse_make_commands_file_and_run_all_commands_in_it(make_commands_file, prog
             subprocess.run(split_command, cwd=working_directory)
 
             if command.startswith('cd'):  # Change working directory if cd is used
-                cd_target = split_command[1]
-                # TODO If the cd_target directory contains spaces, it will completely screw this
+                cd_target = ' '.join(split_command[1:])  # Use join to handle spaces
                 if cd_target.startswith('/'):  # cd to an absolute path
                     working_directory = cd_target
                 else:  # cd to a relative path

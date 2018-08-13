@@ -10,11 +10,12 @@ def print_lines(lines):
         print(line)
 
 
-def find_all_source_files(program_dir_abs):
+def find_all_source_files(program_dir_abs, exclude):
     """
     Find all source files in program_dir_abs. Traverses the directory recursively and returns all source files,
     i.e. all *.c or *.cpp or *.h or *.hpp files.
     :param program_dir_abs: The absolute path to the root directory of the program.
+    :param exclude: A comma separated list of files and directories to exclude from being found.
     :return: A list containing absolute paths to all source files.
     """
     # TODO Should we really count header files, too? Or just pure source files?
@@ -25,10 +26,13 @@ def find_all_source_files(program_dir_abs):
     c_header_file_ending = '.h'
     cpp_header_file_ending = '.hpp'
 
+    excluded_paths = (os.path.join(program_dir_abs, 'build'), os.path.join(program_dir_abs, 'cmake-build-debug'),
+                      os.path.join(program_dir_abs, 'compile'))
+    for x in exclude.split(','):
+        excluded_paths += (x,)
+
     for dirpath, dirs, files in os.walk(program_dir_abs):
-        if dirpath.startswith((os.path.join(program_dir_abs, 'build'),
-                               os.path.join(program_dir_abs, 'cmake-build-debug'),
-                               os.path.join(program_dir_abs, 'compile'))):  # TODO Let the user exclude his own!!!
+        if dirpath.startswith(excluded_paths):
             continue
 
         for file in files:

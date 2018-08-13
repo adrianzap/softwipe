@@ -323,14 +323,15 @@ def run_cpd(source_files, pmd_bin_dir):
     return code_duplicates
 
 
-def run_static_analysis(program_dir_abs, pmd_bin_dir, cpp):
+def run_static_analysis(program_dir_abs, pmd_bin_dir, cpp, exclude):
     """
     Run all the static code analysis.
     :param program_dir_abs: The absolute path to the root directory of the program.
     :param pmd_bin_dir: The path to the bin directory of PMD.
     :param cpp: Whether we're using C++ or not. True if C++ is used, False if C is used.
+    :param exclude: A comma separated list of files and directories to exclude from being analyzed.
     """
-    source_files = util.find_all_source_files(program_dir_abs)
+    source_files = util.find_all_source_files(program_dir_abs, exclude)
     lines_of_code = util.count_lines_of_code(source_files)
 
     amount_of_assertions = check_assert_usage(source_files, lines_of_code)
