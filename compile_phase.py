@@ -157,6 +157,33 @@ def run_make(program_dir_abs, build_path, cpp, make_flags=None, make_verbose=Fal
     return warning_list
 
 
+def parse_make_commands_file_and_run_all_commands_in_it(make_commands_file, program_dir_abs, working_directory, cpp):
+    warning_list = []
+
+    commands = open(make_commands_file, 'r').readlines()
+    for command in commands:
+        if command.startswith('make'):
+            split_command = command.split()
+            make_flags = split_command[1:]
+            cur_warning_list = run_make(program_dir_abs, working_directory, cpp, make_flags=make_flags)
+            warning_list.append(cur_warning_list)
+
+            run_compiledb(working_directory, split_command)
+        else:
+            split_command = command.split()
+            subprocess.run(split_command, cwd=working_directory)
+
+            if command.startswith('cd'):  # Change working directory if cd is used
+                cd_target = split_command[1]
+                # TODO If the cd_target directory contains spaces, it will completely screw this
+                if cd_target.startswith('/'):  # cd to an absolute path
+                    working_directory = cd_target
+                else:  # cd to a relative path
+                    working_directory = os.path.join(program_dir_abs, cd_target)
+
+    return warning_list
+
+
 def compile_program_make(program_dir_abs, cpp, make_commands_file=None):
     """
     Compile the program using Make (i.e. plain old Makefiles).
@@ -167,31 +194,10 @@ def compile_program_make(program_dir_abs, cpp, make_commands_file=None):
     using make.
     :return: A list which contains the names of all warnings that have been generated when compiling.
     """
-    warning_list = []
     if make_commands_file:
         working_directory = program_dir_abs  # This will be used as the build path, which might get changed
-
-        # Parse the file and run all the commands in it
-        commands = open(make_commands_file, 'r').readlines()
-        for command in commands:
-            if command.startswith('make'):
-                split_command = command.split()
-                make_flags = split_command[1:]
-                cur_warning_list = run_make(program_dir_abs, working_directory, cpp, make_flags=make_flags)
-                warning_list.append(cur_warning_list)
-
-                run_compiledb(working_directory, split_command)
-            else:
-                split_command = command.split()
-                subprocess.run(split_command, cwd=working_directory)
-
-                if command.startswith('cd'):
-                    cd_target = split_command[1]
-                    # TODO If the cd_target directory contains spaces, it will completely screw this
-                    if cd_target.startswith('/'):  # cd to an absolute path
-                        working_directory = cd_target
-                    else:  # cd to a relative path
-                        working_directory = os.path.join(program_dir_abs, cd_target)
+        warning_list = parse_make_commands_file_and_run_all_commands_in_it(make_commands_file, program_dir_abs,
+                                                                           working_directory, cpp)
     else:
         warning_list = run_make(program_dir_abs, program_dir_abs, cpp)
         run_compiledb(program_dir_abs, ['make'])
