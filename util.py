@@ -28,8 +28,9 @@ def find_all_source_files(program_dir_abs, exclude):
 
     excluded_paths = (os.path.join(program_dir_abs, 'build'), os.path.join(program_dir_abs, 'cmake-build-debug'),
                       os.path.join(program_dir_abs, 'compile'))
-    for x in exclude.split(','):
-        excluded_paths += (x,)
+    if exclude:
+        for x in exclude.split(','):
+            excluded_paths += (x,)
 
     for dirpath, dirs, files in os.walk(program_dir_abs):
         if dirpath.startswith(excluded_paths):
