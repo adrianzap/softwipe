@@ -156,10 +156,10 @@ def run_make(program_dir_abs, build_path, cpp, make_flags=None, make_verbose=Fal
     return warning_list
 
 
-def parse_make_commands_file_and_run_all_commands_in_it(make_commands_file, program_dir_abs, working_directory, cpp):
+def parse_make_command_file_and_run_all_commands_in_it(make_command_file, program_dir_abs, working_directory, cpp):
     warning_list = []
 
-    commands = open(make_commands_file, 'r').readlines()
+    commands = open(make_command_file, 'r').readlines()
     for command in commands:
         if command.startswith('make'):
             split_command = command.split()
@@ -182,20 +182,20 @@ def parse_make_commands_file_and_run_all_commands_in_it(make_commands_file, prog
     return warning_list
 
 
-def compile_program_make(program_dir_abs, cpp, make_commands_file=None):
+def compile_program_make(program_dir_abs, cpp, make_command_file=None):
     """
     Compile the program using Make (i.e. plain old Makefiles).
     :param program_dir_abs: The absolute path to the root directory of the target program, where the Makefile is
     located.
     :param cpp: Whether C++ is used or not.
-    :param make_commands_file: The path to a file containing the commands used to successfully compile the program
+    :param make_command_file: The path to a file containing the commands used to successfully compile the program
     using make.
     :return: A list which contains the names of all warnings that have been generated when compiling.
     """
-    if make_commands_file:
+    if make_command_file:
         working_directory = program_dir_abs  # This will be used as the build path, which might get changed
-        warning_list = parse_make_commands_file_and_run_all_commands_in_it(make_commands_file, program_dir_abs,
-                                                                           working_directory, cpp)
+        warning_list = parse_make_command_file_and_run_all_commands_in_it(make_command_file, program_dir_abs,
+                                                                          working_directory, cpp)
     else:
         warning_list = run_make(program_dir_abs, program_dir_abs, cpp)
         run_compiledb(program_dir_abs, ['make'])
@@ -221,21 +221,28 @@ def compile_program_cmake(program_dir_abs, cpp):
     return warning_list
 
 
-def compile_program_clang(program_dir_abs, targets, cpp=False):
+def compile_program_clang(program_dir_abs, targets, cpp=False, clang_command_file=None):
     """
     Compile the program using clang.
     :param program_dir_abs: The absolute path to the root directory of the target program.
     :param targets: The source files that should be compiled.
     :param cpp: Whether we're doing C++ or not. True if C++ (so clang++ will be used), False if C (so clang will be
     used).
+    :param clang_command_file: The path to a file containing compiler options used for compilation.
     :return: A list which contains the names of all warnings that have been generated when compiling.
     """
-    # TODO How to pass specific compiler options to this?
     compiler = strings.CLANGPP if cpp else strings.CLANG
     clang_call = [compiler]
+
+    if clang_command_file:
+        options = open(clang_command_file, 'r').read().split()
+        for option in options:
+            clang_call.append(option)
+
     warning_flags = strings.COMPILER_WARNING_FLAGS.split()
     for wflag in warning_flags:
         clang_call.append(wflag)
+
     for target in targets:
         target_abs = os.path.abspath(target)
         clang_call.append(target_abs)
