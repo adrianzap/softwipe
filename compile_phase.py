@@ -1,3 +1,8 @@
+"""
+This module contains all functions related to the automatic compilation phase.
+"""
+
+
 import subprocess
 import os
 import re

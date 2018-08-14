@@ -1,3 +1,9 @@
+"""
+This module contains output classes, that is classes that are used to describe the output of a particular program in
+a way that is easy to handle.
+"""
+
+
 class QmcalcOutput:
     """
     Contains the important parts of the qmcalc output. Important note: an object of this class is created by calling

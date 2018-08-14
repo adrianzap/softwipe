@@ -1,3 +1,9 @@
+"""
+This module contains all functions related to the static analysis phase. That is, the static analysis pipeline is
+completely written down here.
+"""
+
+
 import subprocess
 import os
 import re
@@ -331,6 +337,7 @@ def run_static_analysis(program_dir_abs, pmd_bin_dir, cpp, exclude):
     :param cpp: Whether we're using C++ or not. True if C++ is used, False if C is used.
     :param exclude: A comma separated list of files and directories to exclude from being analyzed.
     """
+    # TODO How to return all the information that is generated here to the caller? One huge object?
     source_files = util.find_all_source_files(program_dir_abs, exclude)
     lines_of_code = util.count_lines_of_code(source_files)
 

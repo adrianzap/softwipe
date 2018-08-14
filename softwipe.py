@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+"""
+The main module of softwipe. Here, command line arguments get parsed and the pipeline gets started.
+"""
 
 import argparse
 import sys
@@ -15,6 +18,10 @@ def print_command_file_help_and_exit():
 
 
 def parse_arguments():
+    """
+    Parse command line arguments.
+    :return: The "args" Namespace that contains the command line arguments specified by the user.
+    """
     # Preparser, used for the command file help. Without the preparser, one would get an error because 'programdir'
     # is a required argument but is missing. With the preparser, the help can be printed anyway.
     preparser = argparse.ArgumentParser(add_help=False)
@@ -58,6 +65,13 @@ def parse_arguments():
 
 
 def compile_program(args, cpp):
+    """
+    Run the automatic compilation of the target project.
+    :param args: The "args" Namespace as returned from parse_arguments().
+    :param cpp: Whether C++ is used or not. True if C++, False if C.
+    :return: The compiler warning list which contains the names of all warnings that have been generated while
+    compiling.
+    """
     print(strings.RUN_COMPILER_HEADER)
     program_dir_abs = os.path.abspath(args.programdir)
     command_file = args.commandfile
@@ -81,6 +95,11 @@ def compile_program(args, cpp):
 
 
 def static_analysis(args, cpp):
+    """
+    Run all the static analysis.
+    :param args: The "args" Namespace as returned from parse_arguments().
+    :param cpp: Whether C++ is used or not. True if C++, False if C.
+    """
     program_dir_abs = os.path.abspath(args.programdir)
     pmd_bin_dir = args.pmdbindir[0] if args.pmdbindir else os.getcwd()
     exclude = args.exclude
