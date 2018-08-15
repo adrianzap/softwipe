@@ -102,8 +102,7 @@ def run_cppcheck(source_files):
     warning_lines = get_cppcheck_warning_lines_from_cppcheck_output(output)
     warning_type_list = get_cppcheck_warning_type_list_from_warning_lines(warning_lines)
 
-    for line in warning_lines:
-        print(line)
+    util.print_lines(warning_lines)
 
     return warning_type_list
 
@@ -178,8 +177,7 @@ def run_flawfinder(program_dir_abs):
     warning_lines = get_flawfinder_warning_lines_from_flawfinder_output(output)
     warning_level_counts = get_flawfinder_warning_level_counts_from_flawfinder_output(output)
 
-    for line in warning_lines:
-        print(line)
+    util.print_lines(warning_lines)
 
     return warning_level_counts
 
@@ -240,8 +238,7 @@ def run_clang_tidy(source_files, cpp):
     warning_lines = get_clang_tidy_warning_lines_from_clang_tidy_output(output)
     warning_count = get_clang_tidy_warning_count_from_clang_tidy_warning_lines(warning_lines)
 
-    for line in warning_lines:
-        print(line)
+    util.print_lines(warning_lines)
 
     return warning_count
 
