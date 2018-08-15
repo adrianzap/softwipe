@@ -9,16 +9,17 @@ SET_CMAKE_C_FLAGS_COMPILER_WARNINGS = 'set(CMAKE_C_FLAGS "' + COMPILER_WARNING_F
 
 
 # These may be modified to contain a full path
-CLANG = 'clang'
-CLANGPP = 'clang++'
-CMAKE = 'cmake'
-MAKE = 'make'
-COMPILEDB = 'compiledb'
-CPPCHECK = 'cppcheck'
-SPLINT = 'splint'
-FLAWFINDER = 'flawfinder'
-CLANG_TIDY = 'clang-tidy'
-QMCALC = 'qmcalc'
+class TOOLS:
+    CLANG = 'clang'
+    CLANGPP = 'clang++'
+    CMAKE = 'cmake'
+    MAKE = 'make'
+    COMPILEDB = 'compiledb'
+    CPPCHECK = 'cppcheck'
+    SPLINT = 'splint'
+    FLAWFINDER = 'flawfinder'
+    CLANG_TIDY = 'clang-tidy'
+    QMCALC = 'qmcalc'
 
 
 _dashes = ' --- '

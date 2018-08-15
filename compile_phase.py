@@ -46,8 +46,8 @@ def run_cmake(program_dir_abs, build_path):
     :param program_dir_abs: The absolute path to the root directory of the target program.
     :param build_path: The build path in which CMake should build everything.
     """
-    cmake_call = [strings.CMAKE, '-DCMAKE_CXX_COMPILER=' + strings.CLANGPP, '-DCMAKE_CC_COMPILER=' + strings.CLANG,
-                  '-DCMAKE_EXPORT_COMPILE_COMMANDS=1', program_dir_abs]
+    cmake_call = [strings.TOOLS.CMAKE, '-DCMAKE_CXX_COMPILER=' + strings.TOOLS.CLANGPP, '-DCMAKE_CC_COMPILER=' +
+                  strings.TOOLS.CLANG, '-DCMAKE_EXPORT_COMPILE_COMMANDS=1', program_dir_abs]
     # '-DCMAKE_EXPORT_COMPILE_COMMANDS=1' exports the compilation database JSON that is required for most clang tools
     # NOTE verbosity may be enabled via '-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON' and run_make(verbose=True) (this shows all
     # commands that are called by cmake & make
@@ -123,7 +123,7 @@ def run_compiledb(build_path, make_command):
     :param make_command: The make command that must be executed to build the program. Must be given as a list,
     e.g. ['make', 'mybuildtarget']. Compiledb uses the command to build the compilation database.
     """
-    compiledb_call = [strings.COMPILEDB, '--no-build']
+    compiledb_call = [strings.TOOLS.COMPILEDB, '--no-build']
     for command in make_command:
         compiledb_call.append(command)
     subprocess.call(compiledb_call, cwd=build_path)
@@ -142,7 +142,7 @@ def run_make(program_dir_abs, build_path, cpp, make_flags=None, make_verbose=Fal
     """
     if make_flags is None:
         make_flags = []
-    make_call = [strings.MAKE]
+    make_call = [strings.TOOLS.MAKE]
     for flag in make_flags:
         make_call.append(flag)
     if make_verbose:
@@ -236,7 +236,7 @@ def compile_program_clang(program_dir_abs, targets, cpp=False, clang_command_fil
     :param clang_command_file: The path to a file containing compiler options used for compilation.
     :return: A list which contains the names of all warnings that have been generated when compiling.
     """
-    compiler = strings.CLANGPP if cpp else strings.CLANG
+    compiler = strings.TOOLS.CLANGPP if cpp else strings.TOOLS.CLANG
     clang_call = [compiler]
 
     if clang_command_file:

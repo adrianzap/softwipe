@@ -6,6 +6,8 @@ The main module of softwipe. Here, command line arguments get parsed and the pip
 import argparse
 import sys
 import os
+import inspect
+import shutil
 
 import strings
 import compile_phase
@@ -64,6 +66,21 @@ def parse_arguments():
     return args
 
 
+def check_if_all_required_tools_are_installed():
+    """
+    Check if clang etc. (all the tools used in the pipeline) are installed on the system and can be used. If
+    something is missing, print a warning and exit.
+    """
+    tools = [tool for tool in inspect.getmembers(strings.TOOLS) if not tool[0].startswith('_')]
+    for tool in tools:
+        which_result = shutil.which(tool[1])
+        if which_result is None:
+            print('Failed to find the following tool:', tool[1])
+            print('Make sure it is installed on your system and accessible. Either put its location into your PATH or '
+                  'provide a full path to the tool in strings.py.')
+            sys.exit(1)
+
+
 def compile_program(args, cpp):
     """
     Run the automatic compilation of the target project.
@@ -108,7 +125,7 @@ def static_analysis(args, cpp):
 
 def main():
     args = parse_arguments()
-    # TODO Check if clang etc (all the tools we use in the pipeline) are installed and working here
+    check_if_all_required_tools_are_installed()
     cpp = True if args.cpp else False
     compiler_warning_list = compile_program(args, cpp)
     # valgrind / gcc mem sanity check?
