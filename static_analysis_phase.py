@@ -243,23 +243,41 @@ def run_clang_tidy(source_files, cpp):
     return warning_count
 
 
-def run_qmcalc(source_files):
+def get_lizard_output_object_from_lizard_output(output):
+    output_lines = output.split('\n')
+    final_line = output_lines[-2]  # This line contains the information we need
+    split_final_line = final_line.split()
+
+    avg_ccn = float(split_final_line[2])
+    warning_cnt = int(split_final_line[5])
+
+    lizard_output = output_classes.LizardOutput(avg_ccn, warning_cnt)
+    return lizard_output
+
+
+def run_lizard(source_files):
     """
-    Runs qmcalc (CQMetrics).
+    Runs Lizard to check cyclomatic complexity.
     :param source_files: The list of source files to analyze.
-    :return: A output_classes.QmcalcOutput object which contains the (for the purposes of this tool) important
-    information of the qmcalc output.
+    :return:
     """
-    print(strings.RUN_QMCALC_HEADER)
-    qmcalc_call = [strings.TOOLS.QMCALC]
+    # TODO Also use lizard for finding duplicates! Better than PMD CPD + easier to use :)
+    # NOTE Although lizard can be used as a python module ("import lizard") it is actually easier to parse its output
+    # (for now at least - this might of course change). This is because the module is not well documented so it's
+    # hard to find out how exactly one can get _all_ information using it. Plus, this way we can check if it is
+    # installed using shutil.which --> consistent with how we check for the other tools.
+    print(strings.RUN_LIZARD_HEADER)
+
+    lizard_call = [strings.TOOLS.LIZARD, '-l', 'cpp']
     for file in source_files:
-        qmcalc_call.append(file)
+        lizard_call.append(file)
 
-    output = subprocess.check_output(qmcalc_call, universal_newlines=True, stderr=subprocess.STDOUT)
-    qmcalc_output = output_classes.QmcalcOutput(output)
-    qmcalc_output.print_all_values()
+    output = subprocess.check_output(lizard_call, universal_newlines=True, stderr=subprocess.STDOUT)
 
-    return qmcalc_output
+    lizard_output = get_lizard_output_object_from_lizard_output(output)
+    lizard_output.print_information()
+
+    return lizard_output
 
 
 def get_lines_and_tokens_from_found_line_in_cpd_output(line):
@@ -344,5 +362,5 @@ def run_static_analysis(program_dir_abs, pmd_bin_dir, cpp, exclude):
         run_splint(source_files)
     flawfinder_warning_level_counts = run_flawfinder(program_dir_abs)
     clang_tidy_warning_count = run_clang_tidy(source_files, cpp)
-    qmcalc_output = run_qmcalc(source_files)
+    lizard_output = run_lizard(source_files)
     code_duplicates = run_cpd(source_files, pmd_bin_dir)

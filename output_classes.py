@@ -4,33 +4,22 @@ a way that is easy to handle.
 """
 
 
-class QmcalcOutput:
+class LizardOutput:
     """
-    Contains the important parts of the qmcalc output. Important note: an object of this class is created by calling
-    the constructor with the whole qmcalc output as one single parameter! The constructor will then parse the output
-    and create all the variables.
+    Contains the important information of the output of Lizard.
+
+    Attributes:
+        average_cyclomatic_complexity: The average cyclomatic complexity of all functions.
+        warning_count: The number of Lizard warnings. These warnings indicate too high cyclomatic complexity,
+        too long functions, or too many function parameters.
     """
-    def __init__(self, qmcalc_output):
-        split_output = qmcalc_output.split()
+    def __init__(self, average_cyclomatic_complexity, warning_count):
+        self.average_cyclomatic_complexity = average_cyclomatic_complexity
+        self.warning_count = warning_count
 
-        self.line_length_max = split_output[5]
-        self.statement_nesting_mean = split_output[11]
-        self.ngoto = split_output[18]
-        self.nregister = split_output[21]
-        self.style_inconsistency = split_output[41]
-        self.cyclomatic_min = split_output[49]
-        self.cyclomatic_max = split_output[52]
-        self.cyclomatic_mean = split_output[50]
-
-    def print_all_values(self):
-        print('Maximum line length:', self.line_length_max)
-        print('Average nesting of statements:', self.statement_nesting_mean)
-        print('# goto statements:', self.ngoto)
-        print('# register statements:', self.nregister)
-        print('Style inconsistency:', self.style_inconsistency)
-        print('Minimum cyclomatic complexity:', self.cyclomatic_min)
-        print('Maximum cyclomatic complexity:', self.cyclomatic_max)
-        print('Mean cyclomatic complexity:', self.cyclomatic_mean)
+    def print_information(self):
+        print('Average cyclomatic complexity:', self.average_cyclomatic_complexity)
+        print('Lizard warnings (~= number of functions that are too complex):', self.warning_count)
 
 
 class CodeDuplicate:

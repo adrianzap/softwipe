@@ -19,7 +19,7 @@ class TOOLS:
     SPLINT = 'splint'
     FLAWFINDER = 'flawfinder'
     CLANG_TIDY = 'clang-tidy'
-    QMCALC = 'qmcalc'
+    LIZARD = 'lizard'
 
 
 _dashes = ' --- '
@@ -31,7 +31,7 @@ RUN_CPPCHECK_HEADER = _header.format('CPPCHECK')
 RUN_SPLINT_HEADER = _header.format('SPLINT')
 RUN_FLAWFINDER_HEADER = _header.format('FLAWFINDER')
 RUN_CLANG_TIDY_HEADER = _header.format('CLANG-TIDY')
-RUN_QMCALC_HEADER = _header.format('QMCALC')
+RUN_LIZARD_HEADER = _header.format('LIZARD')
 RUN_CPD_HEADER = _header.format('PMD CPD')
 
                                                                                 #
