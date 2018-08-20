@@ -272,7 +272,11 @@ def run_lizard(source_files):
     for file in source_files:
         lizard_call.append(file)
 
-    output = subprocess.check_output(lizard_call, universal_newlines=True, stderr=subprocess.STDOUT)
+    try:
+        output = subprocess.check_output(lizard_call, universal_newlines=True, stderr=subprocess.STDOUT)
+    except subprocess.CalledProcessError as e:  # If warnings are generated, Lizard exits with exit code 1
+        output = e.output  # Basically, this catches the exception and ignores it such that this tool doesn't crash
+        # while still keeping the output of the command
 
     lizard_output = get_lizard_output_object_from_lizard_output(output)
     lizard_output.print_information()
