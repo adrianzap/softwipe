@@ -49,9 +49,6 @@ def parse_arguments():
     c.add_argument('-c', '--cc', action='store_true', help='use C. This is the default option')
     c.add_argument('-C', '--cpp', action='store_true', help='use C++')
 
-    parser.add_argument('-p', '--pmdbindir', nargs=1, help='the path to the bin directory of PMD, where the PMD '
-                                                           'run.sh is located')
-
     parser.add_argument('-f', '--commandfile', nargs=1, help='path to a "command file" which can be used to provide '
                                                              'commands that should be executed for building a '
                                                              'make-based project or to provide compiler options for '
@@ -118,9 +115,8 @@ def static_analysis(args, cpp):
     :param cpp: Whether C++ is used or not. True if C++, False if C.
     """
     program_dir_abs = os.path.abspath(args.programdir)
-    pmd_bin_dir = args.pmdbindir[0] if args.pmdbindir else os.getcwd()
     exclude = args.exclude
-    static_analysis_phase.run_static_analysis(program_dir_abs, pmd_bin_dir, cpp, exclude)
+    static_analysis_phase.run_static_analysis(program_dir_abs, cpp, exclude)
 
 
 def main():

@@ -243,15 +243,33 @@ def run_clang_tidy(source_files, cpp):
     return warning_count
 
 
-def get_lizard_output_object_from_lizard_output(output):
+def get_actual_rate_from_lizard_duplicate_rate_line(line):
+    percentage_string = line.split()[-1]  # Get the percentage
+    rate = float(percentage_string[:-1]) / 100  # Remove the "%" character at the end
+    return rate
+
+
+def get_lizard_output_object_from_lizard_printed_output(output):
     output_lines = output.split('\n')
-    final_line = output_lines[-2]  # This line contains the information we need
-    split_final_line = final_line.split()
 
-    avg_ccn = float(split_final_line[2])
-    warning_cnt = int(split_final_line[5])
+    # Get standard lizard information: CCN & warning count
+    summary_line = None
+    for i in range(len(output_lines)):
+        if output_lines[i].startswith('Total nloc'):
+            summary_line = output_lines[i + 2]  # This line contains the information we need
+    split_summary_line = summary_line.split()
 
-    lizard_output = output_classes.LizardOutput(avg_ccn, warning_cnt)
+    avg_ccn = float(split_summary_line[2])
+    warning_cnt = int(split_summary_line[5])
+
+    # Get -Eduplicate information
+    duplicate_rate_line = output_lines[-3]
+    unique_rate_line = output_lines[-2]
+
+    duplicate_rate = get_actual_rate_from_lizard_duplicate_rate_line(duplicate_rate_line)
+    unique_rate = get_actual_rate_from_lizard_duplicate_rate_line(unique_rate_line)
+
+    lizard_output = output_classes.LizardOutput(avg_ccn, warning_cnt, duplicate_rate, unique_rate)
     return lizard_output
 
 
@@ -261,14 +279,13 @@ def run_lizard(source_files):
     :param source_files: The list of source files to analyze.
     :return:
     """
-    # TODO Also use lizard for finding duplicates! Better than PMD CPD + easier to use :)
     # NOTE Although lizard can be used as a python module ("import lizard") it is actually easier to parse its output
     # (for now at least - this might of course change). This is because the module is not well documented so it's
     # hard to find out how exactly one can get _all_ information using it. Plus, this way we can check if it is
     # installed using shutil.which --> consistent with how we check for the other tools.
     print(strings.RUN_LIZARD_HEADER)
 
-    lizard_call = [strings.TOOLS.LIZARD, '-l', 'cpp']
+    lizard_call = [strings.TOOLS.LIZARD, '-Eduplicate', '-l', 'cpp']
     for file in source_files:
         lizard_call.append(file)
 
@@ -278,81 +295,16 @@ def run_lizard(source_files):
         output = e.output  # Basically, this catches the exception and ignores it such that this tool doesn't crash
         # while still keeping the output of the command
 
-    lizard_output = get_lizard_output_object_from_lizard_output(output)
+    lizard_output = get_lizard_output_object_from_lizard_printed_output(output)
     lizard_output.print_information()
 
     return lizard_output
 
 
-def get_lines_and_tokens_from_found_line_in_cpd_output(line):
-    split_line = line.split()
-    lines = int(split_line[2])
-    tokens = int(split_line[4][1:])  # [1:] cuts off the '(' where it says (n tokens)
-    return lines, tokens
-
-
-def get_occurrence_tupel_from_occurrence_line_in_cpd_output(line):
-    split_line = line.split()
-    line = split_line[3]
-    # TODO Check how the output looks like if there are spaces in the path. Handle that case.
-    file = os.path.abspath(split_line[5])
-    return file, line
-
-
-def get_code_duplicates_from_cpd_output(output):
-    code_duplicates = []
-
-    output_lines = output.split('\n')
-    currently_parsing_a_duplicate = False
-    cur_duplicate_lines = 0
-    cur_duplicate_tokens = 0
-    cur_duplicate_occurrences = []
-    for line in output_lines:
-        if not currently_parsing_a_duplicate:
-            if line.startswith('Found'):
-                currently_parsing_a_duplicate = True
-                cur_duplicate_lines, cur_duplicate_tokens = get_lines_and_tokens_from_found_line_in_cpd_output(line)
-        else:
-            if line.startswith('Starting'):
-                cur_duplicate_occurrences.append(get_occurrence_tupel_from_occurrence_line_in_cpd_output(line))
-            else:
-                cur_duplicate = output_classes.CodeDuplicate(cur_duplicate_lines, cur_duplicate_tokens,
-                                                             cur_duplicate_occurrences)
-                code_duplicates.append(cur_duplicate)
-                currently_parsing_a_duplicate = False
-                cur_duplicate_occurrences = []  # Reset the list
-
-    return code_duplicates
-
-
-def run_cpd(source_files, pmd_bin_dir):
-    """
-    Runs the PMD CPD (Copy-Paste detector).
-    :param source_files: The list of source files to analyze.
-    :param pmd_bin_dir: The PMD bin/ directory where the run.sh is located.
-    :return: A list of output_classes.CodeDuplicate objects which contains information about duplicate pieces of code in
-    the source files.
-    """
-    print(strings.RUN_CPD_HEADER)
-    pmd_binary_abs = os.path.join(os.path.abspath(pmd_bin_dir), 'run.sh')  # TODO Maybe support Windows here, too?
-    cpd_call = [pmd_binary_abs, 'cpd', '--minimum-tokens', '100', '--language', 'cpp', '--failOnViolation', 'false',
-                '--files']
-    for file in source_files:
-        cpd_call.append(file)
-
-    output = subprocess.check_output(cpd_call, universal_newlines=True, stderr=subprocess.STDOUT)
-    code_duplicates = get_code_duplicates_from_cpd_output(output)
-    for duplicate in code_duplicates:
-        duplicate.print_information()
-
-    return code_duplicates
-
-
-def run_static_analysis(program_dir_abs, pmd_bin_dir, cpp, exclude):
+def run_static_analysis(program_dir_abs, cpp, exclude):
     """
     Run all the static code analysis.
     :param program_dir_abs: The absolute path to the root directory of the program.
-    :param pmd_bin_dir: The path to the bin directory of PMD.
     :param cpp: Whether we're using C++ or not. True if C++ is used, False if C is used.
     :param exclude: A comma separated list of files and directories to exclude from being analyzed.
     """
@@ -367,4 +319,3 @@ def run_static_analysis(program_dir_abs, pmd_bin_dir, cpp, exclude):
     flawfinder_warning_level_counts = run_flawfinder(program_dir_abs)
     clang_tidy_warning_count = run_clang_tidy(source_files, cpp)
     lizard_output = run_lizard(source_files)
-    code_duplicates = run_cpd(source_files, pmd_bin_dir)
