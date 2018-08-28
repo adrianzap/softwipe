@@ -23,13 +23,9 @@ def find_all_source_files(program_dir_abs, exclude):
     :param exclude: A comma separated list of files and directories to exclude from being found.
     :return: A list containing absolute paths to all source files.
     """
-    # TODO Should we really count header files, too? Or just pure source files?
     source_files = []
 
-    c_source_file_ending = '.c'
-    cpp_source_file_ending = '.cpp'
-    c_header_file_ending = '.h'
-    cpp_header_file_ending = '.hpp'
+    source_file_endings = ('.c', '.cc' '.cpp', '.cxx', '.h', '.hpp')
 
     excluded_paths = (os.path.join(program_dir_abs, 'build'), os.path.join(program_dir_abs, 'cmake-build-debug'),
                       os.path.join(program_dir_abs, 'compile'))
@@ -42,8 +38,7 @@ def find_all_source_files(program_dir_abs, exclude):
             continue
 
         for file in files:
-            if file.endswith((c_source_file_ending, cpp_source_file_ending,
-                              c_header_file_ending, cpp_header_file_ending)):
+            if file.endswith(source_file_endings):
                 source_files.append(os.path.join(dirpath, file))
 
     return source_files
