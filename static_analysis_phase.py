@@ -5,10 +5,10 @@ completely written down here.
 
 
 import subprocess
-import os
 import re
 
 import strings
+from tools_info import TOOLS
 import output_classes
 import util
 
@@ -94,7 +94,7 @@ def run_cppcheck(source_files):
     # TODO cppcheck doesn't know about boost so for boost calls it outputs an error "invalid C code" --> ignore these
     #  errors
     print(strings.RUN_CPPCHECK_HEADER)
-    cppcheck_call = [strings.TOOLS.CPPCHECK, '--enable=all', '--force']
+    cppcheck_call = [TOOLS.CPPCHECK.exe_name, '--enable=all', '--force']
     for file in source_files:
         cppcheck_call.append(file)
 
@@ -115,7 +115,7 @@ def run_splint(source_files):
     # TODO Do we really want Splint?
     # TODO If yes, parse the output.
     print(strings.RUN_SPLINT_HEADER)
-    splint_call = [strings.TOOLS.SPLINT]
+    splint_call = [TOOLS.SPLINT.exe_name]
     for file in source_files:
         splint_call.append(file)
 
@@ -171,7 +171,7 @@ def run_flawfinder(program_dir_abs):
     get_flawfinder_warning_level_counts_from_flawfinder_output function.
     """
     print(strings.RUN_FLAWFINDER_HEADER)
-    flawfinder_call = [strings.TOOLS.FLAWFINDER, program_dir_abs]
+    flawfinder_call = [TOOLS.FLAWFINDER.exe_name, program_dir_abs]
 
     output = subprocess.check_output(flawfinder_call, universal_newlines=True, stderr=subprocess.STDOUT)
     warning_lines = get_flawfinder_warning_lines_from_flawfinder_output(output)
@@ -224,7 +224,7 @@ def run_clang_tidy(source_files, cpp):
     :return: The amount of warnings clang-tidy outputs.
     """
     print(strings.RUN_CLANG_TIDY_HEADER)
-    clang_tidy_call = [strings.TOOLS.CLANG_TIDY]
+    clang_tidy_call = [TOOLS.CLANG_TIDY.exe_name]
     for file in source_files:
         clang_tidy_call.append(file)
 
@@ -285,7 +285,7 @@ def run_lizard(source_files):
     # installed using shutil.which --> consistent with how we check for the other tools.
     print(strings.RUN_LIZARD_HEADER)
 
-    lizard_call = [strings.TOOLS.LIZARD, '-Eduplicate', '-l', 'cpp']
+    lizard_call = [TOOLS.LIZARD.exe_name, '-Eduplicate', '-l', 'cpp']
     for file in source_files:
         lizard_call.append(file)
 

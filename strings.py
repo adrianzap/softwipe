@@ -8,20 +8,6 @@ SET_CMAKE_CXX_FLAGS_COMPILER_WARNINGS = 'set(CMAKE_CXX_FLAGS "' + COMPILER_WARNI
 SET_CMAKE_C_FLAGS_COMPILER_WARNINGS = 'set(CMAKE_C_FLAGS "' + COMPILER_WARNING_FLAGS + ' ${CMAKE_C_FLAGS}")'
 
 
-# These may be modified to contain a full path
-class TOOLS:
-    CLANG = 'clang'
-    CLANGPP = 'clang++'
-    CMAKE = 'cmake'
-    MAKE = 'make'
-    COMPILEDB = 'compiledb'
-    CPPCHECK = 'cppcheck'
-    SPLINT = 'splint'
-    FLAWFINDER = 'flawfinder'
-    CLANG_TIDY = 'clang-tidy'
-    LIZARD = 'lizard'
-
-
 _dashes = ' --- '
 _running = 'Running: '
 _header = _dashes + _running + '{}' + _dashes
@@ -32,7 +18,6 @@ RUN_SPLINT_HEADER = _header.format('SPLINT')
 RUN_FLAWFINDER_HEADER = _header.format('FLAWFINDER')
 RUN_CLANG_TIDY_HEADER = _header.format('CLANG-TIDY')
 RUN_LIZARD_HEADER = _header.format('LIZARD')
-RUN_CPD_HEADER = _header.format('PMD CPD')
 
                                                                                 #
 COMMAND_FILE_HELP = """        --- Command file help ---

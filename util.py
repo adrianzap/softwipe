@@ -8,7 +8,7 @@ import sys
 import inspect
 import shutil
 
-import strings
+import tools_info
 
 
 def print_lines(lines):
@@ -30,7 +30,7 @@ def find_all_source_files(program_dir_abs, exclude):
     """
     source_files = []
 
-    source_file_endings = ('.c', '.cc' '.cpp', '.cxx', '.h', '.hpp')
+    source_file_endings = ('.c', '.cc', '.cpp', '.cxx', '.h', '.hpp')
 
     excluded_paths = (os.path.join(program_dir_abs, 'build'), os.path.join(program_dir_abs, 'cmake-build-debug'),
                       os.path.join(program_dir_abs, 'compile'))
@@ -116,18 +116,18 @@ def check_if_all_required_tools_are_installed():
     Check if clang etc. (all the tools used in the pipeline) are installed on the system and can be used. If
     something is missing, print a warning and exit.
     """
-    tools = [tool for tool in inspect.getmembers(strings.TOOLS) if not tool[0].startswith('_')]
+    tools = [tool for tool in inspect.getmembers(tools_info.TOOLS) if not tool[0].startswith('_')]
     missing_tools = []
     for tool in tools:
-        which_result = shutil.which(tool[1])
+        which_result = shutil.which(tool[1].exe_name)
         if which_result is None:  # if the tool is not installed / not accessible
             missing_tools.append(tool[1])
 
     if missing_tools:
         print('Failed to find the following tools:')
         for missing_tool in missing_tools:
-            print('  ' + missing_tool)
+            print('  ' + missing_tool.install_name, '(install via:', missing_tool.install_via.name.lower() + ')')
 
         print('Make sure all tools are installed on your system and accessible. Either put their location into your '
-              'PATH or provide a full path to each tool in strings.py.')
+              'PATH or provide a full path to each tool as its exe_name in tools_info.py.')
         sys.exit(1)
