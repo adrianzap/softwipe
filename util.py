@@ -132,9 +132,9 @@ def detect_user_os():
 def get_package_install_command_for_os(user_os):
     command = None
     if user_os == strings.OS_MACOS:
-        command = 'brew install'
+        command = ['brew', 'install']
     elif user_os == strings.OS_DEBIAN or user_os == strings.OS_UBUNTU:
-        command = 'apt-get install'
+        command = ['apt-get', 'install']
     return command
 
 
@@ -148,14 +148,21 @@ def print_missing_tools(missing_tools):
 
 
 def auto_tool_install(missing_tools, package_install_command):
-    pip_install_command = 'python -m pip install'
+    pip_install_command = ['python', '-m', 'pip', 'install']
     for tool in missing_tools:
         install_command = []
         if tool.install_via == tools_info.Via.PACKAGE_MANAGER:
-            install_command = [package_install_command, tool.install_name]
+            install_command = package_install_command
         elif tool.install_via == tools_info.Via.PIP:
-            install_command = [pip_install_command, tool.install_name]
+            install_command = pip_install_command
+        install_command.append(tool.install_name)
+
+        print('Running:')
+        for c in install_command:
+            print(c, end=' ')
+        print()
         subprocess.run(install_command)
+        print()
 
 
 def auto_install_prompt(missing_tools, package_install_command):
