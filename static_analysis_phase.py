@@ -255,7 +255,7 @@ def get_lizard_output_object_from_lizard_printed_output(output):
     # Get standard lizard information: CCN & warning count
     summary_line = None
     for i, output_line in enumerate(output_lines):
-        if output_lines.startswith('Total nloc'):
+        if output_line.startswith('Total nloc'):
             summary_line = output_lines[i + 2]  # This line contains the information we need
     split_summary_line = summary_line.split()
 
