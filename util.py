@@ -147,6 +147,26 @@ def print_missing_tools(missing_tools):
           'PATH or provide a full path to each tool as its exe_name in tools_info.py.')
 
 
+def print_and_run_install_command(install_command):
+    for c in install_command:
+        print(c, end=' ')
+    print()
+    subprocess.run(install_command)
+    print()
+
+
+def handle_clang_tidy_installation(package_install_command):
+    """
+    Special treatment for clang-tidy. Homebrew includes clang-tidy in llvm, apt-get has a separate package for
+    clang-tidy. Thus, when using apt-get, do the extra installation.
+    """
+    if package_install_command[0] == 'apt-get':
+        clang_tidy_install_command = package_install_command[:]
+        clang_tidy_install_command.append('clang-tidy')
+
+        print_and_run_install_command(clang_tidy_install_command)
+
+
 def auto_tool_install(missing_tools, package_install_command):
     pip_install_command = ['python', '-m', 'pip', 'install']
     for tool in missing_tools:
@@ -157,11 +177,10 @@ def auto_tool_install(missing_tools, package_install_command):
             install_command = pip_install_command[:]
         install_command.append(tool.install_name)
 
-        for c in install_command:
-            print(c, end=' ')
-        print()
-        subprocess.run(install_command)
-        print()
+        print_and_run_install_command(install_command)
+
+        if tool.exe_name == 'clang-tidy':
+            handle_clang_tidy_installation(package_install_command)
 
 
 def auto_install_prompt(missing_tools, package_install_command):
