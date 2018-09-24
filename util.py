@@ -152,12 +152,11 @@ def auto_tool_install(missing_tools, package_install_command):
     for tool in missing_tools:
         install_command = []
         if tool.install_via == tools_info.Via.PACKAGE_MANAGER:
-            install_command = package_install_command
+            install_command = package_install_command[:]
         elif tool.install_via == tools_info.Via.PIP:
-            install_command = pip_install_command
+            install_command = pip_install_command[:]
         install_command.append(tool.install_name)
 
-        print('Running:')
         for c in install_command:
             print(c, end=' ')
         print()

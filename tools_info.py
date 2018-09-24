@@ -22,3 +22,6 @@ class TOOLS:
     FLAWFINDER = Tool('flawfinder', 'flawfinder', Via.PIP)
     CLANG_TIDY = Tool('clang-tidy', 'llvm', Via.PACKAGE_MANAGER)
     LIZARD = Tool('lizard', 'lizard', Via.PIP)
+    # NOTINSTALLED0 = Tool('jshgjhsdhg', 'jshjlgbkjvjkshg', Via.PACKAGE_MANAGER)
+    # NOTINSTALLED1 = Tool('hsdhjkhsjdhgjk', 'ahdjfhjkhdjkfhs', Via.PACKAGE_MANAGER)
+    # NOTINSTALLED2 = Tool('hshjkgh', 'ksjhkjghjlsdg', Via.PIP)
