@@ -7,8 +7,11 @@ import os
 import sys
 import inspect
 import shutil
+import platform
+import subprocess
 
 import tools_info
+import strings
 
 
 def print_lines(lines):
@@ -111,6 +114,63 @@ def count_lines_of_code(source_files):
     return lines_of_code
 
 
+def detect_user_os():
+    """
+    Detect the users OS.
+    :return: The name of the OS.
+    """
+    detected_os = None
+    system = platform.system()
+    if system == 'Linux':
+        distro = platform.linux_distribution()
+        detected_os = distro[0]
+    else:
+        detected_os = system
+    return detected_os
+
+
+def get_package_install_command_for_os(user_os):
+    command = None
+    if user_os == strings.OS_MACOS:
+        command = 'brew install'
+    elif user_os == strings.OS_DEBIAN or user_os == strings.OS_UBUNTU:
+        command = 'apt-get install'
+    return command
+
+
+def print_missing_tools(missing_tools):
+    print('Failed to find the following tools:')
+    for missing_tool in missing_tools:
+        print('  ' + missing_tool.install_name, '(install via:', missing_tool.install_via.name.lower() + ')')
+
+    print('Make sure all tools are installed on your system and accessible. Either put their location into your '
+          'PATH or provide a full path to each tool as its exe_name in tools_info.py.')
+
+
+def auto_tool_install(missing_tools, package_install_command):
+    pip_install_command = 'python -m pip install'
+    for tool in missing_tools:
+        install_command = []
+        if tool.install_via == tools_info.Via.PACKAGE_MANAGER:
+            install_command = [package_install_command, tool.install_name]
+        elif tool.install_via == tools_info.Via.PIP:
+            install_command = [pip_install_command, tool.install_name]
+        subprocess.run(install_command)
+
+
+def auto_install_prompt(missing_tools, package_install_command):
+    print('I can automatically install the missing tools for you! Shall I? (Y/n)')
+    while True:
+        user_in = input('>>> ')
+        if user_in == 'Y':
+            auto_tool_install(missing_tools, package_install_command)
+            sys.exit(0)
+        elif user_in == 'n':
+            sys.exit(1)
+        else:
+            print('Please answer with "Y" (Yes) or "n" (no)!')
+
+
 def check_if_all_required_tools_are_installed():
     """
     Check if clang etc. (all the tools used in the pipeline) are installed on the system and can be used. If
@@ -124,10 +184,11 @@ def check_if_all_required_tools_are_installed():
             missing_tools.append(tool[1])
 
     if missing_tools:
-        print('Failed to find the following tools:')
-        for missing_tool in missing_tools:
-            print('  ' + missing_tool.install_name, '(install via:', missing_tool.install_via.name.lower() + ')')
+        print_missing_tools(missing_tools)
 
-        print('Make sure all tools are installed on your system and accessible. Either put their location into your '
-              'PATH or provide a full path to each tool as its exe_name in tools_info.py.')
-        sys.exit(1)
+        user_os = detect_user_os()
+        package_install_command = get_package_install_command_for_os(user_os)
+        if package_install_command is None:
+            sys.exit(1)
+
+        auto_install_prompt(missing_tools, package_install_command)

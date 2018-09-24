@@ -19,6 +19,17 @@ RUN_FLAWFINDER_HEADER = _header.format('FLAWFINDER')
 RUN_CLANG_TIDY_HEADER = _header.format('CLANG-TIDY')
 RUN_LIZARD_HEADER = _header.format('LIZARD')
 
+
+OS_MACOS = 'Darwin'
+OS_WINDOWS = 'Windows'
+OS_BEGINNING_OF_CYGWIN_NAME = 'CYGWIN_NT'  # The Windows OS number is appended to this name (e.g. for Win7 it is:
+                                           # 'CYGWIN_NT-6.1')
+OS_LINUX = 'Linux'
+OS_UBUNTU = 'Ubuntu'
+OS_DEBIAN = 'debian'
+OS_FEDORA = 'Fedora'
+OS_RHEL = 'Red Hat Enterprise Linux Server'
+
                                                                                 #
 COMMAND_FILE_HELP = """        --- Command file help ---
 
