@@ -12,7 +12,7 @@ from tools_info import TOOLS
 import util
 
 
-def create_build_directory(program_dir_abs, build_dir_name='build'):
+def create_build_directory(program_dir_abs, build_dir_name='softwipe_build'):
     build_path = os.path.join(program_dir_abs, build_dir_name)
     os.makedirs(build_path, exist_ok=True)
     return build_path
