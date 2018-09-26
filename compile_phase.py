@@ -18,38 +18,25 @@ def create_build_directory(program_dir_abs, build_dir_name='softwipe_build'):
     return build_path
 
 
-def add_compiler_warning_flags_to_cmakelists_file(cmakelists_file):
-    cmakelists_file = open(cmakelists_file, 'a')
-    cmakelists_file.write('\n')
-    cmakelists_file.write(strings.SET_CMAKE_CXX_FLAGS_COMPILER_WARNINGS + '\n')
-    cmakelists_file.write(strings.SET_CMAKE_C_FLAGS_COMPILER_WARNINGS + '\n')
-    cmakelists_file.close()
-
-
-def remove_compiler_warning_flags_from_cmakelists_file(cmakelists_file):
-    # Read the whole file
-    cmakelists_file_read = open(cmakelists_file, 'r')
-    lines = cmakelists_file_read.readlines()
-    cmakelists_file_read.close()
-
-    lines = lines[:-2]  # Remove the last two lines which is where the flags have been added
-    lines[-1] = lines[-1][:-1]  # Remove the newline (\n) which has been added
-
-    # Overwrite the file without the last line
-    cmakelists_file_write = open(cmakelists_file, 'w')
-    cmakelists_file_write.writelines(lines)
-    cmakelists_file_write.close()
-
-
 def run_cmake(program_dir_abs, build_path):
     """
     Run the cmake command for the program in program_dir_abs as if pwd would be build_path.
     :param program_dir_abs: The absolute path to the root directory of the target program.
     :param build_path: The build path in which CMake should build everything.
     """
-    cmake_call = [TOOLS.CMAKE.exe_name, '-DCMAKE_CXX_COMPILER=' + TOOLS.CLANGPP.exe_name, '-DCMAKE_CC_COMPILER=' +
-                  TOOLS.CLANG.exe_name, '-DCMAKE_EXPORT_COMPILE_COMMANDS=1', program_dir_abs]
-    # '-DCMAKE_EXPORT_COMPILE_COMMANDS=1' exports the compilation database JSON that is required for most clang tools
+    # The cmake call activates the compiler warnings we want twice to ensure that they really get activated: via
+    # environment variable, and via a new build type. Both activation methods are safe in that they do not affect the
+    # users code or the compilation process in a bad way.
+    cmake_call = [TOOLS.CMAKE.exe_name, '-E', 'env', 'CXXFLAGS="' + strings.COMPILER_WARNING_FLAGS + '"', 'CFLAGS="'
+                  + strings.COMPILER_WARNING_FLAGS + '"',  # set environment variable to activate the warnings
+                  TOOLS.CMAKE.exe_name, '-DCMAKE_CXX_FLAGS_SOFTWIPE_WARNINGS:STRING="' +
+                  strings.COMPILER_WARNING_FLAGS + '"', '-DCMAKE_C_FLAGS_SOFTWIPE_WARNINGS:STRING="' +
+                  strings.COMPILER_WARNING_FLAGS + '"', '-DCMAKE_BUILD_TYPE=SOFTWIPE_WARNINGS',  # use new build type
+                  # that activates the warnings
+                  '-DCMAKE_CXX_COMPILER=' + TOOLS.CLANGPP.exe_name, '-DCMAKE_CC_COMPILER=' + TOOLS.CLANG.exe_name,
+                  '-DCMAKE_EXPORT_COMPILE_COMMANDS=1', program_dir_abs  # Ensure that clang is used and the
+                  # compilation database JSON that is required for most clang tools is exported
+                  ]
     # NOTE verbosity may be enabled via '-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON' and run_make(verbose=True) (this shows all
     # commands that are called by cmake & make
     output = subprocess.check_output(cmake_call, cwd=build_path, universal_newlines=True, stderr=subprocess.STDOUT)
@@ -218,11 +205,8 @@ def compile_program_cmake(program_dir_abs, cpp):
     :return: A list which contains the names of all warnings that have been generated when compiling.
     """
     build_path = create_build_directory(program_dir_abs)
-    cmakelists_file = os.path.join(program_dir_abs, 'CMakeLists.txt')
-    add_compiler_warning_flags_to_cmakelists_file(cmakelists_file)
     run_cmake(program_dir_abs, build_path)
     warning_list = run_make(program_dir_abs, build_path, cpp)
-    remove_compiler_warning_flags_from_cmakelists_file(cmakelists_file)
 
     return warning_list
 
