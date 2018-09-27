@@ -195,13 +195,19 @@ def compile_program_make(program_dir_abs, cpp, make_command_file=None):
     using make.
     :return: A list which contains the names of all warnings that have been generated when compiling.
     """
+    try:
+        run_make(program_dir_abs, program_dir_abs, cpp, make_flags=['clean'])
+    except subprocess.CalledProcessError:
+        print('Seems like there is no "make clean" target :( Please make sure the build directory is clean such that '
+              'I can compile from scratch, else I might not find all warnings.')
+        
     if make_command_file:
         working_directory = program_dir_abs  # This will be used as the build path, which might get changed
         warning_list = parse_make_command_file_and_run_all_commands_in_it(make_command_file, program_dir_abs,
                                                                           working_directory, cpp)
     else:
         warning_list = run_make(program_dir_abs, program_dir_abs, cpp)
-        run_compiledb(program_dir_abs, ['make'])
+        run_compiledb(program_dir_abs, [TOOLS.MAKE.exe_name])
 
     return warning_list
 
