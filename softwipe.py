@@ -92,24 +92,26 @@ def compile_program(args, cpp):
     return compiler_warning_list
 
 
-def static_analysis(args, cpp):
+def static_analysis(source_files, lines_of_code, cpp):
     """
     Run all the static analysis.
-    :param args: The "args" Namespace as returned from parse_arguments().
+    :param source_files: The list of source files to analyze.
+    :param lines_of_code: The lines of pure code count for the source_files.
     :param cpp: Whether C++ is used or not. True if C++, False if C.
     """
-    program_dir_abs = os.path.abspath(args.programdir)
-    exclude = args.exclude
-    static_analysis_phase.run_static_analysis(program_dir_abs, cpp, exclude)
+    static_analysis_phase.run_static_analysis(source_files, lines_of_code, cpp)
 
 
 def main():
     args = parse_arguments()
     util.check_if_all_required_tools_are_installed()
     cpp = True if args.cpp else False
+    program_dir_abs = os.path.abspath(args.programdir)
+    source_files = util.find_all_source_files(program_dir_abs, args.exclude)
+    lines_of_code = util.count_lines_of_code(source_files)
     compiler_warning_list = compile_program(args, cpp)
     # valgrind / gcc mem sanity check?
-    static_analysis(args, cpp)
+    static_analysis(source_files, lines_of_code, cpp)
 
 
 if __name__ == "__main__":

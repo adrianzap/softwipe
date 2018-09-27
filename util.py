@@ -117,16 +117,14 @@ def count_lines_of_code(source_files):
     :param source_files: The list of files to count lines in.
     :return: The count of total non-empty, non-comment code lines in the files.
     """
-    # TODO Do this while iterating through the files for assert? Would be way faster
-    # OR do this at the very beginning of the program. Might be useful for the total score at the end
     lines_of_code = 0
 
     for file in source_files:
         lines_of_code += count_lines_of_code_in_one_file(file)
 
+    print('Lines of pure code (excluding blank and comment lines):', lines_of_code)
     print()
-    print('LOC:', lines_of_code)
-    print()
+
     return lines_of_code
 
 

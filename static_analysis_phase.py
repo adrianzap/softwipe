@@ -248,17 +248,14 @@ def run_lizard(source_files):
     return lizard_output
 
 
-def run_static_analysis(program_dir_abs, cpp, exclude):
+def run_static_analysis(source_files, lines_of_code, cpp):
     """
     Run all the static code analysis.
-    :param program_dir_abs: The absolute path to the root directory of the program.
+    :param source_files: The list of source files to analyze.
+    :param lines_of_code: The lines of pure code count for the source_files.
     :param cpp: Whether we're using C++ or not. True if C++ is used, False if C is used.
-    :param exclude: A comma separated list of files and directories to exclude from being analyzed.
     """
     # TODO How to return all the information that is generated here to the caller? One huge object?
-    source_files = util.find_all_source_files(program_dir_abs, exclude)
-    lines_of_code = util.count_lines_of_code(source_files)
-
     amount_of_assertions = check_assert_usage(source_files, lines_of_code)
     cppcheck_warning_type_list = run_cppcheck(source_files)
     if not cpp:
