@@ -126,66 +126,6 @@ def run_splint(source_files):
     subprocess.call(splint_call, universal_newlines=True, stderr=subprocess.STDOUT)
 
 
-def get_flawfinder_warning_lines_from_flawfinder_output(output):
-    warning_lines = []
-
-    output_lines = output.split('\n')
-    do_add_warnings = False
-    for line in output_lines:
-        if line.startswith('ANALYSIS SUMMARY'):
-            do_add_warnings = False
-
-        if do_add_warnings:
-            warning_lines.append(line)
-
-        if line.startswith('FINAL RESULTS'):
-            do_add_warnings = True
-
-    return warning_lines
-
-
-def get_flawfinder_warning_level_counts_from_flawfinder_output(output):
-    """
-    :return: A list of integers where each integer is the count of the warning level that corresponds to its position in
-    the list. For instance, warning_level_counts[0] = 12 means that we have 12 warnings of level 0,
-    warning_level_counts[4] = 42 means that we have 42 warning of level 4 etc. Flawfinder warnings go from 0 (not
-    dangerous) to 5 (very dangerous)
-    """
-    warning_level_counts = []
-
-    output_lines = output.split('\n')
-    do_check_for_hits_level = False
-    for line in output_lines:
-        if line.startswith('ANALYSIS SUMMARY'):
-            do_check_for_hits_level = True
-
-        if do_check_for_hits_level:
-            if line.startswith('Hits@level ='):  # If this is the line that shows the warning level counts
-                warning_level_counts = line.split()[3::2]
-
-    return warning_level_counts
-
-
-def run_flawfinder(program_dir_abs):
-    """
-    Runs Flawfinder.
-    :param program_dir_abs: The absolute path to the root directory of the target program.
-    :return: A list of integers where each integer is the count of the warning level that corresponds to its position in
-    the list. For more detail about this list, see the doc of the
-    get_flawfinder_warning_level_counts_from_flawfinder_output function.
-    """
-    print(strings.RUN_FLAWFINDER_HEADER)
-    flawfinder_call = [TOOLS.FLAWFINDER.exe_name, program_dir_abs]
-
-    output = subprocess.check_output(flawfinder_call, universal_newlines=True, stderr=subprocess.STDOUT)
-    warning_lines = get_flawfinder_warning_lines_from_flawfinder_output(output)
-    warning_level_counts = get_flawfinder_warning_level_counts_from_flawfinder_output(output)
-
-    util.print_lines(warning_lines)
-
-    return warning_level_counts
-
-
 def get_clang_tidy_warning_lines_from_clang_tidy_output(output):
     warning_lines = []
 
@@ -323,6 +263,5 @@ def run_static_analysis(program_dir_abs, cpp, exclude):
     cppcheck_warning_type_list = run_cppcheck(source_files)
     if not cpp:
         run_splint(source_files)
-    flawfinder_warning_level_counts = run_flawfinder(program_dir_abs)
     clang_tidy_warning_count = run_clang_tidy(source_files, cpp)
     lizard_output = run_lizard(source_files)

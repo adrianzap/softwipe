@@ -15,7 +15,6 @@ RUN_COMPILER_HEADER = _header.format('COMPILER')
 RUN_ASSERTION_CHECK_HEADER = _header.format('ASSERTION CHECK')
 RUN_CPPCHECK_HEADER = _header.format('CPPCHECK')
 RUN_SPLINT_HEADER = _header.format('SPLINT')
-RUN_FLAWFINDER_HEADER = _header.format('FLAWFINDER')
 RUN_CLANG_TIDY_HEADER = _header.format('CLANG-TIDY')
 RUN_LIZARD_HEADER = _header.format('LIZARD')
 

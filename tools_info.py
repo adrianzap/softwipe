@@ -19,7 +19,6 @@ class TOOLS:
     COMPILEDB = Tool('compiledb', 'compiledb', Via.PIP)
     CPPCHECK = Tool('cppcheck', 'cppcheck', Via.PACKAGE_MANAGER)
     SPLINT = Tool('splint', 'splint', Via.PACKAGE_MANAGER)
-    FLAWFINDER = Tool('flawfinder', 'flawfinder', Via.PIP)
     CLANG_TIDY = Tool('clang-tidy', 'llvm', Via.PACKAGE_MANAGER)
     LIZARD = Tool('lizard', 'lizard', Via.PIP)
     # NOTINSTALLED0 = Tool('jshgjhsdhg', 'jshjlgbkjvjkshg', Via.PACKAGE_MANAGER)
