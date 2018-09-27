@@ -144,7 +144,8 @@ def run_make(program_dir_abs, build_path, cpp, make_flags=None, make_verbose=Fal
     warning_lines = get_warning_lines_from_make_output(output, program_dir_abs)
     warning_list = get_warning_list_from_warning_lines(warning_lines, program_dir_abs)
 
-    util.print_lines(warning_lines)
+    print(strings.RESULT_FOUND_N_COMPILER_WARNINGS.format(len(warning_list)))
+    util.write_into_file_list(strings.RESULTS_FILENAME_COMPILER, warning_lines)
 
     return warning_list
 
@@ -241,6 +242,7 @@ def compile_program_clang(program_dir_abs, targets, cpp=False, clang_command_fil
     warning_lines = output.split('\n')
     warning_list = get_warning_list_from_warning_lines(warning_lines, program_dir_abs)
 
-    util.print_lines(warning_lines)
+    print(strings.RESULT_FOUND_N_COMPILER_WARNINGS.format(len(warning_list)))
+    util.write_into_file_string(strings.RESULTS_FILENAME_COMPILER, output)
 
     return warning_list

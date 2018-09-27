@@ -14,6 +14,22 @@ import tools_info
 import strings
 
 
+def write_into_file_string(file_name, content):
+    file = open(file_name, 'w')
+    file.write(content)
+    file.close()
+    print('Detailled results have been written into', file_name)
+    print()
+
+
+def write_into_file_list(file_name, content):
+    content_as_string = ''
+    for line in content:
+        content_as_string += line
+        content_as_string += '\n'
+    write_into_file_string(file_name, content_as_string)
+
+
 def print_lines(lines):
     """
     Print all lines in the input to stdout.

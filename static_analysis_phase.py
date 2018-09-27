@@ -50,13 +50,15 @@ def check_assert_usage(source_files, lines_of_code):
 
         f.close()
 
-    amount_of_assertions = assert_count / lines_of_code
+    assertion_rate = assert_count / lines_of_code
 
-    print("Found", assert_count, "assertions in", lines_of_code, "lines of code (excluding blank lines and comment "
-                                                                 "lines).")
-    print("That's", str(100 * amount_of_assertions), "%.")
+    detailled_result_string = strings.RESULT_ASSERTION_RATE_DETAILLED.format(count=assert_count, loc=lines_of_code,
+                                                                             rate=assertion_rate,
+                                                                             percentage=100*assertion_rate)
+    print(strings.RESULT_ASSERTION_RATE.format(assertion_rate))
+    util.write_into_file_string(strings.RESULTS_FILENAME_ASSERTION_CHECK, detailled_result_string)
 
-    return amount_of_assertions
+    return assertion_rate
 
 
 def get_cppcheck_warning_lines_from_cppcheck_output(output):
@@ -102,7 +104,9 @@ def run_cppcheck(source_files):
     warning_lines = get_cppcheck_warning_lines_from_cppcheck_output(output)
     warning_type_list = get_cppcheck_warning_type_list_from_warning_lines(warning_lines)
 
-    util.print_lines(warning_lines)
+    print(strings.RESULT_CPPCHECK_WARNINGS.format(len(warning_type_list)))  # TODO Give better information here (
+    # which warnings types; maybe include an easy way to do this while fixing the above TODO)
+    util.write_into_file_list(strings.RESULTS_FILENAME_CPPCHECK, warning_lines)
 
     return warning_type_list
 
@@ -202,16 +206,16 @@ def get_clang_tidy_warning_lines_from_clang_tidy_output(output):
 
 def get_clang_tidy_warning_count_from_clang_tidy_warning_lines(warning_lines):
     total_warning_count = 0
-    supressed_warning_count = 0
+    suppressed_warning_count = 0
 
     for line in warning_lines:
         if line.endswith('generated.'):  # "n warnings generated"
             count_on_this_line = int(line.split()[0])  # get n
             total_warning_count = count_on_this_line if count_on_this_line > total_warning_count else total_warning_count
         elif line.startswith('Suppressed'):  # "Suppressed m warnings"
-            supressed_warning_count = int(line.split()[1])  # get m
+            suppressed_warning_count = int(line.split()[1])  # get m
 
-    warning_count = total_warning_count - supressed_warning_count  # n - m
+    warning_count = total_warning_count - suppressed_warning_count  # n - m
 
     return warning_count
 
@@ -238,7 +242,9 @@ def run_clang_tidy(source_files, cpp):
     warning_lines = get_clang_tidy_warning_lines_from_clang_tidy_output(output)
     warning_count = get_clang_tidy_warning_count_from_clang_tidy_warning_lines(warning_lines)
 
-    util.print_lines(warning_lines)
+    print(strings.RESULT_CLANG_TIDY_WARNINGS.format(warning_count))
+    # TODO Remove the "n warnings generated" headers and "Suppressed m warnings" trailer for a more beautiful output
+    util.write_into_file_list(strings.RESULTS_FILENAME_CLANG_TIDY, warning_lines)
 
     return warning_count
 
@@ -297,6 +303,7 @@ def run_lizard(source_files):
 
     lizard_output = get_lizard_output_object_from_lizard_printed_output(output)
     lizard_output.print_information()
+    util.write_into_file_string(strings.RESULTS_FILENAME_LIZARD, output)
 
     return lizard_output
 
