@@ -5,6 +5,7 @@ This module contains all functions related to the automatic compilation phase.
 
 import subprocess
 import os
+import shutil
 import re
 
 import strings
@@ -16,6 +17,14 @@ def create_build_directory(program_dir_abs, build_dir_name='softwipe_build'):
     build_path = os.path.join(program_dir_abs, build_dir_name)
     os.makedirs(build_path, exist_ok=True)
     return build_path
+
+
+def clear_directory(directory):
+    for path in (os.path.join(directory, file) for file in os.listdir(directory)):
+        if os.path.isdir(path):
+            shutil.rmtree(path)
+        else:
+            os.remove(path)
 
 
 def run_cmake(program_dir_abs, build_path):
@@ -206,6 +215,7 @@ def compile_program_cmake(program_dir_abs, cpp):
     :return: A list which contains the names of all warnings that have been generated when compiling.
     """
     build_path = create_build_directory(program_dir_abs)
+    clear_directory(build_path)  # If the path already existed, it should be cleared to ensure a fresh compilation
     run_cmake(program_dir_abs, build_path)
     warning_list = run_make(program_dir_abs, build_path, cpp)
 
