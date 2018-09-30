@@ -62,10 +62,11 @@ def parse_arguments():
     return args
 
 
-def compile_program(args, cpp):
+def compile_program(args, lines_of_code, cpp):
     """
     Run the automatic compilation of the target project.
     :param args: The "args" Namespace as returned from parse_arguments().
+    :param lines_of_code: The lines of pure code count.
     :param cpp: Whether C++ is used or not. True if C++, False if C.
     :return: The compiler warning list which contains the names of all warnings that have been generated while
     compiling.
@@ -76,18 +77,18 @@ def compile_program(args, cpp):
 
     if args.make:
         if command_file:
-            compiler_warning_list = compile_phase.compile_program_make(program_dir_abs, cpp,
+            compiler_warning_list = compile_phase.compile_program_make(program_dir_abs, lines_of_code, cpp,
                                                                        make_command_file=command_file[0])
         else:
-            compiler_warning_list = compile_phase.compile_program_make(program_dir_abs, cpp)
+            compiler_warning_list = compile_phase.compile_program_make(program_dir_abs, lines_of_code, cpp)
     elif args.clang:
         if command_file:
-            compiler_warning_list = compile_phase.compile_program_clang(program_dir_abs, args.clang, cpp,
+            compiler_warning_list = compile_phase.compile_program_clang(program_dir_abs, args.clang, lines_of_code, cpp,
                                                                         clang_command_file=command_file[0])
         else:
-            compiler_warning_list = compile_phase.compile_program_clang(program_dir_abs, args.clang, cpp)
+            compiler_warning_list = compile_phase.compile_program_clang(program_dir_abs, args.clang, lines_of_code, cpp)
     else:
-        compiler_warning_list = compile_phase.compile_program_cmake(program_dir_abs, cpp)
+        compiler_warning_list = compile_phase.compile_program_cmake(program_dir_abs, lines_of_code, cpp)
 
     return compiler_warning_list
 
@@ -109,7 +110,7 @@ def main():
     program_dir_abs = os.path.abspath(args.programdir)
     source_files = util.find_all_source_files(program_dir_abs, args.exclude)
     lines_of_code = util.count_lines_of_code(source_files)
-    compiler_warning_list = compile_program(args, cpp)
+    compiler_warning_list = compile_program(args, lines_of_code, cpp)
     # valgrind / gcc mem sanity check?
     static_analysis(source_files, lines_of_code, cpp)
 

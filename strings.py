@@ -38,7 +38,7 @@ RESULTS_FILENAME_SPLINT = _softwipe + 'splint_results.txt'
 RESULTS_FILENAME_CLANG_TIDY = _softwipe + 'clang_tidy_results.txt'
 RESULTS_FILENAME_LIZARD = _softwipe + 'lizard_results.txt'
 
-RESULT_FOUND_N_COMPILER_WARNINGS = 'Found {} compiler warnings.'
+RESULT_COMPILER_WARNING_RATE = 'Compiler warning rate: {} ({} / {})'
 RESULT_ASSERTION_RATE = 'Assertion rate: {}'
 RESULT_ASSERTION_RATE_DETAILLED = 'Found {count} assertions in {loc} lines of pure' \
                               ' code (i.e. excluding blank lines and comment lines).' + '\n' \
