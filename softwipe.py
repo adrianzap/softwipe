@@ -110,7 +110,8 @@ def main():
 
     cpp = True if args.cpp else False
     program_dir_abs = os.path.abspath(args.programdir)
-    source_files = util.find_all_source_files(program_dir_abs, args.exclude[0])
+    exclude = args.exclude[0] if args.exclude else None
+    source_files = util.find_all_source_files(program_dir_abs, exclude)
     lines_of_code = util.count_lines_of_code(source_files)
 
     compiler_warning_list = compile_program(args, lines_of_code, cpp)
