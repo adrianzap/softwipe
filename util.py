@@ -56,7 +56,7 @@ def find_all_source_files(program_dir_abs, exclude):
                                                                              strings.SOFTWIPE_BUILD_DIR_NAME))
     if exclude:
         for x in exclude.split(','):
-            excluded_paths += (x,)
+            excluded_paths += (os.path.abspath(x),)
 
     for dirpath, dirs, files in os.walk(program_dir_abs):
         if dirpath.startswith(excluded_paths):
