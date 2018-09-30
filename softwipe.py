@@ -105,14 +105,17 @@ def static_analysis(source_files, lines_of_code, cpp):
 
 def main():
     args = parse_arguments()
+
     util.check_if_all_required_tools_are_installed()
+
     cpp = True if args.cpp else False
     program_dir_abs = os.path.abspath(args.programdir)
     source_files = util.find_all_source_files(program_dir_abs, args.exclude[0])
     lines_of_code = util.count_lines_of_code(source_files)
+
     compiler_warning_list = compile_program(args, lines_of_code, cpp)
-    # valgrind / gcc mem sanity check?
     static_analysis(source_files, lines_of_code, cpp)
+    # valgrind / gcc mem sanity check?
 
 
 if __name__ == "__main__":

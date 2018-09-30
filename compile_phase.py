@@ -13,7 +13,7 @@ from tools_info import TOOLS
 import util
 
 
-def create_build_directory(program_dir_abs, build_dir_name='softwipe_build'):
+def create_build_directory(program_dir_abs, build_dir_name=strings.SOFTWIPE_BUILD_DIR_NAME):
     build_path = os.path.join(program_dir_abs, build_dir_name)
     os.makedirs(build_path, exist_ok=True)
     return build_path
@@ -200,7 +200,7 @@ def compile_program_make(program_dir_abs, lines_of_code, cpp, make_command_file=
     :return: A list which contains the names of all warnings that have been generated when compiling.
     """
     try:
-        run_make(program_dir_abs, program_dir_abs, cpp, make_flags=['clean'])
+        run_make(program_dir_abs, program_dir_abs, lines_of_code, cpp, make_flags=['clean'])
     except subprocess.CalledProcessError:
         print('Seems like there is no "make clean" target :( Please make sure the build directory is clean such that '
               'I can compile from scratch, else I might not find all warnings.')
