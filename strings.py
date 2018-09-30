@@ -39,12 +39,12 @@ RESULTS_FILENAME_CLANG_TIDY = _softwipe + 'clang_tidy_results.txt'
 RESULTS_FILENAME_LIZARD = _softwipe + 'lizard_results.txt'
 
 RESULT_COMPILER_WARNING_RATE = 'Compiler warning rate: {} ({}/{})'
-RESULT_ASSERTION_RATE = 'Assertion rate: {}'
-RESULT_ASSERTION_RATE_DETAILLED = 'Found {count} assertions in {loc} lines of pure' \
+RESULT_ASSERTION_RATE = 'Assertion rate: {} ({}/{})'
+RESULT_ASSERTION_RATE_DETAILED = 'Found {count} assertions in {loc} lines of pure' \
                               ' code (i.e. excluding blank lines and comment lines).' + '\n' \
                               'That\'s an assertion rate of {rate}, or {percentage}%.'
-RESULT_CPPCHECK_WARNINGS = 'Found {} cppcheck warnings.'
-RESULT_CLANG_TIDY_WARNINGS = 'Found {} clang-tidy warnings.'
+RESULT_CPPCHECK_WARNING_RATE = 'Cppcheck warning rate: {} ({}/{})'
+RESULT_CLANG_TIDY_WARNING_RATE = 'Clang-tidy warning rate: {} ({}/{})'
 
 
 SOFTWIPE_BUILD_DIR_NAME = _softwipe + 'build'

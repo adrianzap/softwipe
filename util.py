@@ -52,7 +52,7 @@ def find_all_source_files(program_dir_abs, exclude):
     source_file_endings = ('.c', '.cc', '.cpp', '.cxx', '.h', '.hpp')
 
     excluded_paths = (os.path.join(program_dir_abs, 'build'), os.path.join(program_dir_abs, 'cmake-build-debug'),
-                      os.path.join(program_dir_abs, 'compile'), os.path.join(program_dir_abs, 
+                      os.path.join(program_dir_abs, 'compile'), os.path.join(program_dir_abs,
                                                                              strings.SOFTWIPE_BUILD_DIR_NAME))
     if exclude:
         for x in exclude.split(','):

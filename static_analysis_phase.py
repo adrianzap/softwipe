@@ -52,10 +52,10 @@ def check_assert_usage(source_files, lines_of_code):
 
     assertion_rate = assert_count / lines_of_code
 
-    detailled_result_string = strings.RESULT_ASSERTION_RATE_DETAILLED.format(count=assert_count, loc=lines_of_code,
-                                                                             rate=assertion_rate,
-                                                                             percentage=100*assertion_rate)
-    print(strings.RESULT_ASSERTION_RATE.format(assertion_rate))
+    detailled_result_string = strings.RESULT_ASSERTION_RATE_DETAILED.format(count=assert_count, loc=lines_of_code,
+                                                                            rate=assertion_rate,
+                                                                            percentage=100*assertion_rate)
+    print(strings.RESULT_ASSERTION_RATE.format(assertion_rate, assert_count, lines_of_code))
     util.write_into_file_string(strings.RESULTS_FILENAME_ASSERTION_CHECK, detailled_result_string)
 
     return assertion_rate
@@ -84,10 +84,11 @@ def get_cppcheck_warning_type_list_from_warning_lines(warning_lines):
     return warning_type_list
 
 
-def run_cppcheck(source_files):
+def run_cppcheck(source_files, lines_of_code):
     """
     Runs cppcheck.
     :param source_files: The list of source files to analyze.
+    :param lines_of_code: The lines of pure code count.
     :return: A list of the types of warnings cppcheck outputs. E.g., if cppcheck outputs 2 (warning),
     1 (performance), and 4 (style), then this list looks like this: [(warning), (warning), (performance), (style),
     (style), (style), (style)].
@@ -103,9 +104,11 @@ def run_cppcheck(source_files):
     output = subprocess.check_output(cppcheck_call, universal_newlines=True, stderr=subprocess.STDOUT)
     warning_lines = get_cppcheck_warning_lines_from_cppcheck_output(output)
     warning_type_list = get_cppcheck_warning_type_list_from_warning_lines(warning_lines)
+    warning_rate = len(warning_type_list) / lines_of_code
 
-    print(strings.RESULT_CPPCHECK_WARNINGS.format(len(warning_type_list)))  # TODO Give better information here (
-    # which warnings types; maybe include an easy way to do this while fixing the above TODO)
+    print(strings.RESULT_CPPCHECK_WARNING_RATE.format(warning_rate, len(warning_type_list), lines_of_code))
+    # TODO Give better information here (which warnings types; maybe include an easy way to do this while fixing the
+    # above TODO)
     util.write_into_file_list(strings.RESULTS_FILENAME_CPPCHECK, warning_lines)
 
     return warning_type_list
@@ -160,10 +163,11 @@ def get_clang_tidy_warning_count_from_clang_tidy_warning_lines(warning_lines):
     return warning_count
 
 
-def run_clang_tidy(source_files, cpp):
+def run_clang_tidy(source_files, lines_of_code, cpp):
     """
     Runs clang-tidy.
     :param source_files: The list of source files to analyze.
+    :param lines_of_code: The lines of pure code count.
     :param cpp: Whether C++ is used or not. True if C++, false if C.
     :return: The amount of warnings clang-tidy outputs.
     """
@@ -181,8 +185,9 @@ def run_clang_tidy(source_files, cpp):
     output = subprocess.check_output(clang_tidy_call, universal_newlines=True, stderr=subprocess.STDOUT)
     warning_lines = get_clang_tidy_warning_lines_from_clang_tidy_output(output)
     warning_count = get_clang_tidy_warning_count_from_clang_tidy_warning_lines(warning_lines)
+    warning_rate = warning_count / lines_of_code
 
-    print(strings.RESULT_CLANG_TIDY_WARNINGS.format(warning_count))
+    print(strings.RESULT_CLANG_TIDY_WARNING_RATE.format(warning_rate, warning_count, lines_of_code))
     # TODO Remove the "n warnings generated" headers and "Suppressed m warnings" trailer for a more beautiful output
     util.write_into_file_list(strings.RESULTS_FILENAME_CLANG_TIDY, warning_lines)
 
@@ -243,6 +248,7 @@ def run_lizard(source_files):
 
     lizard_output = get_lizard_output_object_from_lizard_printed_output(output)
     lizard_output.print_information()
+    # TODO Get a relative score for lizard warnings (i.e., relative to the amount of functions (fits better than LoC))
     util.write_into_file_string(strings.RESULTS_FILENAME_LIZARD, output)
 
     return lizard_output
@@ -256,9 +262,9 @@ def run_static_analysis(source_files, lines_of_code, cpp):
     :param cpp: Whether we're using C++ or not. True if C++ is used, False if C is used.
     """
     # TODO How to return all the information that is generated here to the caller? One huge object?
-    amount_of_assertions = check_assert_usage(source_files, lines_of_code)
-    cppcheck_warning_type_list = run_cppcheck(source_files)
+    assertion_rate = check_assert_usage(source_files, lines_of_code)
+    cppcheck_warning_type_list = run_cppcheck(source_files, lines_of_code)
     if not cpp:
         run_splint(source_files)
-    clang_tidy_warning_count = run_clang_tidy(source_files, cpp)
+    clang_tidy_warning_rate = run_clang_tidy(source_files, lines_of_code, cpp)
     lizard_output = run_lizard(source_files)

@@ -153,8 +153,8 @@ def run_make(program_dir_abs, build_path, lines_of_code, cpp, make_flags=None, m
     output = subprocess.check_output(make_call, cwd=build_path, universal_newlines=True, stderr=subprocess.STDOUT)
     warning_lines = get_warning_lines_from_make_output(output, program_dir_abs)
     warning_list = get_warning_list_from_warning_lines(warning_lines, program_dir_abs)
-
     warning_rate = len(warning_list) / lines_of_code
+
     print(strings.RESULT_COMPILER_WARNING_RATE.format(warning_rate, len(warning_list), lines_of_code))
     util.write_into_file_list(strings.RESULTS_FILENAME_COMPILER, warning_lines)
 
@@ -263,8 +263,8 @@ def compile_program_clang(program_dir_abs, targets, lines_of_code, cpp=False, cl
     output = subprocess.check_output(clang_call, cwd=program_dir_abs, universal_newlines=True, stderr=subprocess.STDOUT)
     warning_lines = output.split('\n')
     warning_list = get_warning_list_from_warning_lines(warning_lines, program_dir_abs)
-
     warning_rate = len(warning_list) / lines_of_code
+
     print(strings.RESULT_COMPILER_WARNING_RATE.format(warning_rate, len(warning_list), lines_of_code))
     util.write_into_file_string(strings.RESULTS_FILENAME_COMPILER, output)
 
