@@ -72,18 +72,6 @@ def get_cppcheck_warning_lines_from_cppcheck_output(output):
     return warning_lines
 
 
-def get_cppcheck_warning_type_list_from_warning_lines(warning_lines):
-    warning_type_list = []
-
-    for line in warning_lines:
-        split_line = line.split()
-        warning_type = [substring for substring in split_line if substring.startswith('(') and substring.endswith(
-            ')')][0]
-        warning_type_list.append(warning_type)
-
-    return warning_type_list
-
-
 def run_cppcheck(source_files, lines_of_code):
     """
     Runs cppcheck.
@@ -93,7 +81,6 @@ def run_cppcheck(source_files, lines_of_code):
     1 (performance), and 4 (style), then this list looks like this: [(warning), (warning), (performance), (style),
     (style), (style), (style)].
     """
-    # TODO The return value of this (that list) is a bit awkward... Think about a better way to do this!
     # TODO cppcheck doesn't know about boost so for boost calls it outputs an error "invalid C code" --> ignore these
     #  errors
     print(strings.RUN_CPPCHECK_HEADER)
@@ -103,15 +90,12 @@ def run_cppcheck(source_files, lines_of_code):
 
     output = subprocess.check_output(cppcheck_call, universal_newlines=True, stderr=subprocess.STDOUT)
     warning_lines = get_cppcheck_warning_lines_from_cppcheck_output(output)
-    warning_type_list = get_cppcheck_warning_type_list_from_warning_lines(warning_lines)
-    warning_rate = len(warning_type_list) / lines_of_code
+    cppcheck_output = output_classes.CppcheckOutput(warning_lines)
 
-    print(strings.RESULT_CPPCHECK_WARNING_RATE.format(warning_rate, len(warning_type_list), lines_of_code))
-    # TODO Give better information here (which warnings types; maybe include an easy way to do this while fixing the
-    # above TODO)
+    cppcheck_output.print_information(lines_of_code)
     util.write_into_file_list(strings.RESULTS_FILENAME_CPPCHECK, warning_lines)
 
-    return warning_type_list
+    return cppcheck_output
 
 
 def run_splint(source_files):
@@ -263,7 +247,7 @@ def run_static_analysis(source_files, lines_of_code, cpp):
     """
     # TODO How to return all the information that is generated here to the caller? One huge object?
     assertion_rate = check_assert_usage(source_files, lines_of_code)
-    cppcheck_warning_type_list = run_cppcheck(source_files, lines_of_code)
+    cppcheck_output = run_cppcheck(source_files, lines_of_code)
     if not cpp:
         run_splint(source_files)
     clang_tidy_warning_rate = run_clang_tidy(source_files, lines_of_code, cpp)
