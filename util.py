@@ -183,7 +183,7 @@ def handle_clang_tidy_installation(package_install_command):
 
 
 def auto_tool_install(missing_tools, package_install_command):
-    pip_install_command = ['python', '-m', 'pip', 'install']
+    pip_install_command = ['python3', '-m', 'pip', 'install']
     for tool in missing_tools:
         install_command = []
         if tool.install_via == tools_info.Via.PACKAGE_MANAGER:
@@ -202,10 +202,10 @@ def auto_install_prompt(missing_tools, package_install_command):
     print('I can automatically install the missing tools for you! Shall I? (Y/n)')
     while True:
         user_in = input('>>> ')
-        if user_in == 'Y':
+        if user_in == 'Y' or user_in == 'Yes':
             auto_tool_install(missing_tools, package_install_command)
             sys.exit(0)
-        elif user_in == 'n':
+        elif user_in == 'n' or user_in == 'no':
             sys.exit(1)
         else:
             print('Please answer with "Y" (Yes) or "n" (no)!')
