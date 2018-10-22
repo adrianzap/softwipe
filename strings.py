@@ -31,7 +31,7 @@ OS_RHEL = 'Red Hat Enterprise Linux Server'
 
 
 _softwipe = 'softwipe_'
-RATE_COUNT_LOC = '{} ({}/{})'
+RATE_COUNT_TOTAL = '{} ({}/{})'
 RESULTS_FILENAME_COMPILER = _softwipe + 'compilation_warnings.txt'
 RESULTS_FILENAME_ASSERTION_CHECK = _softwipe + 'assertion_check.txt'
 RESULTS_FILENAME_CPPCHECK = _softwipe + 'cppcheck_results.txt'
@@ -39,13 +39,13 @@ RESULTS_FILENAME_SPLINT = _softwipe + 'splint_results.txt'
 RESULTS_FILENAME_CLANG_TIDY = _softwipe + 'clang_tidy_results.txt'
 RESULTS_FILENAME_LIZARD = _softwipe + 'lizard_results.txt'
 
-RESULT_COMPILER_WARNING_RATE = 'Compiler warning rate: ' + RATE_COUNT_LOC
-RESULT_ASSERTION_RATE = 'Assertion rate: ' + RATE_COUNT_LOC
+RESULT_COMPILER_WARNING_RATE = 'Compiler warning rate: ' + RATE_COUNT_TOTAL
+RESULT_ASSERTION_RATE = 'Assertion rate: ' + RATE_COUNT_TOTAL
 RESULT_ASSERTION_RATE_DETAILED = 'Found {count} assertions in {loc} lines of pure' \
                               ' code (i.e. excluding blank lines and comment lines).' + '\n' \
                               'That\'s an assertion rate of {rate}, or {percentage}%.'
-RESULT_CPPCHECK_WARNING_RATE = 'Cppcheck warning rate: ' + RATE_COUNT_LOC
-RESULT_CLANG_TIDY_WARNING_RATE = 'Clang-tidy warning rate: ' + RATE_COUNT_LOC
+RESULT_CPPCHECK_WARNING_RATE = 'Cppcheck warning rate: ' + RATE_COUNT_TOTAL
+RESULT_CLANG_TIDY_WARNING_RATE = 'Clang-tidy warning rate: ' + RATE_COUNT_TOTAL
 
 
 SOFTWIPE_BUILD_DIR_NAME = _softwipe + 'build'

@@ -185,9 +185,23 @@ def get_actual_rate_from_lizard_duplicate_rate_line(line):
 def get_lizard_output_object_from_lizard_printed_output(output):
     output_lines = output.split('\n')
 
-    # Get standard lizard information: CCN & warning count
+    # Get total number of functions and standard lizard information (CCN & warning count)
+    function_count = 0
+    currently_counting_functions = False
+    function_counting_finished = False
     summary_line = None
     for i, output_line in enumerate(output_lines):
+        # Function counting
+        if currently_counting_functions:
+            if output_line.endswith('analyzed.'):  # Stop counting at the right point
+                currently_counting_functions = False
+                function_counting_finished = True
+            else:
+                function_count += 1
+        if output_line.startswith('--') and not function_counting_finished:  # Start counting after this
+            currently_counting_functions = True
+
+        # Getting the information
         if output_line.startswith('Total nloc'):
             summary_line = output_lines[i + 2]  # This line contains the information we need
     split_summary_line = summary_line.split()
@@ -202,7 +216,7 @@ def get_lizard_output_object_from_lizard_printed_output(output):
     duplicate_rate = get_actual_rate_from_lizard_duplicate_rate_line(duplicate_rate_line)
     unique_rate = get_actual_rate_from_lizard_duplicate_rate_line(unique_rate_line)
 
-    lizard_output = output_classes.LizardOutput(avg_ccn, warning_cnt, duplicate_rate, unique_rate)
+    lizard_output = output_classes.LizardOutput(avg_ccn, warning_cnt, duplicate_rate, unique_rate, function_count)
     return lizard_output
 
 

@@ -43,21 +43,21 @@ class CppcheckOutput:
     def print_information(self, lines_of_code):
         if self.error_count > 0:
             error_rate = self.error_count / lines_of_code
-            print('Error rate:', strings.RATE_COUNT_LOC.format(error_rate, self.error_count, lines_of_code))
+            print('Error rate:', strings.RATE_COUNT_TOTAL.format(error_rate, self.error_count, lines_of_code))
         if self.warning_count > 0:
             warning_rate = self.warning_count / lines_of_code
-            print('Warning rate:', strings.RATE_COUNT_LOC.format(warning_rate, self.warning_count, lines_of_code))
+            print('Warning rate:', strings.RATE_COUNT_TOTAL.format(warning_rate, self.warning_count, lines_of_code))
         if self.style_count > 0:
             style_rate = self.style_count / lines_of_code
-            print('Style warning rate:', strings.RATE_COUNT_LOC.format(style_rate, self.style_count, lines_of_code))
+            print('Style warning rate:', strings.RATE_COUNT_TOTAL.format(style_rate, self.style_count, lines_of_code))
         if self.portability_count > 0:
             portability_rate = self.portability_count / lines_of_code
-            print('Portability issue rate:', strings.RATE_COUNT_LOC.format(portability_rate, self.portability_count,
-                                                                           lines_of_code))
+            print('Portability issue rate:', strings.RATE_COUNT_TOTAL.format(portability_rate, self.portability_count,
+                                                                             lines_of_code))
         if self.performance_count > 0:
             performance_rate = self.performance_count / lines_of_code
-            print('Performance issue rate:', strings.RATE_COUNT_LOC.format(performance_rate, self.performance_count,
-                                                                           lines_of_code))
+            print('Performance issue rate:', strings.RATE_COUNT_TOTAL.format(performance_rate, self.performance_count,
+                                                                             lines_of_code))
         # Information count is omitted because it is not considered interesting
 
 
@@ -71,15 +71,19 @@ class LizardOutput:
         too long functions, or too many function parameters.
         duplicate_rate: The duplicate rate
         unique_rate: The unique rate
+        function_count: The total number of functions
     """
-    def __init__(self, average_cyclomatic_complexity, warning_count, duplicate_rate, unique_rate):
+    def __init__(self, average_cyclomatic_complexity, warning_count, duplicate_rate, unique_rate, function_count):
         self.average_cyclomatic_complexity = average_cyclomatic_complexity
         self.warning_count = warning_count
         self.duplicate_rate = duplicate_rate
         self.unique_rate = unique_rate
+        self.function_count = function_count
 
     def print_information(self):
         print('Average cyclomatic complexity:', self.average_cyclomatic_complexity)
-        print('Lizard warnings (~= number of functions that are too complex):', self.warning_count)
+        warning_rate = self.warning_count / self.function_count
+        print('Lizard warning rate (~= rate of functions that are too complex):', strings.RATE_COUNT_TOTAL.format(
+            warning_rate, self.warning_count, self.function_count))
         print('Duplicate rate:', self.duplicate_rate)
         print('Unique rate:', self.unique_rate)
