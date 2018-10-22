@@ -77,9 +77,7 @@ def run_cppcheck(source_files, lines_of_code):
     Runs cppcheck.
     :param source_files: The list of source files to analyze.
     :param lines_of_code: The lines of pure code count.
-    :return: A list of the types of warnings cppcheck outputs. E.g., if cppcheck outputs 2 (warning),
-    1 (performance), and 4 (style), then this list looks like this: [(warning), (warning), (performance), (style),
-    (style), (style), (style)].
+    :return: A CppcheckOutput object that contains the amount of warnings for each cppcheck warning type.
     """
     # TODO cppcheck doesn't know about boost so for boost calls it outputs an error "invalid C code" --> ignore these
     #  errors
@@ -212,7 +210,7 @@ def run_lizard(source_files):
     """
     Runs Lizard to check cyclomatic complexity.
     :param source_files: The list of source files to analyze.
-    :return:
+    :return: A LizardOutput object that contains all the information we want from lizard.
     """
     # NOTE Although lizard can be used as a python module ("import lizard") it is actually easier to parse its output
     # (for now at least - this might of course change). This is because the module is not well documented so it's
