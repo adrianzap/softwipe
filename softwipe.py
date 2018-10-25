@@ -58,8 +58,25 @@ def parse_arguments():
     parser.add_argument('-x', '--exclude', nargs=1, help='a comma separated list of files and directories that should '
                                                          'be excluded from being analyzed by this program')
 
+    parser.add_argument('-p', '--path', nargs=1, help='a comma separated list of paths that should be added to the '
+                                                      'PATH environment variable. Use this if you have a dependency '
+                                                      'installed but not accessible via your default PATH')
+
     args = parser.parse_args()
     return args
+
+
+def add_to_path_variable(paths):
+    """
+    Add paths to the system PATH environment variable.
+    :param paths: A comma separated list of paths to add.
+    """
+    path_list = []
+    for path in paths.split(','):
+        path_list.append(path)
+
+    for path in path_list:
+        os.environ['PATH'] += os.pathsep + path
 
 
 def compile_program(args, lines_of_code, cpp):
@@ -105,6 +122,10 @@ def static_analysis(source_files, lines_of_code, cpp):
 
 def main():
     args = parse_arguments()
+
+    paths = args.path[0] if args.path else None
+    if paths:
+        add_to_path_variable(paths)
 
     util.check_if_all_required_tools_are_installed()
 
