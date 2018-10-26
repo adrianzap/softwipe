@@ -17,6 +17,7 @@ RUN_CPPCHECK_HEADER = _header.format('CPPCHECK')
 RUN_SPLINT_HEADER = _header.format('SPLINT')
 RUN_CLANG_TIDY_HEADER = _header.format('CLANG-TIDY')
 RUN_LIZARD_HEADER = _header.format('LIZARD')
+RUN_KWSTYLE_HEADER = _header.format('KWSTYLE')
 
 
 OS_MACOS = 'Darwin'
@@ -31,13 +32,16 @@ OS_RHEL = 'Red Hat Enterprise Linux Server'
 
 
 _softwipe = 'softwipe_'
+
 RATE_COUNT_TOTAL = '{} ({}/{})'
+
 RESULTS_FILENAME_COMPILER = _softwipe + 'compilation_warnings.txt'
 RESULTS_FILENAME_ASSERTION_CHECK = _softwipe + 'assertion_check.txt'
 RESULTS_FILENAME_CPPCHECK = _softwipe + 'cppcheck_results.txt'
 RESULTS_FILENAME_SPLINT = _softwipe + 'splint_results.txt'
 RESULTS_FILENAME_CLANG_TIDY = _softwipe + 'clang_tidy_results.txt'
 RESULTS_FILENAME_LIZARD = _softwipe + 'lizard_results.txt'
+RESULTS_FILENAME_KWSTYLE = _softwipe + 'kwstyle_results.txt'
 
 RESULT_COMPILER_WARNING_RATE = 'Compiler warning rate: ' + RATE_COUNT_TOTAL
 RESULT_ASSERTION_RATE = 'Assertion rate: ' + RATE_COUNT_TOTAL
@@ -46,6 +50,7 @@ RESULT_ASSERTION_RATE_DETAILED = 'Found {count} assertions in {loc} lines of pur
                               'That\'s an assertion rate of {rate}, or {percentage}%.'
 RESULT_CPPCHECK_WARNING_RATE = 'Cppcheck warning rate: ' + RATE_COUNT_TOTAL
 RESULT_CLANG_TIDY_WARNING_RATE = 'Clang-tidy warning rate: ' + RATE_COUNT_TOTAL
+RESULT_KWSTYLE_WARNING_RATE = 'KWStyle warning rate: ' + RATE_COUNT_TOTAL
 
 
 SOFTWIPE_BUILD_DIR_NAME = _softwipe + 'build'

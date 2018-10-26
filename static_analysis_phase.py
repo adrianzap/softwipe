@@ -222,7 +222,7 @@ def get_lizard_output_object_from_lizard_printed_output(output):
 
 def run_lizard(source_files):
     """
-    Runs Lizard to check cyclomatic complexity.
+    Runs Lizard.
     :param source_files: The list of source files to analyze.
     :return: A LizardOutput object that contains all the information we want from lizard.
     """
@@ -250,6 +250,44 @@ def run_lizard(source_files):
     return lizard_output
 
 
+def get_kwstyle_warning_count_from_kwstyle_output(output):
+    warning_count = 0
+
+    output_lines = output.split('\n')
+    for line in output_lines:
+        if line.startswith('Error'):
+            warning_count += 1
+
+    return warning_count
+
+
+def run_kwstyle(source_files, lines_of_code):
+    """
+    Runs KWStyle.
+    :param source_files: The list of source files to analyze.
+    :param lines_of_code: The lines of pure code count.
+    :return: The amount of warnings KWStyle outputs.
+    """
+    print(strings.RUN_KWSTYLE_HEADER)
+
+    kwstyle_call = [TOOLS.KWSTYLE.exe_name, '-v']
+    for file in source_files:
+        kwstyle_call.append(file)
+
+    try:
+        output = subprocess.check_output(kwstyle_call, universal_newlines=True, stderr=subprocess.STDOUT)
+    except subprocess.CalledProcessError as e:  # Same as with the lizard call. KWStyle exits with status 1 by default
+        output = e.output  # So catch that, ignore the exception, and keep the output of the command
+        
+    warning_count = get_kwstyle_warning_count_from_kwstyle_output(output)
+    warning_rate = warning_count / lines_of_code
+
+    print(strings.RESULT_KWSTYLE_WARNING_RATE.format(warning_rate, warning_count, lines_of_code))
+    util.write_into_file_string(strings.RESULTS_FILENAME_KWSTYLE, output)
+
+    return warning_count
+
+
 def run_static_analysis(source_files, lines_of_code, cpp):
     """
     Run all the static code analysis.
@@ -264,3 +302,4 @@ def run_static_analysis(source_files, lines_of_code, cpp):
         run_splint(source_files)
     clang_tidy_warning_rate = run_clang_tidy(source_files, lines_of_code, cpp)
     lizard_output = run_lizard(source_files)
+    kwstyle_warnings = run_kwstyle(source_files, lines_of_code)
