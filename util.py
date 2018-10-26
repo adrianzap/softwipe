@@ -12,6 +12,7 @@ import subprocess
 
 import tools_info
 import strings
+import compile_phase
 
 
 def write_into_file_string(file_name, content):
@@ -144,6 +145,14 @@ def detect_user_os():
     return detected_os
 
 
+def get_softwipe_directory():
+    """
+    Get the directory where softwipe is located.
+    :return: The softwipe directory.
+    """
+    return os.path.dirname(os.path.realpath(__file__))
+
+
 def get_package_install_command_for_os(user_os):
     command = None
     if user_os == strings.OS_MACOS:
@@ -170,6 +179,29 @@ def print_and_run_install_command(install_command):
     print()
 
 
+def handle_kwstyle_download():
+    git_link = 'https://github.com/Kitware/KWStyle.git'
+    git_clone_command = ['git', 'clone', git_link]
+    softwipe_dir = get_softwipe_directory()
+
+    subprocess.run(git_clone_command, cwd=softwipe_dir)
+
+    kwstyle_dir = os.path.join(softwipe_dir, 'KWStyle')
+    print('Building KWStyle...')
+    compile_phase.compile_program_cmake(kwstyle_dir, 1, True)  # Last two arguments do not matter
+    print('Done!')
+    print()
+
+
+def handle_tool_download(tool_name):
+    """
+    If a tool has to be downloaded and installed manually, this function calls the correct handler for the tool.
+    :param tool_name: The name of the tool.
+    """
+    if tool_name == 'KWStyle':
+        handle_kwstyle_download()
+
+
 def handle_clang_tidy_installation(package_install_command):
     """
     Special treatment for clang-tidy. Homebrew includes clang-tidy in llvm, apt-get has a separate package for
@@ -190,6 +222,10 @@ def auto_tool_install(missing_tools, package_install_command):
             install_command = package_install_command[:]
         elif tool.install_via == tools_info.Via.PIP:
             install_command = pip_install_command[:]
+        elif tool.install_via == tools_info.Via.DOWNLOAD:
+            handle_tool_download(tool.install_name)
+            continue
+
         install_command.append(tool.install_name)
 
         print_and_run_install_command(install_command)

@@ -79,6 +79,21 @@ def add_to_path_variable(paths):
         os.environ['PATH'] += os.pathsep + path
 
 
+def adjust_path_variable(args):
+    """
+    Adjusts the PATH variable if necessary by adding user specified paths (if any were specified) and adding KWStyle
+    to the PATH if it is contained in the softwipe directory (which it is if the user did the auto-installation of it).
+    :param args: The "args" Namespace as returned from parse_arguments().
+    """
+    user_paths = args.path[0] if args.path else None
+    if user_paths:
+        add_to_path_variable(user_paths)
+
+    kwstyle_dir = os.path.join(util.get_softwipe_directory(), 'KWStyle')
+    if os.path.isdir(kwstyle_dir):
+        add_to_path_variable(os.path.join(kwstyle_dir, 'softwipe_build'))
+
+
 def compile_program(args, lines_of_code, cpp):
     """
     Run the automatic compilation of the target project.
@@ -123,9 +138,7 @@ def static_analysis(source_files, lines_of_code, cpp):
 def main():
     args = parse_arguments()
 
-    paths = args.path[0] if args.path else None
-    if paths:
-        add_to_path_variable(paths)
+    adjust_path_variable(args)
 
     util.check_if_all_required_tools_are_installed()
 
