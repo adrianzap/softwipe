@@ -20,7 +20,7 @@ def assertion_used_in_code_line(line):
     """
     # This regex should match _all_ ways in which assertions could occur.
     # It spits out false positives for ultra specific cases: when someone literally puts "assert(" in a string or the
-    # mid of a block comment etc. This is fine though.
+    # mid of a block comment. This is fine though.
     # Breakdown of the regex: The first two negative lookaheads "(?! )" exclude commented assertions. Then,
     # match assert( and static_assert( while allowing for whitespace or code (e.g. ";" or "}") before the call.
     regex = r'(?!^.*\/\/.*assert\s*\()(?!^.*\/\*.*assert\s*\()^.*(\W|^)(static_)?assert\s*\('
@@ -244,7 +244,6 @@ def run_lizard(source_files):
 
     lizard_output = get_lizard_output_object_from_lizard_printed_output(output)
     lizard_output.print_information()
-    # TODO Get a relative score for lizard warnings (i.e., relative to the amount of functions (fits better than LoC))
     util.write_into_file_string(strings.RESULTS_FILENAME_LIZARD, output)
 
     return lizard_output

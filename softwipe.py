@@ -91,7 +91,7 @@ def adjust_path_variable(args):
 
     kwstyle_dir = os.path.join(util.get_softwipe_directory(), 'KWStyle')
     if os.path.isdir(kwstyle_dir):
-        add_to_path_variable(os.path.join(kwstyle_dir, 'softwipe_build'))
+        add_to_path_variable(os.path.join(kwstyle_dir, strings.SOFTWIPE_BUILD_DIR_NAME))
 
 
 def compile_program(args, lines_of_code, cpp):
