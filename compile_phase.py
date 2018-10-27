@@ -133,8 +133,8 @@ def run_make(program_dir_abs, build_path, lines_of_code, cpp, make_flags=None, m
     :param build_path: The build path, where the Makefile is located.
     :param lines_of_code: The lines of pure code count.
     :param cpp: Whether C++ is used or not.
-    :param make_flags: A list of options passed to the make command. E.g., if make_call_options=['-foobar'],
-    then this method will call "make -foobar"
+    :param make_flags: A list of options passed to the make command. E.g., if make_flags=['-foobar'], then this method
+    will call "make -foobar"
     :param make_verbose: Whether the make command output should be verbose or not.
     :return: A list which contains the names of all warnings that have been generated when compiling.
     """
@@ -146,9 +146,9 @@ def run_make(program_dir_abs, build_path, lines_of_code, cpp, make_flags=None, m
     if make_verbose:
         make_call.append('VERBOSE=1')
     if cpp:
-        make_call.append("CXXFLAGS='-Weverything'")
+        make_call.append("CXXFLAGS='{}'".format(strings.COMPILER_WARNING_FLAGS))
     else:
-        make_call.append("CFLAGS='-Weverything'")
+        make_call.append("CFLAGS='{}'".format(strings.COMPILER_WARNING_FLAGS))
 
     output = subprocess.check_output(make_call, cwd=build_path, universal_newlines=True, stderr=subprocess.STDOUT)
     warning_lines = get_warning_lines_from_make_output(output, program_dir_abs)
