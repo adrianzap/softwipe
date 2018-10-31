@@ -145,10 +145,6 @@ def run_make(program_dir_abs, build_path, lines_of_code, cpp, make_flags=None, m
         make_call.append(flag)
     if make_verbose:
         make_call.append('VERBOSE=1')
-    if cpp:
-        make_call.append("CXXFLAGS='{}'".format(strings.COMPILER_WARNING_FLAGS))
-    else:
-        make_call.append("CFLAGS='{}'".format(strings.COMPILER_WARNING_FLAGS))
 
     output = subprocess.check_output(make_call, cwd=build_path, universal_newlines=True, stderr=subprocess.STDOUT)
     warning_lines = get_warning_lines_from_make_output(output, program_dir_abs)
@@ -170,6 +166,11 @@ def parse_make_command_file_and_run_all_commands_in_it(make_command_file, progra
         if command.startswith('make'):
             split_command = command.split()
             make_flags = split_command[1:]
+
+            warning_flags = strings.SET_CXXFLAGS if cpp else strings.SET_CFLAGS
+            for flag in warning_flags.split():
+                make_flags.append(flag)
+
             cur_warning_list = run_make(program_dir_abs, working_directory, lines_of_code, cpp, make_flags=make_flags)
             warning_list.append(cur_warning_list)
 
@@ -210,7 +211,8 @@ def compile_program_make(program_dir_abs, lines_of_code, cpp, make_command_file=
         warning_list = parse_make_command_file_and_run_all_commands_in_it(make_command_file, program_dir_abs,
                                                                           working_directory, lines_of_code, cpp)
     else:
-        warning_list = run_make(program_dir_abs, program_dir_abs, lines_of_code, cpp)
+        flags = strings.SET_CXXFLAGS if cpp else strings.SET_CFLAGS
+        warning_list = run_make(program_dir_abs, program_dir_abs, lines_of_code, cpp, make_flags=[flags])
         run_compiledb(program_dir_abs, [TOOLS.MAKE.exe_name])
 
     return warning_list

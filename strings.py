@@ -7,6 +7,8 @@ COMPILER_WARNING_FLAGS = '-Weverything'
 COMPILER_SANITIZER_FLAGS = '-g -fno-omit-frame-pointer -fsanitize=address -fsanitize-recover=address ' \
                            '-fsanitize=undefined'
 COMPILE_FLAGS = COMPILER_WARNING_FLAGS + ' ' + COMPILER_SANITIZER_FLAGS
+SET_CXXFLAGS = 'CXXFLAGS="{}"'.format(COMPILER_WARNING_FLAGS)
+SET_CFLAGS = 'CFLAGS="{}"'.format(COMPILER_WARNING_FLAGS)
 
 
 _dashes = ' --- '
