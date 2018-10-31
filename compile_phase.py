@@ -33,18 +33,18 @@ def run_cmake(program_dir_abs, build_path):
     :param program_dir_abs: The absolute path to the root directory of the target program.
     :param build_path: The build path in which CMake should build everything.
     """
-    # The cmake call activates the compiler warnings we want twice to ensure that they really get activated: via
-    # environment variable, and via a new build type. Both activation methods are safe in that they do not affect the
-    # users code or the compilation process in a bad way.
-    cmake_call = [TOOLS.CMAKE.exe_name, '-E', 'env', 'CXXFLAGS="' + strings.COMPILER_WARNING_FLAGS + '"', 'CFLAGS="'
-                  + strings.COMPILER_WARNING_FLAGS + '"',  # set environment variable to activate the warnings
-                  TOOLS.CMAKE.exe_name, '-DCMAKE_CXX_FLAGS_SOFTWIPE_WARNINGS:STRING="' +
-                  strings.COMPILER_WARNING_FLAGS + '"', '-DCMAKE_C_FLAGS_SOFTWIPE_WARNINGS:STRING="' +
-                  strings.COMPILER_WARNING_FLAGS + '"', '-DCMAKE_BUILD_TYPE=SOFTWIPE_WARNINGS',  # use new build type
-                  # that activates the warnings
+    # The cmake call activates the compiler warnings we want and the flags that activate the clang sanitizers twice to
+    # ensure that they really get activated: via environment variable, and via a new build type. Both activation
+    # methods are safe in that they do not affect the users code or the compilation process in a bad way.
+    cmake_call = [TOOLS.CMAKE.exe_name, '-E', 'env', 'CXXFLAGS=' + strings.COMPILE_FLAGS,
+                  'CFLAGS=' + strings.COMPILE_FLAGS,  # set environment variable to activate the warnings
+                  TOOLS.CMAKE.exe_name, '-DCMAKE_CXX_FLAGS_SOFTWIPE_WARNINGS:STRING=' + strings.COMPILE_FLAGS,
+                  '-DCMAKE_C_FLAGS_SOFTWIPE_WARNINGS:STRING=' + strings.COMPILE_FLAGS,
+                  '-DCMAKE_BUILD_TYPE=SOFTWIPE_WARNINGS',  # use new build type that activates the warnings
                   '-DCMAKE_CXX_COMPILER=' + TOOLS.CLANGPP.exe_name, '-DCMAKE_CC_COMPILER=' + TOOLS.CLANG.exe_name,
-                  '-DCMAKE_EXPORT_COMPILE_COMMANDS=1', program_dir_abs  # Ensure that clang is used and the
-                  # compilation database JSON that is required for most clang tools is exported
+                  '-DCMAKE_EXPORT_COMPILE_COMMANDS=1',  # Ensure that clang is used and the compilation database JSON
+                  # that is required for most clang tools is exported
+                  program_dir_abs
                   ]
     # NOTE verbosity may be enabled via '-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON' and run_make(verbose=True) (this shows all
     # commands that are called by cmake & make
@@ -252,9 +252,9 @@ def compile_program_clang(program_dir_abs, targets, lines_of_code, cpp=False, cl
         for option in options:
             clang_call.append(option)
 
-    warning_flags = strings.COMPILER_WARNING_FLAGS.split()
-    for wflag in warning_flags:
-        clang_call.append(wflag)
+    compile_flags = strings.COMPILE_FLAGS.split()
+    for flag in compile_flags:
+        clang_call.append(flag)
 
     for target in targets:
         target_abs = os.path.abspath(target)

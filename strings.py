@@ -4,8 +4,9 @@ This module contains string constants.
 
 
 COMPILER_WARNING_FLAGS = '-Weverything'
-SET_CMAKE_CXX_FLAGS_COMPILER_WARNINGS = 'set(CMAKE_CXX_FLAGS "' + COMPILER_WARNING_FLAGS + ' ${CMAKE_CXX_FLAGS}")'
-SET_CMAKE_C_FLAGS_COMPILER_WARNINGS = 'set(CMAKE_C_FLAGS "' + COMPILER_WARNING_FLAGS + ' ${CMAKE_C_FLAGS}")'
+COMPILER_SANITIZER_FLAGS = '-g -fno-omit-frame-pointer -fsanitize=address -fsanitize-recover=address ' \
+                           '-fsanitize=undefined'
+COMPILE_FLAGS = COMPILER_WARNING_FLAGS + ' ' + COMPILER_SANITIZER_FLAGS
 
 
 _dashes = ' --- '
