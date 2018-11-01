@@ -7,8 +7,14 @@ COMPILER_WARNING_FLAGS = '-Weverything'
 COMPILER_SANITIZER_FLAGS = '-g -fno-omit-frame-pointer -fsanitize=address -fsanitize-recover=address ' \
                            '-fsanitize=undefined'
 COMPILE_FLAGS = COMPILER_WARNING_FLAGS + ' ' + COMPILER_SANITIZER_FLAGS
-SET_CXXFLAGS = 'CXXFLAGS="{}"'.format(COMPILER_WARNING_FLAGS)
 SET_CFLAGS = 'CFLAGS="{}"'.format(COMPILER_WARNING_FLAGS)
+SET_CXXFLAGS = 'CXXFLAGS="{}"'.format(COMPILER_WARNING_FLAGS)
+SET_CPPFLAGS = 'CPPFLAGS="{}"'.format(COMPILER_WARNING_FLAGS)
+
+SET_CC = 'CC="clang"'
+SET_CXX = 'CXX="clang++"'
+
+SET_ALL_VARIBALES_FOR_MAKE = SET_CFLAGS + ' ' + SET_CXXFLAGS + ' ' + SET_CPPFLAGS + ' ' + SET_CC + ' ' + SET_CXX
 
 
 _dashes = ' --- '

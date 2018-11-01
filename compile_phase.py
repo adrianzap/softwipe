@@ -167,8 +167,7 @@ def parse_make_command_file_and_run_all_commands_in_it(make_command_file, progra
             split_command = command.split()
             make_flags = split_command[1:]
 
-            warning_flags = strings.SET_CXXFLAGS if cpp else strings.SET_CFLAGS
-            for flag in warning_flags.split():
+            for flag in strings.SET_ALL_VARIBALES_FOR_MAKE.split():
                 make_flags.append(flag)
 
             cur_warning_list = run_make(program_dir_abs, working_directory, lines_of_code, cpp, make_flags=make_flags)
@@ -211,8 +210,8 @@ def compile_program_make(program_dir_abs, lines_of_code, cpp, make_command_file=
         warning_list = parse_make_command_file_and_run_all_commands_in_it(make_command_file, program_dir_abs,
                                                                           working_directory, lines_of_code, cpp)
     else:
-        flags = strings.SET_CXXFLAGS if cpp else strings.SET_CFLAGS
-        warning_list = run_make(program_dir_abs, program_dir_abs, lines_of_code, cpp, make_flags=[flags])
+        list_of_flags = strings.SET_ALL_VARIBALES_FOR_MAKE.split()
+        warning_list = run_make(program_dir_abs, program_dir_abs, lines_of_code, cpp, make_flags=list_of_flags)
         run_compiledb(program_dir_abs, [TOOLS.MAKE.exe_name])
 
     return warning_list
