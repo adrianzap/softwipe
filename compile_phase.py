@@ -27,11 +27,11 @@ def clear_directory(directory):
             os.remove(path)
 
 
-def run_cmake(program_dir_abs, build_path):
+def build_cmake_call(program_dir_abs):
     """
-    Run the cmake command for the program in program_dir_abs as if pwd would be build_path.
+    Build the CMake call.
     :param program_dir_abs: The absolute path to the root directory of the target program.
-    :param build_path: The build path in which CMake should build everything.
+    :return: The full CMake call as a list.
     """
     # The cmake call activates the compiler warnings we want and the flags that activate the clang sanitizers twice to
     # ensure that they really get activated: via environment variable, and via a new build type. Both activation
@@ -46,8 +46,18 @@ def run_cmake(program_dir_abs, build_path):
                   # that is required for most clang tools is exported
                   program_dir_abs
                   ]
-    # NOTE verbosity may be enabled via '-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON' and run_make(verbose=True) (this shows all
-    # commands that are called by cmake & make
+    # NOTE verbosity may be enabled via '-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON' and run_make(make_verbose=True) (this shows
+    # all commands that are called by cmake & make, respectively.
+    return cmake_call
+
+
+def run_cmake(program_dir_abs, build_path):
+    """
+    Run the cmake command for the program in program_dir_abs as if pwd would be build_path.
+    :param program_dir_abs: The absolute path to the root directory of the target program.
+    :param build_path: The build path in which CMake should build everything.
+    """
+    cmake_call = build_cmake_call(program_dir_abs)
     output = subprocess.check_output(cmake_call, cwd=build_path, universal_newlines=True, stderr=subprocess.STDOUT)
 
 
@@ -126,23 +136,21 @@ def run_compiledb(build_path, make_command):
     subprocess.call(compiledb_call, cwd=build_path)
 
 
-def run_make(program_dir_abs, build_path, lines_of_code, cpp, make_flags=None, make_verbose=False):
+def run_make(program_dir_abs, build_path, lines_of_code, cpp, make_flags='', make_verbose=False):
     """
     Run the make command and print the warnings that it outputs while compiling.
     :param program_dir_abs: The absolute path to the root directory of the target program.
     :param build_path: The build path, where the Makefile is located.
     :param lines_of_code: The lines of pure code count.
     :param cpp: Whether C++ is used or not.
-    :param make_flags: A list of options passed to the make command. E.g., if make_flags=['-foobar'], then this method
-    will call "make -foobar"
+    :param make_flags: A string containing arguments passed to the make command. E.g., if make_flags='-foo BAR',
+    then this method will call "make -foo BAR"
     :param make_verbose: Whether the make command output should be verbose or not.
     :return: A list which contains the names of all warnings that have been generated when compiling.
     """
     if make_flags is None:
         make_flags = []
-    make_call = TOOLS.MAKE.exe_name
-    for flag in make_flags:
-        make_call += ' ' + flag
+    make_call = TOOLS.MAKE.exe_name + ' ' + make_flags
     if make_verbose:
         make_call += ' VERBOSE=1'
 
@@ -150,7 +158,7 @@ def run_make(program_dir_abs, build_path, lines_of_code, cpp, make_flags=None, m
     output = subprocess.check_output(make_call, cwd=build_path, universal_newlines=True, stderr=subprocess.STDOUT,
                                      shell=True)
     warning_list = []
-    if make_flags[0] != 'clean':  # Don't look for warnings when running "make clean" :)
+    if not make_flags.strip().startswith('clean'):  # Don't look for warnings when running "make clean" :)
         warning_lines = get_warning_lines_from_make_output(output, program_dir_abs)
         warning_list = get_warning_list_from_warning_lines(warning_lines, program_dir_abs)
         warning_rate = len(warning_list) / lines_of_code
@@ -161,16 +169,6 @@ def run_make(program_dir_abs, build_path, lines_of_code, cpp, make_flags=None, m
     return warning_list
 
 
-def build_make_flags():
-    """
-    Build the flags for a make call that activate all warnings and the clang sanitizers.
-    :return: A list containing all flags.
-    """
-    make_flags = [strings.SET_CC, strings.SET_CXX, strings.SET_CFLAGS, strings.SET_CXXFLAGS, strings.SET_CPPFLAGS,
-                  strings.SET_LDFLAGS]
-    return make_flags
-
-
 def parse_make_command_file_and_run_all_commands_in_it(make_command_file, program_dir_abs, working_directory,
                                                        lines_of_code, cpp):
     warning_list = []
@@ -178,16 +176,14 @@ def parse_make_command_file_and_run_all_commands_in_it(make_command_file, progra
     commands = open(make_command_file, 'r').readlines()
     for command in commands:
         if command.startswith('make'):
-            split_command = command.split()
-            make_flags = split_command[1:]
+            make_flags = command[4:]
 
-            for flag in build_make_flags():
-                make_flags.append(flag)
+            make_flags += ' ' + strings.SET_ALL_MAKE_FLAGS
 
             cur_warning_list = run_make(program_dir_abs, working_directory, lines_of_code, cpp, make_flags=make_flags)
             warning_list.append(cur_warning_list)
 
-            run_compiledb(working_directory, split_command)
+            run_compiledb(working_directory, command.split())
         else:
             split_command = command.split()
             subprocess.run(split_command, cwd=working_directory)
@@ -214,7 +210,7 @@ def compile_program_make(program_dir_abs, lines_of_code, cpp, make_command_file=
     :return: A list which contains the names of all warnings that have been generated when compiling.
     """
     try:
-        run_make(program_dir_abs, program_dir_abs, lines_of_code, cpp, make_flags=['clean'])
+        run_make(program_dir_abs, program_dir_abs, lines_of_code, cpp, make_flags='clean')
     except subprocess.CalledProcessError:
         print('Seems like there is no "make clean" target :( Please make sure the build directory is clean such that '
               'I can compile from scratch, else I might not find all warnings.')
@@ -226,9 +222,8 @@ def compile_program_make(program_dir_abs, lines_of_code, cpp, make_command_file=
         warning_list = parse_make_command_file_and_run_all_commands_in_it(make_command_file, program_dir_abs,
                                                                           working_directory, lines_of_code, cpp)
     else:
-        make_flags = build_make_flags()
-        warning_list = run_make(program_dir_abs, program_dir_abs, lines_of_code, cpp, make_flags=make_flags,
-                                make_verbose=True)
+        warning_list = run_make(program_dir_abs, program_dir_abs, lines_of_code, cpp,
+                                make_flags=strings.SET_ALL_MAKE_FLAGS)
         run_compiledb(program_dir_abs, [TOOLS.MAKE.exe_name])
 
     return warning_list

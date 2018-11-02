@@ -39,7 +39,10 @@ def parse_arguments():
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument('-M', '--cmake', action='store_true', help='compile the program using cmake. This is the default '
                                                                  'option')
-    mode.add_argument('-m', '--make', action='store_true', help='compile the program using make')
+    mode.add_argument('-m', '--make', action='store_true', help='compile the program using make. Note that this '
+                                                                'option requires a "standard" style makefile that '
+                                                                'uses common variables like ${CC}, ${CFLAGS}, '
+                                                                '${LDFLAGS} etc. to work properly')
     mode.add_argument('-l', '--clang', nargs='+', metavar='target', help='compile the program using the clang/clang++ '
                                                                          'compiler. This option takes as arguments the'
                                                                          ' files to compile')
