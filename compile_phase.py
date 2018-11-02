@@ -133,7 +133,7 @@ def run_compiledb(build_path, make_command):
     compiledb_call = [TOOLS.COMPILEDB.exe_name, '--no-build']
     for command in make_command:
         compiledb_call.append(command)
-    subprocess.call(compiledb_call, cwd=build_path)
+    subprocess.check_output(compiledb_call, cwd=build_path)
 
 
 def run_make(program_dir_abs, build_path, lines_of_code, cpp, make_flags='', make_verbose=False):
