@@ -18,7 +18,6 @@ class TOOLS:
     MAKE = Tool('make', 'make', Via.PACKAGE_MANAGER)
     COMPILEDB = Tool('compiledb', 'compiledb', Via.PIP)
     CPPCHECK = Tool('cppcheck', 'cppcheck', Via.PACKAGE_MANAGER)
-    SPLINT = Tool('splint', 'splint', Via.PACKAGE_MANAGER)
     CLANG_TIDY = Tool('clang-tidy', 'llvm', Via.PACKAGE_MANAGER)
     LIZARD = Tool('lizard', 'lizard', Via.PIP)
     KWSTYLE = Tool('KWStyle', 'KWStyle', Via.DOWNLOAD)

@@ -5,7 +5,6 @@ A tool for automatically checking the software quality of a C/C++ program. It is
 This tool runs a bunch of other tools that must be installed:
 * Clang (<https://clang.llvm.org>, probably available in your package manager)
 * cppcheck (<http://cppcheck.sourceforge.net>, probably available in your package manager)
-* splint (<http://www.splint.org>, probably available in your package manager)
 * clang-tidy (part of LLVM tools (<http://llvm.org>); either clang-tidy is available in your package manager as a standalone (e.g. in apt-get it is), or your package manager includes it in LLVM (e.g. in homebrew this is the case))
 * Lizard (<https://github.com/terryyin/lizard>, available in pip)
 

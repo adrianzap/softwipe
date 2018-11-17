@@ -96,21 +96,6 @@ def run_cppcheck(source_files, lines_of_code):
     return cppcheck_output
 
 
-def run_splint(source_files):
-    """
-    Runs splint.
-    :param source_files: The list of source files to analyze.
-    """
-    # TODO Do we really want Splint?
-    # TODO If yes, parse the output.
-    print(strings.RUN_SPLINT_HEADER)
-    splint_call = [TOOLS.SPLINT.exe_name]
-    for file in source_files:
-        splint_call.append(file)
-
-    subprocess.call(splint_call, universal_newlines=True, stderr=subprocess.STDOUT)
-
-
 def get_clang_tidy_warning_lines_from_clang_tidy_output(output):
     warning_lines = []
 
@@ -297,8 +282,6 @@ def run_static_analysis(source_files, lines_of_code, cpp):
     # TODO How to return all the information that is generated here to the caller? One huge object?
     assertion_rate = check_assert_usage(source_files, lines_of_code)
     cppcheck_output = run_cppcheck(source_files, lines_of_code)
-    if not cpp:
-        run_splint(source_files)
     clang_tidy_warning_rate = run_clang_tidy(source_files, lines_of_code, cpp)
     lizard_output = run_lizard(source_files)
     kwstyle_warnings = run_kwstyle(source_files, lines_of_code)
