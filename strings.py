@@ -69,6 +69,18 @@ RESULT_KWSTYLE_WARNING_RATE = 'KWStyle warning rate: ' + RATE_COUNT_TOTAL
 SOFTWIPE_BUILD_DIR_NAME = _softwipe + 'build'
 
                                                                                 #
+EXECUTE_FILE_HELP = """        --- Execute file help ---
+
+The execute file (provided via -e option) is a file that contains a command line
+that executes your program. It should only contain one single line containing
+exactly the command line you would use for executing it.
+For example, if your program compiles the executable "foobar" and requires two
+arguments "-x" and "-y", your file should contain a line like this:
+  foobar -x baz -y qux
+If your file contains more than one line, any line beyond the first will be
+ignored.
+"""
+                                                                                #
 COMMAND_FILE_HELP = """        --- Command file help ---
 
 The command file (provided via -f option) is a file that contains:
@@ -100,5 +112,6 @@ required for compilation.
  Example command file:
 -std=c++14 -save-stats
  If no command file is given for a compiler-based project, it will be assumed
-that simply compiling the targets using clang/clang++ works."""
+that simply compiling the targets using clang/clang++ works.
+"""
                                                                                 #

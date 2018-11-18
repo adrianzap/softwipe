@@ -14,28 +14,39 @@ import execution_phase
 import util
 
 
-def print_command_file_help_and_exit():
-    print(strings.COMMAND_FILE_HELP)
-    sys.exit(0)
-
-
 def parse_arguments():
     """
     Parse command line arguments.
     :return: The "args" Namespace that contains the command line arguments specified by the user.
     """
-    # Preparser, used for the command file help. Without the preparser, one would get an error because 'programdir'
-    # is a required argument but is missing. With the preparser, the help can be printed anyway.
+    # Preparser, used for the command file & execute file help. Without the preparser, one would get an error because
+    # 'programdir' is a required argument but is missing. With the preparser, the help can be printed anyway.
     preparser = argparse.ArgumentParser(add_help=False)
     preparser.add_argument('--commandfilehelp', default=False, action='store_true')
+    preparser.add_argument('--executefilehelp', default=False, action='store_true')
     preargs, unk = preparser.parse_known_args()
+
+    # Both helps can be printed at once
+    if preargs.executefilehelp:
+        print(strings.EXECUTE_FILE_HELP)
     if preargs.commandfilehelp:
-        print_command_file_help_and_exit()
+        print(strings.COMMAND_FILE_HELP)
+    if preargs.executefilehelp or preargs.commandfilehelp:  # Exit if either one or both helps have been printed
+        sys.exit(0)
 
     # Main parser
-    parser = argparse.ArgumentParser(description="Check the software quality of a C/C++ program")
+    parser = argparse.ArgumentParser(description='Check the software quality of a C/C++ program\n\n'
+                                                 'Important arguments you probably want to use:\n'
+                                                 '  -c/-C to tell me whether your program is C or C++\n'
+                                                 '  -l/-m/-M to tell me how to build your program\n'
+                                                 '  -e to specify a file that tells me how to execute your program\n',
+                                     formatter_class=argparse.RawDescriptionHelpFormatter)
 
     parser.add_argument('programdir', help="the root directory of your target program")
+
+    c = parser.add_mutually_exclusive_group()
+    c.add_argument('-c', '--cc', action='store_true', help='use C. This is the default option')
+    c.add_argument('-C', '--cpp', action='store_true', help='use C++')
 
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument('-M', '--cmake', action='store_true', help='compile the program using cmake. This is the default '
@@ -48,12 +59,10 @@ def parse_arguments():
                                                                          'compiler. This option takes as arguments the'
                                                                          ' files to compile')
 
-    c = parser.add_mutually_exclusive_group()
-    c.add_argument('-c', '--cc', action='store_true', help='use C. This is the default option')
-    c.add_argument('-C', '--cpp', action='store_true', help='use C++')
-
     parser.add_argument('-e', '--executefile', nargs=1, help='path to an "execute file" which contains a command line '
                                                              'that executes your program')
+    parser.add_argument('--executefilehelp', action='store_true', help='print detailled information about how the '
+                                                                       'execute file works and exit')
 
     parser.add_argument('-f', '--commandfile', nargs=1, help='path to a "command file" which can be used to provide '
                                                              'commands that should be executed for building a '
