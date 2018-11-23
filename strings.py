@@ -19,6 +19,16 @@ SET_ALL_MAKE_FLAGS = SET_CC + ' ' + SET_CXX + ' ' + SET_CFLAGS + ' ' + SET_CXXFL
                      SET_LDFLAGS
 
 
+NO_MAKE_CLKEAN_TARGET_FOUND = 'Seems like there is no "make clean" target :( Please make sure the build directory is ' \
+                              'clean such that I can compile from scratch, else I might not find all warnings.\n' \
+                              'If you do have a "make clean" target, please make sure you\'re using "rm -f" to ' \
+                              'prevent rm from  crashing if a file doesn\'t exist.'
+
+
+CLANG_TIDY_CHECKS_C = '-*,bugprone-*,clang-analyzer-*,misc-*,modernize-*,mpi-*,performance-*,readability-*'
+CLANG_TIDY_CHECKS_CPP = CLANG_TIDY_CHECKS_C + ',boost-*,cppcoreguidelines-*'
+
+
 _dashes = ' --- '
 _running = 'Running: '
 _header = _dashes + _running + '{}' + _dashes
@@ -66,7 +76,18 @@ RESULT_CLANG_TIDY_WARNING_RATE = 'Clang-tidy warning rate: ' + RATE_COUNT_TOTAL
 RESULT_KWSTYLE_WARNING_RATE = 'KWStyle warning rate: ' + RATE_COUNT_TOTAL
 
 
+DETAILLED_RESULTS_WRITTEN_INTO = 'Detailled results have been written into {}'
+LINES_OF_PURE_CODE_ARE = 'Lines of pure code (excluding blank and comment lines): {}'
+
+
+FAILED_TO_FIND_TOOLS = 'Failed to find the following tools:'
+MAKE_SURE_TOOLS_ARE_INSTALLED = 'Make sure all tools are installed on your system and accessible. Either put their ' \
+                                'location into your PATH or provide a full path to each tool as its exe_name in ' \
+                                'tools_info.py.'
+
+
 SOFTWIPE_BUILD_DIR_NAME = _softwipe + 'build'
+SOFTWIPE_COMPILED_EXE_NAME = _softwipe + 'compiled_exe.out'
 
                                                                                 #
 EXECUTE_FILE_HELP = """        --- Execute file help ---
@@ -79,6 +100,8 @@ arguments "-x" and "-y", your file should contain a line like this:
   foobar -x baz -y qux
 If your file contains more than one line, any line beyond the first will be
 ignored.
+If you omit the execute file, I will simply call "a.out" (which will most likely
+not work :))
 """
                                                                                 #
 COMMAND_FILE_HELP = """        --- Command file help ---

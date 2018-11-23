@@ -18,16 +18,13 @@ def assertion_used_in_code_line(line):
     Check whether a line of code contains an assertion. Finds both C assert() calls and C++ static_assert().
     :return: True if there is an assertion, else False.
     """
-    # This regex should match _all_ ways in which assertions could occur.
+    # This regex should match all ways in which assertions could occur.
     # It spits out false positives for ultra specific cases: when someone literally puts "assert(" in a string or the
     # mid of a block comment. This is fine though.
     # Breakdown of the regex: The first two negative lookaheads "(?! )" exclude commented assertions. Then,
     # match assert( and static_assert( while allowing for whitespace or code (e.g. ";" or "}") before the call.
     regex = r'(?!^.*\/\/.*assert\s*\()(?!^.*\/\*.*assert\s*\()^.*(\W|^)(static_)?assert\s*\('
-    line_includes_assertion = False
-    if re.match(regex, line):
-        line_includes_assertion = True
-    return line_includes_assertion
+    return re.match(regex, line)
 
 
 def check_assert_usage(source_files, lines_of_code):
@@ -83,8 +80,7 @@ def run_cppcheck(source_files, lines_of_code):
     #  errors
     print(strings.RUN_CPPCHECK_HEADER)
     cppcheck_call = [TOOLS.CPPCHECK.exe_name, '--enable=all', '--force']
-    for file in source_files:
-        cppcheck_call.append(file)
+    cppcheck_call.extend(source_files)
 
     output = subprocess.check_output(cppcheck_call, universal_newlines=True, stderr=subprocess.STDOUT)
     warning_lines = get_cppcheck_warning_lines_from_cppcheck_output(output)
@@ -102,13 +98,13 @@ def get_clang_tidy_warning_lines_from_clang_tidy_output(output):
     output_lines = output.split('\n')
     do_add_warnings = False
     for line in output_lines:
-        if line.endswith('generated.'):  # "n warnings generated."
+        if util.clang_tidy_output_line_is_header(line):  # "n warnings generated."
             do_add_warnings = True
 
         if do_add_warnings:
             warning_lines.append(line)
 
-        if line.startswith('Suppressed'):  # "Suppressed m warnings."
+        if util.clang_tidy_output_line_is_trailer(line):  # "Suppressed m warnings."
             do_add_warnings = False
 
     return warning_lines
@@ -119,15 +115,32 @@ def get_clang_tidy_warning_count_from_clang_tidy_warning_lines(warning_lines):
     suppressed_warning_count = 0
 
     for line in warning_lines:
-        if line.endswith('generated.'):  # "n warnings generated"
+        if util.clang_tidy_output_line_is_header(line):  # "n warnings generated"
             count_on_this_line = int(line.split()[0])  # get n
-            total_warning_count = count_on_this_line if count_on_this_line > total_warning_count else total_warning_count
-        elif line.startswith('Suppressed'):  # "Suppressed m warnings"
+            total_warning_count = count_on_this_line if \
+                count_on_this_line > total_warning_count else total_warning_count
+
+        elif util.clang_tidy_output_line_is_trailer(line):  # "Suppressed m warnings"
             suppressed_warning_count = int(line.split()[1])  # get m
 
     warning_count = total_warning_count - suppressed_warning_count  # n - m
 
     return warning_count
+
+
+def beautify_clang_tidy_warning_lines(warning_lines):
+    """
+    Removes the "n warnings generated" headers and "Suppressed m warnings" trailer for a more beautiful output
+    :param warning_lines: The clang tidy warning lines as output by
+    get_clang_tidy_warning_lines_from_clang_tidy_output(), which contain the ugly headers and trailer.
+    :return: The warning lines with the headers and trailer removed.
+    """
+    beautified_lines = []
+    for line in warning_lines:
+        if not (util.clang_tidy_output_line_is_header(line) or util.clang_tidy_output_line_is_trailer(line)):
+            beautified_lines.append(line)
+
+    return beautified_lines
 
 
 def run_clang_tidy(source_files, lines_of_code, cpp):
@@ -140,13 +153,10 @@ def run_clang_tidy(source_files, lines_of_code, cpp):
     """
     print(strings.RUN_CLANG_TIDY_HEADER)
     clang_tidy_call = [TOOLS.CLANG_TIDY.exe_name]
-    for file in source_files:
-        clang_tidy_call.append(file)
+    clang_tidy_call.extend(source_files)
 
     # Create checks list
-    clang_tidy_checks = '-*,bugprone-*,clang-analyzer-*,misc-*,modernize-*,mpi-*,performance-*,readability-*'
-    if cpp:
-        clang_tidy_checks += ',boost-*,cppcoreguidelines-*'
+    clang_tidy_checks = strings.CLANG_TIDY_CHECKS_CPP if cpp else strings.CLANG_TIDY_CHECKS_C
     clang_tidy_call.append('-checks=' + clang_tidy_checks)
 
     output = subprocess.check_output(clang_tidy_call, universal_newlines=True, stderr=subprocess.STDOUT)
@@ -155,8 +165,8 @@ def run_clang_tidy(source_files, lines_of_code, cpp):
     warning_rate = warning_count / lines_of_code
 
     print(strings.RESULT_CLANG_TIDY_WARNING_RATE.format(warning_rate, warning_count, lines_of_code))
-    # TODO Remove the "n warnings generated" headers and "Suppressed m warnings" trailer for a more beautiful output
-    util.write_into_file_list(strings.RESULTS_FILENAME_CLANG_TIDY, warning_lines)
+    beautified_warning_lines = beautify_clang_tidy_warning_lines(warning_lines)
+    util.write_into_file_list(strings.RESULTS_FILENAME_CLANG_TIDY, beautified_warning_lines)
 
     return warning_count
 
@@ -218,8 +228,7 @@ def run_lizard(source_files):
     print(strings.RUN_LIZARD_HEADER)
 
     lizard_call = [TOOLS.LIZARD.exe_name, '-Eduplicate', '-l', 'cpp']
-    for file in source_files:
-        lizard_call.append(file)
+    lizard_call.extend(source_files)
 
     try:
         output = subprocess.check_output(lizard_call, universal_newlines=True, stderr=subprocess.STDOUT)
@@ -255,8 +264,7 @@ def run_kwstyle(source_files, lines_of_code):
     print(strings.RUN_KWSTYLE_HEADER)
 
     kwstyle_call = [TOOLS.KWSTYLE.exe_name, '-v']
-    for file in source_files:
-        kwstyle_call.append(file)
+    kwstyle_call.extend(source_files)
 
     try:
         output = subprocess.check_output(kwstyle_call, universal_newlines=True, stderr=subprocess.STDOUT)

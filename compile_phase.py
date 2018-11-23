@@ -131,8 +131,7 @@ def run_compiledb(build_path, make_command):
     e.g. ['make', 'mybuildtarget']. Compiledb uses the command to build the compilation database.
     """
     compiledb_call = [TOOLS.COMPILEDB.exe_name, '--no-build']
-    for command in make_command:
-        compiledb_call.append(command)
+    compiledb_call.extend(make_command)
     subprocess.check_output(compiledb_call, cwd=build_path)
 
 
@@ -212,10 +211,7 @@ def compile_program_make(program_dir_abs, lines_of_code, cpp, make_command_file=
     try:
         run_make(program_dir_abs, program_dir_abs, lines_of_code, cpp, make_flags='clean')
     except subprocess.CalledProcessError:
-        print('Seems like there is no "make clean" target :( Please make sure the build directory is clean such that '
-              'I can compile from scratch, else I might not find all warnings.')
-        print('If you do have a "make clean" target, please make sure you\'re using "rm -f" to prevent rm from '
-              'crashing if a file doesn\'t exist.')
+        print(strings.NO_MAKE_CLKEAN_TARGET_FOUND)
 
     if make_command_file:
         working_directory = program_dir_abs  # This will be used as the build path, which might get changed
@@ -258,16 +254,14 @@ def compile_program_clang(program_dir_abs, targets, lines_of_code, cpp=False, cl
     :return: A list which contains the names of all warnings that have been generated when compiling.
     """
     compiler = TOOLS.CLANGPP.exe_name if cpp else TOOLS.CLANG.exe_name
-    clang_call = [compiler]
+    clang_call = [compiler, '-o', strings.SOFTWIPE_COMPILED_EXE_NAME]
 
     if clang_command_file:
         options = open(clang_command_file, 'r').read().split()
-        for option in options:
-            clang_call.append(option)
+        clang_call.extend(options)
 
     compile_flags = strings.COMPILE_FLAGS.split()
-    for flag in compile_flags:
-        clang_call.append(flag)
+    clang_call.extend(compile_flags)
 
     for target in targets:
         target_abs = os.path.abspath(target)

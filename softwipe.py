@@ -12,6 +12,7 @@ import compile_phase
 import static_analysis_phase
 import execution_phase
 import util
+import automatic_tool_installation
 
 
 def parse_arguments():
@@ -183,7 +184,7 @@ def main():
 
     adjust_path_variable(args)
 
-    util.check_if_all_required_tools_are_installed()
+    automatic_tool_installation.check_if_all_required_tools_are_installed()
 
     cpp = True if args.cpp else False
     program_dir_abs = os.path.abspath(args.programdir)
