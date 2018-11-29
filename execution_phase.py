@@ -4,6 +4,7 @@ This module contains all functions related to executing the program and analyzin
 
 import subprocess
 import os
+import sys
 
 import strings
 import compile_phase
@@ -19,7 +20,7 @@ def build_command(program_dir_abs, executefile, cmake):
     :return: The full command as a list.
     """
     # Read file and create command as a list
-    if os.path.isfile(executefile):
+    if executefile is not None and os.path.isfile(executefile):
         file = open(executefile, 'r')
         lines = file.readlines()
         file.close()
@@ -28,6 +29,7 @@ def build_command(program_dir_abs, executefile, cmake):
         command = command_line.split()
     else:
         command = ['a.out']  # Default to a.out
+        print(strings.USER_DID_NOT_SPECIFY_EXECUTE_FILE_USING_AOUT_NOW)
 
     # Make the executable an absolute path
     executable_dir = program_dir_abs
@@ -77,8 +79,14 @@ def run_execution(program_dir_abs, executefile, cmake, lines_of_code):
     os.environ['ASAN_OPTIONS'] = 'halt_on_error=0'
 
     # Execute and get stderr, which contains the output of the sanitizers
-    output = subprocess.run(command, universal_newlines=True, stdout=subprocess.DEVNULL,
-                            stderr=subprocess.PIPE).stderr
+    try:
+        output = subprocess.run(command, universal_newlines=True, stdout=subprocess.DEVNULL,
+                                stderr=subprocess.PIPE).stderr
+    except FileNotFoundError as e:
+        print(e)
+        print(strings.EXECUTION_FILE_NOT_FOUND.format(command[0]))
+        sys.exit(1)
+
     asan_error_count, ubsan_error_count = get_sanitizer_error_count_from_sanitizer_output(output, program_dir_abs)
     asan_error_rate = asan_error_count / lines_of_code
     ubsan_error_rate = ubsan_error_count / lines_of_code

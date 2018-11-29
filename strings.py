@@ -86,6 +86,16 @@ MAKE_SURE_TOOLS_ARE_INSTALLED = 'Make sure all tools are installed on your syste
                                 'tools_info.py.'
 
 
+USER_DID_NOT_SPECIFY_EXECUTE_FILE_USING_AOUT_NOW = 'Warning! You did not specify an executefile. I\'m trying to run ' \
+                                                   'your program using "a.out" now. In most cases, this will not ' \
+                                                   'work properly, and you should specify an executefile.\n' \
+                                                   'For more information, please run: softwipe.py --executefilehelp'
+
+EXECUTION_FILE_NOT_FOUND = 'I could not find the executable "{}".\n' \
+                           'If you haven\'t specified an executefile, please do so. If you did specify an ' \
+                           'executefile, please make sure it is correct.'
+
+
 SOFTWIPE_BUILD_DIR_NAME = _softwipe + 'build'
 SOFTWIPE_COMPILED_EXE_NAME = _softwipe + 'compiled_exe.out'
 

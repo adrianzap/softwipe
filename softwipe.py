@@ -164,7 +164,8 @@ def compile_and_execute_program_with_sanitizers(args, lines_of_code, program_dir
     :return: The compiler warning list from compile_program() and the sanitizer results from execute_program().
     """
     compiler_warning_list = compile_program(args, lines_of_code, cpp)
-    sanitizer_results = execute_program(program_dir_abs, args.executefile[0], args.cmake, lines_of_code)
+    execute_file = args.executefile[0] if args.executefile else None
+    sanitizer_results = execute_program(program_dir_abs, execute_file, args.cmake, lines_of_code)
 
     return compiler_warning_list, sanitizer_results
 
