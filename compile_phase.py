@@ -135,13 +135,16 @@ def run_compiledb(build_path, make_command):
     subprocess.check_output(compiledb_call, cwd=build_path)
 
 
-def run_make(program_dir_abs, build_path, lines_of_code, cpp, make_flags='', make_verbose=False):
+def run_make(program_dir_abs, build_path, lines_of_code, cpp, dont_check_for_warnings=False, make_flags='',
+             make_verbose=False):
     """
     Run the make command and print the warnings that it outputs while compiling.
     :param program_dir_abs: The absolute path to the root directory of the target program.
     :param build_path: The build path, where the Makefile is located.
     :param lines_of_code: The lines of pure code count.
     :param cpp: Whether C++ is used or not.
+    :param dont_check_for_warnings: Do not check for warnings. Useful for automatically building a dependency,
+    in which case you don't want warnings to be extracted from the compilation.
     :param make_flags: A string containing arguments passed to the make command. E.g., if make_flags='-foo BAR',
     then this method will call "make -foo BAR"
     :param make_verbose: Whether the make command output should be verbose or not.
@@ -157,7 +160,8 @@ def run_make(program_dir_abs, build_path, lines_of_code, cpp, make_flags='', mak
     output = subprocess.check_output(make_call, cwd=build_path, universal_newlines=True, stderr=subprocess.STDOUT,
                                      shell=True)
     warning_list = []
-    if not make_flags.strip().startswith('clean'):  # Don't look for warnings when running "make clean" :)
+    if not (dont_check_for_warnings or make_flags.strip().startswith('clean')):  # Don't look for warnings when running
+        # "make clean" :)
         warning_lines = get_warning_lines_from_make_output(output, program_dir_abs)
         warning_list = get_warning_list_from_warning_lines(warning_lines, program_dir_abs)
         warning_rate = len(warning_list) / lines_of_code
@@ -225,19 +229,21 @@ def compile_program_make(program_dir_abs, lines_of_code, cpp, make_command_file=
     return warning_list
 
 
-def compile_program_cmake(program_dir_abs, lines_of_code, cpp):
+def compile_program_cmake(program_dir_abs, lines_of_code, cpp, dont_check_for_warnings=False):
     """
     Compile the program using CMake.
     :param program_dir_abs: The absolute path to the root directory of the target program, where the CMakeLists.txt
     is located.
     :param lines_of_code: The lines of pure code count.
     :param cpp: Whether C++ is used or not.
+    :param dont_check_for_warnings: Do not check for warnings. Useful for automatically building a dependency,
+    in which case you don't want warnings to be extracted from the compilation.
     :return: A list which contains the names of all warnings that have been generated when compiling.
     """
     build_path = create_build_directory(program_dir_abs)
     clear_directory(build_path)  # If the path already existed, it should be cleared to ensure a fresh compilation
     run_cmake(program_dir_abs, build_path)
-    warning_list = run_make(program_dir_abs, build_path, lines_of_code, cpp)
+    warning_list = run_make(program_dir_abs, build_path, lines_of_code, cpp, dont_check_for_warnings)
 
     return warning_list
 

@@ -64,7 +64,8 @@ def handle_kwstyle_download():
 
     kwstyle_dir = os.path.join(softwipe_dir, 'KWStyle')
     print('Building KWStyle...')
-    compile_phase.compile_program_cmake(kwstyle_dir, 1, True)  # Last two arguments do not matter
+    compile_phase.compile_program_cmake(kwstyle_dir, 1, True, dont_check_for_warnings=True)  # The arguments
+    # lines_of_code (2nd arg) and cpp (3rd arg) do not matter here
     print('Done!')
     print()
 
