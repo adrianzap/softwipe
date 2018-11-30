@@ -178,6 +178,7 @@ def parse_make_command_file_and_run_all_commands_in_it(make_command_file, progra
 
     commands = open(make_command_file, 'r').readlines()
     for command in commands:
+        command = command.rstrip()  # Remove trailing newline from the command to prevent issues with the make_flags
         if command.startswith('make'):
             make_flags = command[4:]
 
