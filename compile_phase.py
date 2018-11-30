@@ -189,7 +189,7 @@ def parse_make_command_file_and_run_all_commands_in_it(make_command_file, progra
             run_compiledb(working_directory, command.split())
         else:
             split_command = command.split()
-            subprocess.run(split_command, cwd=working_directory)
+            subprocess.run(split_command, cwd=working_directory, stdout=subprocess.DEVNULL)
 
             if command.startswith('cd'):  # Change working directory if cd is used
                 cd_target = ' '.join(split_command[1:])  # Use join to handle spaces
