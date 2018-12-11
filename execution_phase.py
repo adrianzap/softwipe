@@ -34,7 +34,7 @@ def build_command(program_dir_abs, executefile, cmake):
     # Make the executable an absolute path
     executable_dir = program_dir_abs
     if cmake:
-        os.path.join(executable_dir, strings.SOFTWIPE_BUILD_DIR_NAME)
+        executable_dir = os.path.join(executable_dir, strings.SOFTWIPE_BUILD_DIR_NAME)
     full_executable_path = os.path.join(executable_dir, command[0])
     command[0] = full_executable_path
 
