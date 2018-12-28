@@ -133,8 +133,7 @@ def get_softwipe_directory():
 
 
 def clang_tidy_output_line_is_header(line):
-    regex = r'^\d+ warnings? and \d+ errors?.*'
-    return re.match(regex, line)
+    return line.strip().endswith('generated.')
 
 
 def clang_tidy_output_line_is_trailer(line):
