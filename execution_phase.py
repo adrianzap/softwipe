@@ -27,8 +27,10 @@ def build_command(program_dir_abs, executefile, cmake):
 
         command_line = lines[0]
         command = command_line.split()
+        command2 = None  # Not used here
     else:
-        command = ['a.out']  # Default to a.out
+        command = ['a.out']  # Default to a.out...
+        command2 = [strings.SOFTWIPE_COMPILED_EXE_NAME]  # ... or softwipe_compiled_exe.out
         print(strings.USER_DID_NOT_SPECIFY_EXECUTE_FILE_USING_AOUT_NOW)
 
     # Make the executable an absolute path
@@ -36,9 +38,11 @@ def build_command(program_dir_abs, executefile, cmake):
     if cmake:
         executable_dir = os.path.join(executable_dir, strings.SOFTWIPE_BUILD_DIR_NAME)
     full_executable_path = os.path.join(executable_dir, command[0])
+    full_executable_path2 = os.path.join(executable_dir, command2[0])
     command[0] = full_executable_path
+    command2[0] = full_executable_path2
 
-    return command
+    return command, command2
 
 
 def get_asan_error_count_from_sanitizer_output_lines(output_lines):
@@ -75,17 +79,28 @@ def run_execution(program_dir_abs, executefile, cmake, lines_of_code):
     """
     print(strings.RUN_EXECUTION_WITH_SANITIZERS_HEADER)
 
-    command = build_command(program_dir_abs, executefile, cmake)
+    command, command2 = build_command(program_dir_abs, executefile, cmake)
     os.environ['ASAN_OPTIONS'] = 'halt_on_error=0'
 
     # Execute and get stderr, which contains the output of the sanitizers
     try:
         output = subprocess.run(command, universal_newlines=True, stdout=subprocess.DEVNULL,
                                 stderr=subprocess.PIPE).stderr
-    except FileNotFoundError as e:
-        print(e)
-        print(strings.EXECUTION_FILE_NOT_FOUND.format(command[0]))
-        sys.exit(1)
+    except FileNotFoundError as e1:
+        if command2 is not None:
+            try:
+                output = subprocess.run(command2, universal_newlines=True, stdout=subprocess.DEVNULL,
+                                        stderr=subprocess.PIPE).stderr
+            except FileNotFoundError as e2:
+                print(e1)
+                print(strings.EXECUTION_FILE_NOT_FOUND.format(command[0]))
+                print(e2)
+                print(strings.EXECUTION_FILE_NOT_FOUND.format(command2[0]))
+                sys.exit(1)
+        else:
+            print(e1)
+            print(strings.EXECUTION_FILE_NOT_FOUND.format(command[0]))
+            sys.exit(1)
 
     asan_error_count, ubsan_error_count = get_sanitizer_error_count_from_sanitizer_output(output, program_dir_abs)
     asan_error_rate = asan_error_count / lines_of_code
