@@ -25,7 +25,8 @@ NO_MAKE_CLKEAN_TARGET_FOUND = 'Seems like there is no "make clean" target :( Ple
                               'prevent rm from  crashing if a file doesn\'t exist.'
 
 
-CLANG_TIDY_CHECKS_C = '-*,bugprone-*,clang-analyzer-*,misc-*,modernize-*,mpi-*,performance-*,readability-*'
+CLANG_TIDY_CHECKS_C = '-*,bugprone-*,clang-analyzer-*,misc-*,modernize-*,mpi-*,performance-*,readability-*,' \
+                      '-readability-non-const-parameter'
 CLANG_TIDY_CHECKS_CPP = CLANG_TIDY_CHECKS_C + ',boost-*,cppcoreguidelines-*'
 
 
