@@ -7,6 +7,7 @@ import subprocess
 import os
 import shutil
 import re
+import sys
 
 import strings
 from tools_info import TOOLS
@@ -58,7 +59,11 @@ def run_cmake(program_dir_abs, build_path):
     :param build_path: The build path in which CMake should build everything.
     """
     cmake_call = build_cmake_call(program_dir_abs)
-    output = subprocess.check_output(cmake_call, cwd=build_path, universal_newlines=True, stderr=subprocess.STDOUT)
+    try:
+        output = subprocess.check_output(cmake_call, cwd=build_path, universal_newlines=True, stderr=subprocess.STDOUT)
+    except subprocess.CalledProcessError as e:
+        print(strings.COMPILATION_CRASHED.format(e.returncode, e.output))
+        sys.exit(e.returncode)
 
 
 def line_is_warning_line(line, program_dir_abs):
@@ -157,8 +162,13 @@ def run_make(program_dir_abs, build_path, lines_of_code, cpp, dont_check_for_war
         make_call += ' VERBOSE=1'
 
     # We must use shell=True here, else setting CFLAGS etc. won't work properly.
-    output = subprocess.check_output(make_call, cwd=build_path, universal_newlines=True, stderr=subprocess.STDOUT,
-                                     shell=True)
+    try:
+        output = subprocess.check_output(make_call, cwd=build_path, universal_newlines=True, stderr=subprocess.STDOUT,
+                                         shell=True)
+    except subprocess.CalledProcessError as e:
+        print(strings.COMPILATION_CRASHED.format(e.returncode, e.output))
+        sys.exit(e.returncode)
+
     warning_list = []
     if not (dont_check_for_warnings or make_flags.strip().startswith('clean')):  # Don't look for warnings when running
         # "make clean" :)
@@ -216,7 +226,7 @@ def compile_program_make(program_dir_abs, lines_of_code, cpp, make_command_file=
     try:
         run_make(program_dir_abs, program_dir_abs, lines_of_code, cpp, make_flags='clean')
     except subprocess.CalledProcessError:
-        print(strings.NO_MAKE_CLKEAN_TARGET_FOUND)
+        print(strings.NO_MAKE_CLEAN_TARGET_FOUND)
 
     if make_command_file:
         working_directory = program_dir_abs  # This will be used as the build path, which might get changed
@@ -274,7 +284,12 @@ def compile_program_clang(program_dir_abs, targets, lines_of_code, cpp=False, cl
         target_abs = os.path.abspath(target)
         clang_call.append(target_abs)
 
-    output = subprocess.check_output(clang_call, cwd=program_dir_abs, universal_newlines=True, stderr=subprocess.STDOUT)
+    try:
+        output = subprocess.check_output(clang_call, cwd=program_dir_abs, universal_newlines=True,
+                                         stderr=subprocess.STDOUT)
+    except subprocess.CalledProcessError as e:
+        print(strings.COMPILATION_CRASHED.format(e.returncode, e.output))
+        sys.exit(e.returncode)
     warning_lines = output.split('\n')
     warning_list = get_warning_list_from_warning_lines(warning_lines, program_dir_abs)
     warning_rate = len(warning_list) / lines_of_code

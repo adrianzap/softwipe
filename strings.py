@@ -20,10 +20,13 @@ SET_ALL_MAKE_FLAGS = SET_CC + ' ' + SET_CXX + ' ' + SET_CFLAGS + ' ' + SET_CXXFL
                      SET_LDFLAGS
 
 
-NO_MAKE_CLKEAN_TARGET_FOUND = 'Seems like there is no "make clean" target :( Please make sure the build directory is ' \
-                              'clean such that I can compile from scratch, else I might not find all warnings.\n' \
-                              'If you do have a "make clean" target, please make sure you\'re using "rm -f" to ' \
-                              'prevent rm from  crashing if a file doesn\'t exist.'
+NO_MAKE_CLEAN_TARGET_FOUND = 'Seems like there is no "make clean" target :( Please make sure the build directory is ' \
+                             'clean such that I can compile from scratch, else I might not find all warnings.\n' \
+                             'If you do have a "make clean" target, please make sure you\'re using "rm -f" to ' \
+                             'prevent rm from  crashing if a file doesn\'t exist.'
+
+
+COMPILATION_CRASHED = 'Compilation crashed with error code {}!\n{}'
 
 
 CLANG_TIDY_CHECKS_C = '-*,bugprone-*,clang-analyzer-*,misc-*,modernize-*,mpi-*,performance-*,readability-*,' \
