@@ -38,9 +38,11 @@ def build_command(program_dir_abs, executefile, cmake):
     if cmake:
         executable_dir = os.path.join(executable_dir, strings.SOFTWIPE_BUILD_DIR_NAME)
     full_executable_path = os.path.join(executable_dir, command[0])
-    full_executable_path2 = os.path.join(executable_dir, command2[0])
     command[0] = full_executable_path
-    command2[0] = full_executable_path2
+    
+    if command2 is not None:
+        full_executable_path2 = os.path.join(executable_dir, command2[0])
+        command2[0] = full_executable_path2
 
     return command, command2
 
