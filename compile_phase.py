@@ -140,6 +140,10 @@ def run_compiledb(build_path, make_command):
     subprocess.check_output(compiledb_call, cwd=build_path)
 
 
+def running_make_clean(make_flags):
+    return make_flags.strip().startswith('clean')
+
+
 def run_make(program_dir_abs, build_path, lines_of_code, cpp, dont_check_for_warnings=False, make_flags='',
              make_verbose=False):
     """
@@ -166,11 +170,12 @@ def run_make(program_dir_abs, build_path, lines_of_code, cpp, dont_check_for_war
         output = subprocess.check_output(make_call, cwd=build_path, universal_newlines=True, stderr=subprocess.STDOUT,
                                          shell=True)
     except subprocess.CalledProcessError as e:
-        print(strings.COMPILATION_CRASHED.format(e.returncode, e.output))
-        sys.exit(e.returncode)
+        if not running_make_clean(make_flags):
+            print(strings.COMPILATION_CRASHED.format(e.returncode, e.output))
+            sys.exit(e.returncode)
 
     warning_list = []
-    if not (dont_check_for_warnings or make_flags.strip().startswith('clean')):  # Don't look for warnings when running
+    if not (dont_check_for_warnings or running_make_clean(make_flags)):  # Don't look for warnings when running
         # "make clean" :)
         warning_lines = get_warning_lines_from_make_output(output, program_dir_abs)
         warning_list = get_warning_list_from_warning_lines(warning_lines, program_dir_abs)
