@@ -4,25 +4,25 @@ This module contains utility functions.
 
 
 import os
-import re
 
 import strings
 
 
-def write_into_file_string(file_name, content):
-    file = open(file_name, 'w')
+def write_into_file_string(file_name, content, append=False):
+    write_mode = 'a' if append else 'w'
+    file = open(file_name, write_mode)
     file.write(content)
     file.close()
     print(strings.DETAILLED_RESULTS_WRITTEN_INTO.format(file_name))
     print()
 
 
-def write_into_file_list(file_name, content):
+def write_into_file_list(file_name, content, append=False):
     content_as_string = ''
     for line in content:
         content_as_string += line
         content_as_string += '\n'
-    write_into_file_string(file_name, content_as_string)
+    write_into_file_string(file_name, content_as_string, append)
 
 
 def print_lines(lines):

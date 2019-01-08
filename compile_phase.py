@@ -145,7 +145,7 @@ def running_make_clean(make_flags):
 
 
 def run_make(program_dir_abs, build_path, lines_of_code, cpp, dont_check_for_warnings=False, make_flags='',
-             make_verbose=False):
+             make_verbose=False, append_to_file=False):
     """
     Run the make command and print the warnings that it outputs while compiling.
     :param program_dir_abs: The absolute path to the root directory of the target program.
@@ -157,6 +157,8 @@ def run_make(program_dir_abs, build_path, lines_of_code, cpp, dont_check_for_war
     :param make_flags: A string containing arguments passed to the make command. E.g., if make_flags='-foo BAR',
     then this method will call "make -foo BAR"
     :param make_verbose: Whether the make command output should be verbose or not.
+    :param append_to_file: If True, append to the softwipe_compilation_results.txt file rather than writing it.
+    Useful when running multiple make commands for the compilation to not overwrite previous results.
     :return: A list which contains the names of all warnings that have been generated when compiling.
     """
     if make_flags is None:
@@ -182,7 +184,7 @@ def run_make(program_dir_abs, build_path, lines_of_code, cpp, dont_check_for_war
         warning_rate = len(warning_list) / lines_of_code
 
         print(strings.RESULT_COMPILER_WARNING_RATE.format(warning_rate, len(warning_list), lines_of_code))
-        util.write_into_file_list(strings.RESULTS_FILENAME_COMPILER, warning_lines)
+        util.write_into_file_list(strings.RESULTS_FILENAME_COMPILER, warning_lines, append_to_file)
 
     return warning_list
 
@@ -192,6 +194,7 @@ def parse_make_command_file_and_run_all_commands_in_it(make_command_file, progra
     warning_list = []
 
     commands = open(make_command_file, 'r').readlines()
+    have_already_written_into_file = False
     for command in commands:
         command = command.rstrip()  # Remove trailing newline from the command to prevent issues with the make_flags
         if command.startswith('make'):
@@ -199,8 +202,11 @@ def parse_make_command_file_and_run_all_commands_in_it(make_command_file, progra
 
             make_flags += ' ' + strings.SET_ALL_MAKE_FLAGS
 
-            cur_warning_list = run_make(program_dir_abs, working_directory, lines_of_code, cpp, make_flags=make_flags)
+            append_to_file = True if have_already_written_into_file else False
+            cur_warning_list = run_make(program_dir_abs, working_directory, lines_of_code, cpp,
+                                        make_flags=make_flags, append_to_file=append_to_file)
             warning_list.append(cur_warning_list)
+            have_already_written_into_file = True
 
             run_compiledb(working_directory, command.split())
         else:
