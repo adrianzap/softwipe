@@ -159,7 +159,12 @@ def run_clang_tidy(source_files, lines_of_code, cpp):
     clang_tidy_checks = strings.CLANG_TIDY_CHECKS_CPP if cpp else strings.CLANG_TIDY_CHECKS_C
     clang_tidy_call.append('-checks=' + clang_tidy_checks)
 
-    output = subprocess.check_output(clang_tidy_call, universal_newlines=True, stderr=subprocess.STDOUT)
+    try:
+        output = subprocess.check_output(clang_tidy_call, universal_newlines=True, stderr=subprocess.STDOUT)
+    except subprocess.CalledProcessError as e:
+        output = e.output
+        # clang-tidy can exit with exit code 1 if there is no compilation database, which might be the case when
+        # compiling with just clang. Thus, ignore the exception here.
     warning_lines = get_clang_tidy_warning_lines_from_clang_tidy_output(output)
     warning_count = get_clang_tidy_warning_count_from_clang_tidy_warning_lines(warning_lines)
     warning_rate = warning_count / lines_of_code
