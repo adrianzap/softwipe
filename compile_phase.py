@@ -67,11 +67,10 @@ def run_cmake(program_dir_abs, build_path):
 
 
 def line_is_warning_line(line, program_dir_abs):
-    regex = r'.+\.(c|cc|cpp|cxx|h|hpp):[0-9]+:[0-9]+:.*'  # Matches e.g. 'foo.cpp:x:y: ...' or '/path/to/bar.c:x:y: ...'
-    # because warning lines start with the file (foo or bar here), then the line (x) and column (y) which caused the
-    # warning
-    return line.startswith(program_dir_abs) or line.startswith(os.path.basename(program_dir_abs)) or re.match(regex,
-                                                                                                              line)
+    regex = r'.+\.(c|cc|cpp|cxx|h|hpp):[0-9]+:[0-9]+:.+\[.+\]'  # Matches e.g. 'foo.cpp:x:y: ...' or
+    # '/path/to/bar.c:x:y: ...' because warning lines start with the file (foo or bar here), then the line (x) and
+    # column (y) which caused the warning
+    return re.match(regex, line)
 
 
 def get_warning_lines_from_make_output(output, program_dir_abs):
