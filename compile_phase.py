@@ -39,12 +39,9 @@ def build_cmake_call(program_dir_abs):
     # methods are safe in that they do not affect the users code or the compilation process in a bad way.
     cmake_call = [TOOLS.CMAKE.exe_name, '-E', 'env', 'CXXFLAGS=' + strings.COMPILE_FLAGS,
                   'CFLAGS=' + strings.COMPILE_FLAGS,  # set environment variable to activate the warnings
-                  TOOLS.CMAKE.exe_name, '-DCMAKE_CXX_FLAGS_SOFTWIPE_WARNINGS:STRING=' + strings.COMPILE_FLAGS,
-                  '-DCMAKE_C_FLAGS_SOFTWIPE_WARNINGS:STRING=' + strings.COMPILE_FLAGS,
-                  '-DCMAKE_BUILD_TYPE=SOFTWIPE_WARNINGS',  # use new build type that activates the warnings
-                  '-DCMAKE_CXX_COMPILER=' + TOOLS.CLANGPP.exe_name, '-DCMAKE_CC_COMPILER=' + TOOLS.CLANG.exe_name,
-                  '-DCMAKE_EXPORT_COMPILE_COMMANDS=1',  # Ensure that clang is used and the compilation database JSON
-                  # that is required for most clang tools is exported
+                  TOOLS.CMAKE.exe_name, '-DCMAKE_CXX_COMPILER=' + TOOLS.CLANGPP.exe_name, '-DCMAKE_CC_COMPILER=' +
+                  TOOLS.CLANG.exe_name, '-DCMAKE_EXPORT_COMPILE_COMMANDS=1',  # Ensure that clang is used and the
+                  # compilation database JSON that is required for most clang tools is exported
                   program_dir_abs
                   ]
     # NOTE verbosity may be enabled via '-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON' and run_make(make_verbose=True) (this shows
