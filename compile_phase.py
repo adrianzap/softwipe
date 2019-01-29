@@ -38,10 +38,12 @@ def build_cmake_call(program_dir_abs):
     # ensure that they really get activated: via environment variable, and via a new build type. Both activation
     # methods are safe in that they do not affect the users code or the compilation process in a bad way.
     cmake_call = [TOOLS.CMAKE.exe_name, '-E', 'env', 'CXXFLAGS=' + strings.COMPILE_FLAGS,
-                  'CFLAGS=' + strings.COMPILE_FLAGS,  # set environment variable to activate the warnings
+                  'CFLAGS=' + strings.COMPILE_FLAGS, 'LDFLAGS=' + strings.COMPILE_FLAGS,  # set environment variables to
+                  # activate the warnings
                   TOOLS.CMAKE.exe_name, '-DCMAKE_CXX_COMPILER=' + TOOLS.CLANGPP.exe_name, '-DCMAKE_CC_COMPILER=' +
-                  TOOLS.CLANG.exe_name, '-DCMAKE_EXPORT_COMPILE_COMMANDS=1',  # Ensure that clang is used and the
-                  # compilation database JSON that is required for most clang tools is exported
+                  TOOLS.CLANG.exe_name, '-DCMAKE_C_COMPILER=' + TOOLS.CLANG.exe_name,  # Ensure that clang is used
+                  '-DCMAKE_EXPORT_COMPILE_COMMANDS=1',  # Ensure that the compilation database JSON that is required
+                  # for most clang tools is exported
                   program_dir_abs
                   ]
     # NOTE verbosity may be enabled via '-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON' and run_make(make_verbose=True) (this shows
