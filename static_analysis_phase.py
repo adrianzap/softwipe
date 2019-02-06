@@ -70,17 +70,19 @@ def get_cppcheck_warning_lines_from_cppcheck_output(output):
     return warning_lines
 
 
-def run_cppcheck(source_files, lines_of_code):
+def run_cppcheck(source_files, lines_of_code, cpp):
     """
     Runs cppcheck.
     :param source_files: The list of source files to analyze.
     :param lines_of_code: The lines of pure code count.
+    :param cpp: Whether we're using C++ or not. True if C++ is used, False if C is used.
     :return: A CppcheckOutput object that contains the amount of warnings for each cppcheck warning type.
     """
     # TODO cppcheck doesn't know about boost so for boost calls it outputs an error "invalid C code" --> ignore these
     #  errors
     print(strings.RUN_CPPCHECK_HEADER)
-    cppcheck_call = [TOOLS.CPPCHECK.exe_name, '--enable=all', '--force']
+    language = 'c++' if cpp else 'c'
+    cppcheck_call = [TOOLS.CPPCHECK.exe_name, '--enable=all', '--force', '--language=' + language]
     cppcheck_call.extend(source_files)
 
     output = subprocess.check_output(cppcheck_call, universal_newlines=True, stderr=subprocess.STDOUT)
@@ -297,7 +299,7 @@ def run_static_analysis(source_files, lines_of_code, cpp):
     """
     # TODO How to return all the information that is generated here to the caller? One huge object?
     assertion_rate = check_assert_usage(source_files, lines_of_code)
-    cppcheck_output = run_cppcheck(source_files, lines_of_code)
+    cppcheck_output = run_cppcheck(source_files, lines_of_code, cpp)
     clang_tidy_warning_rate = run_clang_tidy(source_files, lines_of_code, cpp)
     lizard_output = run_lizard(source_files)
     kwstyle_warnings = run_kwstyle(source_files, lines_of_code)
