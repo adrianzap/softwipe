@@ -6,6 +6,7 @@ completely written down here.
 
 import subprocess
 import re
+import os
 
 import strings
 from tools_info import TOOLS
@@ -268,7 +269,9 @@ def run_kwstyle(source_files, lines_of_code):
     """
     print(strings.RUN_KWSTYLE_HEADER)
 
-    kwstyle_call = [TOOLS.KWSTYLE.exe_name, '-v']
+    softwipe_directory = os.path.dirname(os.path.realpath(__file__))
+    kwstyle_xml = os.path.join(softwipe_directory, 'KWStyle.xml')
+    kwstyle_call = [TOOLS.KWSTYLE.exe_name, '-v', '-xml', kwstyle_xml]
     kwstyle_call.extend(source_files)
 
     try:

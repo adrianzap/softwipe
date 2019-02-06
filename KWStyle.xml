@@ -1,9 +1,5 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <Description>
-    <InternalVariables>
-        <regex>.*</regex> <!-- Without this, KWStyle outputs many wrong warnings for some reason -->
-        <private>0</private>
-    </InternalVariables>
     <Tabs>1</Tabs>
     <Operator>
         <spaceBefore>1</spaceBefore>
