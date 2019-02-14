@@ -4,7 +4,7 @@ This module contains string constants.
 
 
 COMPILER_WARNING_FLAGS = '-Weverything -Wno-padded -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-c99-compat ' \
-                         '-Wno-c++11-extensions'
+                         '-Wno-c++11-extensions -Wno-newline-eof -Wno-source-uses-openmp'
 COMPILER_SANITIZER_FLAGS = '-g -fno-omit-frame-pointer -fsanitize=address -fsanitize-recover=address ' \
                            '-fsanitize=undefined'
 COMPILE_FLAGS = COMPILER_WARNING_FLAGS + ' ' + COMPILER_SANITIZER_FLAGS
