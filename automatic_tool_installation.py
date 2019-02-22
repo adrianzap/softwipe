@@ -20,7 +20,6 @@ def detect_user_os():
     Detect the users OS.
     :return: The name of the OS.
     """
-    detected_os = None
     system = platform.system()
     if system == 'Linux':
         distro = platform.linux_distribution()
@@ -64,8 +63,8 @@ def handle_kwstyle_download():
 
     kwstyle_dir = os.path.join(softwipe_dir, 'KWStyle')
     print('Building KWStyle...')
-    compile_phase.compile_program_cmake(kwstyle_dir, 1, True, dont_check_for_warnings=True)  # The arguments
-    # lines_of_code (2nd arg) and cpp (3rd arg) do not matter here
+    compile_phase.compile_program_cmake(kwstyle_dir, 1, dont_check_for_warnings=True)  # The argument
+    # lines_of_code (2nd arg) does not matter here
     print('Done!')
     print()
 

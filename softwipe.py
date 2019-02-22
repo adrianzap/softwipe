@@ -137,7 +137,7 @@ def compile_program(args, lines_of_code, cpp):
         else:
             compiler_warning_list = compile_phase.compile_program_clang(program_dir_abs, args.clang, lines_of_code, cpp)
     else:
-        compiler_warning_list = compile_phase.compile_program_cmake(program_dir_abs, lines_of_code, cpp)
+        compiler_warning_list = compile_phase.compile_program_cmake(program_dir_abs, lines_of_code)
 
     return compiler_warning_list
 

@@ -55,19 +55,19 @@ def get_asan_error_count_from_sanitizer_output_lines(output_lines):
     return count
 
 
-def get_ubsan_error_count_from_sanitizer_output_lines(output_lines, program_dir_abs):
+def get_ubsan_error_count_from_sanitizer_output_lines(output_lines):
     count = 0
     for line in output_lines:
         # UBSan uses the same warning format as compiler warnings
-        if compile_phase.line_is_warning_line(line, program_dir_abs):
+        if compile_phase.line_is_warning_line(line):
             count += 1
     return count
 
 
-def get_sanitizer_error_count_from_sanitizer_output(output, program_dir_abs):
+def get_sanitizer_error_count_from_sanitizer_output(output):
     output_lines = output.split('\n')
     asan_error_count = get_asan_error_count_from_sanitizer_output_lines(output_lines)
-    ubsan_error_count = get_ubsan_error_count_from_sanitizer_output_lines(output_lines, program_dir_abs)
+    ubsan_error_count = get_ubsan_error_count_from_sanitizer_output_lines(output_lines)
     return asan_error_count, ubsan_error_count
 
 
@@ -104,7 +104,7 @@ def run_execution(program_dir_abs, executefile, cmake, lines_of_code):
             print(strings.EXECUTION_FILE_NOT_FOUND.format(command[0]))
             sys.exit(1)
 
-    asan_error_count, ubsan_error_count = get_sanitizer_error_count_from_sanitizer_output(output, program_dir_abs)
+    asan_error_count, ubsan_error_count = get_sanitizer_error_count_from_sanitizer_output(output)
     asan_error_rate = asan_error_count / lines_of_code
     ubsan_error_rate = ubsan_error_count / lines_of_code
 
