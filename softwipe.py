@@ -126,10 +126,10 @@ def compile_program(args, lines_of_code, cpp):
 
     if args.make:
         if command_file:
-            compiler_warning_list = compile_phase.compile_program_make(program_dir_abs, lines_of_code, cpp,
+            compiler_warning_list = compile_phase.compile_program_make(program_dir_abs, lines_of_code,
                                                                        make_command_file=command_file[0])
         else:
-            compiler_warning_list = compile_phase.compile_program_make(program_dir_abs, lines_of_code, cpp)
+            compiler_warning_list = compile_phase.compile_program_make(program_dir_abs, lines_of_code)
     elif args.clang:
         if command_file:
             compiler_warning_list = compile_phase.compile_program_clang(program_dir_abs, args.clang, lines_of_code, cpp,

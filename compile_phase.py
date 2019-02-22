@@ -217,13 +217,12 @@ def parse_make_command_file_and_run_all_commands_in_it(make_command_file, progra
     return warning_list
 
 
-def compile_program_make(program_dir_abs, lines_of_code, cpp, make_command_file=None):
+def compile_program_make(program_dir_abs, lines_of_code, make_command_file=None):
     """
     Compile the program using Make (i.e. plain old Makefiles).
     :param program_dir_abs: The absolute path to the root directory of the target program, where the Makefile is
     located.
     :param lines_of_code: The lines of pure code count.
-    :param cpp: Whether C++ is used or not.
     :param make_command_file: The path to a file containing the commands used to successfully compile the program
     using make.
     :return: A list which contains the names of all warnings that have been generated when compiling.
