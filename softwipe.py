@@ -117,8 +117,7 @@ def compile_program(args, lines_of_code, cpp):
     :param args: The "args" Namespace as returned from parse_arguments().
     :param lines_of_code: The lines of pure code count.
     :param cpp: Whether C++ is used or not. True if C++, False if C.
-    :return: The compiler warning list which contains the names of all warnings that have been generated while
-    compiling.
+    :return: The compiler warning list which contains the names of al
     """
     print(strings.RUN_COMPILER_HEADER)
     program_dir_abs = os.path.abspath(args.programdir)
@@ -126,20 +125,17 @@ def compile_program(args, lines_of_code, cpp):
 
     if args.make:
         if command_file:
-            compiler_warning_list = compile_phase.compile_program_make(program_dir_abs, lines_of_code,
-                                                                       make_command_file=command_file[0])
+            compile_phase.compile_program_make(program_dir_abs, lines_of_code, make_command_file=command_file[0])
         else:
-            compiler_warning_list = compile_phase.compile_program_make(program_dir_abs, lines_of_code)
+            compile_phase.compile_program_make(program_dir_abs, lines_of_code)
     elif args.clang:
         if command_file:
-            compiler_warning_list = compile_phase.compile_program_clang(program_dir_abs, args.clang, lines_of_code, cpp,
-                                                                        clang_command_file=command_file[0])
+            compile_phase.compile_program_clang(program_dir_abs, args.clang, lines_of_code, cpp,
+                                                clang_command_file=command_file[0])
         else:
-            compiler_warning_list = compile_phase.compile_program_clang(program_dir_abs, args.clang, lines_of_code, cpp)
+            compile_phase.compile_program_clang(program_dir_abs, args.clang, lines_of_code, cpp)
     else:
-        compiler_warning_list = compile_phase.compile_program_cmake(program_dir_abs, lines_of_code)
-
-    return compiler_warning_list
+        compile_phase.compile_program_cmake(program_dir_abs, lines_of_code)
 
 
 def execute_program(program_dir_abs, executefile, cmake, lines_of_code):
@@ -150,8 +146,7 @@ def execute_program(program_dir_abs, executefile, cmake, lines_of_code):
     :param cmake: Whether CMake has been used for compilation or not.
     :param lines_of_code: The lines of pure code count.
     """
-    sanitizer_results = execution_phase.run_execution(program_dir_abs, executefile, cmake, lines_of_code)
-    return sanitizer_results
+    execution_phase.run_execution(program_dir_abs, executefile, cmake, lines_of_code)
 
 
 def compile_and_execute_program_with_sanitizers(args, lines_of_code, program_dir_abs, cpp):
@@ -161,13 +156,10 @@ def compile_and_execute_program_with_sanitizers(args, lines_of_code, program_dir
     :param lines_of_code: The lines of pure code count.
     :param program_dir_abs: The absolute path to the root directory of the target program.
     :param cpp: Whether C++ is used or not. True if C++, False if C.
-    :return: The compiler warning list from compile_program() and the sanitizer results from execute_program().
     """
-    compiler_warning_list = compile_program(args, lines_of_code, cpp)
+    compile_program(args, lines_of_code, cpp)
     execute_file = args.executefile[0] if args.executefile else None
-    sanitizer_results = execute_program(program_dir_abs, execute_file, args.cmake, lines_of_code)
-
-    return compiler_warning_list, sanitizer_results
+    execute_program(program_dir_abs, execute_file, args.cmake, lines_of_code)
 
 
 def static_analysis(source_files, lines_of_code, cpp):
@@ -194,8 +186,7 @@ def main():
     source_files = util.find_all_source_files(program_dir_abs, exclude)
     lines_of_code = util.count_lines_of_code(source_files)
 
-    compiler_warning_list, sanitizer_results = compile_and_execute_program_with_sanitizers(args, lines_of_code,
-                                                                                           program_dir_abs, cpp)
+    compile_and_execute_program_with_sanitizers(args, lines_of_code, program_dir_abs, cpp)
     static_analysis(source_files, lines_of_code, cpp)
 
 

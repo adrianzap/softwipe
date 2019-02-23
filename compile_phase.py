@@ -14,6 +14,13 @@ from tools_info import TOOLS
 import util
 
 
+def print_compilation_results(warning_list, warning_lines, lines_of_code, append_to_file):
+    warning_rate = len(warning_list) / lines_of_code
+
+    print(strings.RESULT_COMPILER_WARNING_RATE.format(warning_rate, len(warning_list), lines_of_code))
+    util.write_into_file_list(strings.RESULTS_FILENAME_COMPILER, warning_lines, append_to_file)
+
+
 def create_build_directory(program_dir_abs, build_dir_name=strings.SOFTWIPE_BUILD_DIR_NAME):
     build_path = os.path.join(program_dir_abs, build_dir_name)
     os.makedirs(build_path, exist_ok=True)
@@ -170,23 +177,16 @@ def run_make(build_path, lines_of_code, dont_check_for_warnings=False, make_flag
             print(strings.COMPILATION_CRASHED.format(e.returncode, e.output))
             sys.exit(e.returncode)
 
-    warning_list = []
     if not (dont_check_for_warnings or running_make_clean(make_flags)):  # Don't look for warnings when running
         # "make clean" :)
         warning_lines = get_warning_lines_from_make_output(output)
         warning_list = get_warning_list_from_warning_lines(warning_lines)
-        warning_rate = len(warning_list) / lines_of_code
 
-        print(strings.RESULT_COMPILER_WARNING_RATE.format(warning_rate, len(warning_list), lines_of_code))
-        util.write_into_file_list(strings.RESULTS_FILENAME_COMPILER, warning_lines, append_to_file)
-
-    return warning_list
+        print_compilation_results(warning_list, warning_lines, lines_of_code, append_to_file)
 
 
 def parse_make_command_file_and_run_all_commands_in_it(make_command_file, program_dir_abs, working_directory,
                                                        lines_of_code):
-    warning_list = []
-
     commands = open(make_command_file, 'r').readlines()
     have_already_written_into_file = False
     for command in commands:
@@ -197,9 +197,7 @@ def parse_make_command_file_and_run_all_commands_in_it(make_command_file, progra
             make_flags += ' ' + strings.SET_ALL_MAKE_FLAGS
 
             append_to_file = True if have_already_written_into_file else False
-            cur_warning_list = run_make(working_directory, lines_of_code, make_flags=make_flags,
-                                        append_to_file=append_to_file)
-            warning_list.append(cur_warning_list)
+            run_make(working_directory, lines_of_code, make_flags=make_flags, append_to_file=append_to_file)
             have_already_written_into_file = True
 
             run_compiledb(working_directory, command.split())
@@ -214,8 +212,6 @@ def parse_make_command_file_and_run_all_commands_in_it(make_command_file, progra
                 else:  # cd to a relative path
                     working_directory = os.path.join(program_dir_abs, cd_target)
 
-    return warning_list
-
 
 def compile_program_make(program_dir_abs, lines_of_code, make_command_file=None):
     """
@@ -225,7 +221,6 @@ def compile_program_make(program_dir_abs, lines_of_code, make_command_file=None)
     :param lines_of_code: The lines of pure code count.
     :param make_command_file: The path to a file containing the commands used to successfully compile the program
     using make.
-    :return: A list which contains the names of all warnings that have been generated when compiling.
     """
     try:
         run_make(program_dir_abs, lines_of_code, make_flags='clean')
@@ -234,13 +229,11 @@ def compile_program_make(program_dir_abs, lines_of_code, make_command_file=None)
 
     if make_command_file:
         working_directory = program_dir_abs  # This will be used as the build path, which might get changed
-        warning_list = parse_make_command_file_and_run_all_commands_in_it(make_command_file, program_dir_abs,
-                                                                          working_directory, lines_of_code)
+        parse_make_command_file_and_run_all_commands_in_it(make_command_file, program_dir_abs, working_directory,
+                                                           lines_of_code)
     else:
-        warning_list = run_make(program_dir_abs, lines_of_code, make_flags=strings.SET_ALL_MAKE_FLAGS)
+        run_make(program_dir_abs, lines_of_code, make_flags=strings.SET_ALL_MAKE_FLAGS)
         run_compiledb(program_dir_abs, [TOOLS.MAKE.exe_name])
-
-    return warning_list
 
 
 def compile_program_cmake(program_dir_abs, lines_of_code, dont_check_for_warnings=False):
@@ -251,14 +244,11 @@ def compile_program_cmake(program_dir_abs, lines_of_code, dont_check_for_warning
     :param lines_of_code: The lines of pure code count.
     :param dont_check_for_warnings: Do not check for warnings. Useful for automatically building a dependency,
     in which case you don't want warnings to be extracted from the compilation.
-    :return: A list which contains the names of all warnings that have been generated when compiling.
     """
     build_path = create_build_directory(program_dir_abs)
     clear_directory(build_path)  # If the path already existed, it should be cleared to ensure a fresh compilation
     run_cmake(program_dir_abs, build_path)
-    warning_list = run_make(build_path, lines_of_code, dont_check_for_warnings)
-
-    return warning_list
+    run_make(build_path, lines_of_code, dont_check_for_warnings)
 
 
 def compile_program_clang(program_dir_abs, targets, lines_of_code, cpp=False, clang_command_file=None):
@@ -270,7 +260,6 @@ def compile_program_clang(program_dir_abs, targets, lines_of_code, cpp=False, cl
     :param cpp: Whether we're doing C++ or not. True if C++ (so clang++ will be used), False if C (so clang will be
     used).
     :param clang_command_file: The path to a file containing compiler options used for compilation.
-    :return: A list which contains the names of all warnings that have been generated when compiling.
     """
     compiler = TOOLS.CLANGPP.exe_name if cpp else TOOLS.CLANG.exe_name
     clang_call = [compiler, '-o', strings.SOFTWIPE_COMPILED_EXE_NAME]
@@ -294,9 +283,5 @@ def compile_program_clang(program_dir_abs, targets, lines_of_code, cpp=False, cl
         sys.exit(e.returncode)
     warning_lines = output.split('\n')
     warning_list = get_warning_list_from_warning_lines(warning_lines)
-    warning_rate = len(warning_list) / lines_of_code
 
-    print(strings.RESULT_COMPILER_WARNING_RATE.format(warning_rate, len(warning_list), lines_of_code))
-    util.write_into_file_string(strings.RESULTS_FILENAME_COMPILER, output)
-
-    return warning_list
+    print_compilation_results(warning_list, warning_lines, lines_of_code, False)
