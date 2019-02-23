@@ -62,7 +62,9 @@ _softwipe = 'softwipe_'
 SOFTWIPE_BUILD_DIR_NAME = _softwipe + 'build'
 SOFTWIPE_COMPILED_EXE_NAME = _softwipe + 'compiled_exe.out'
 
-RESULTS_FILENAME_COMPILER = _softwipe + 'compilation_warnings.txt'
+RESULTS_FILENAME_COMPILER_MUST_BE_FIXED = _softwipe + 'compilation_warnings_must_be_fixed.txt'
+RESULTS_FILENAME_COMPILER_SHOULD_BE_FIXED = _softwipe + 'compilation_warnings_should_be_fixed.txt'
+RESULTS_FILENAME_COMPILER_COULD_BE_FIXED = _softwipe + 'compilation_warnings_could_be_fixed.txt'
 RESULTS_FILENAME_SANITIZERS = _softwipe + 'sanitizer_output.txt'
 RESULTS_FILENAME_ASSERTION_CHECK = _softwipe + 'assertion_check.txt'
 RESULTS_FILENAME_CPPCHECK = _softwipe + 'cppcheck_results.txt'
@@ -72,7 +74,7 @@ RESULTS_FILENAME_KWSTYLE = _softwipe + 'kwstyle_results.txt'
 
 RATE_COUNT_TOTAL = '{} ({}/{})'
 
-RESULT_COMPILER_WARNING_RATE = 'Compiler warning rate: ' + RATE_COUNT_TOTAL
+RESULT_WEIGHTED_COMPILER_WARNING_RATE = 'Weighted compiler warning rate: ' + RATE_COUNT_TOTAL
 RESULT_ASAN_ERROR_RATE = 'AddressSanitizer error rate: ' + RATE_COUNT_TOTAL
 RESULT_UBSAN_ERROR_RATE = 'UndefinedBehaviorSanitizer error rate: ' + RATE_COUNT_TOTAL
 RESULT_ASSERTION_RATE = 'Assertion rate: ' + RATE_COUNT_TOTAL

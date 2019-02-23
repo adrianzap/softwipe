@@ -12,13 +12,7 @@ import sys
 import strings
 from tools_info import TOOLS
 import util
-
-
-def print_compilation_results(warning_list, warning_lines, lines_of_code, append_to_file):
-    warning_rate = len(warning_list) / lines_of_code
-
-    print(strings.RESULT_COMPILER_WARNING_RATE.format(warning_rate, len(warning_list), lines_of_code))
-    util.write_into_file_list(strings.RESULTS_FILENAME_COMPILER, warning_lines, append_to_file)
+import classifications
 
 
 def create_build_directory(program_dir_abs, build_dir_name=strings.SOFTWIPE_BUILD_DIR_NAME):
@@ -110,24 +104,43 @@ def get_warning_lines_from_make_output(output):
     return warning_lines
 
 
-def get_warning_list_from_warning_lines(warning_lines):
-    """
-    Extract from the warning lines just the names of the warnings, i.e. '-Wfoo'.
-    :param warning_lines: The warning lines.
-    :return: A list of all warnings as strings. If the same warning occurs n times in the warning lines, it will be n
-    times in this list, too.
-    """
-    warning_list = []
+def print_compilation_results(warning_lines, lines_of_code, append_to_file):
+    must_be_fixed_warning_lines = []
+    should_be_fixed_warning_lines = []
+    could_be_fixed_warning_lines = []
 
+    weighted_sum_of_warnings = 0
+
+    cur_warning_level = 0
     for line in warning_lines:
         if line_is_warning_line(line):
+            # Get the classified warning level
             split_line = line.split()
-            # The last word in the output of a warning is [-Wfoo] where foo is the name of the warning
-            # Must check for the [] so that we don't parse notes (which are contained in the warning_lines)
-            if split_line[-1].startswith('[') and split_line[-1].endswith(']'):
-                warning_list.append(split_line[-1][1:-1])
+            warning_name = split_line[-1][1:-1]
 
-    return warning_list
+            cur_warning_level = 1  # Default to 1
+            if warning_name in classifications.COMPILER_WARNINGS:
+                cur_warning_level = classifications.COMPILER_WARNINGS[warning_name]
+
+            weighted_sum_of_warnings += cur_warning_level
+
+        if cur_warning_level == 1:
+            could_be_fixed_warning_lines.append(line)
+        elif cur_warning_level == 2:
+            should_be_fixed_warning_lines.append(line)
+        elif cur_warning_level == 3:
+            must_be_fixed_warning_lines.append(line)
+
+    weighted_warning_rate = weighted_sum_of_warnings / lines_of_code
+
+    print(strings.RESULT_WEIGHTED_COMPILER_WARNING_RATE.format(weighted_warning_rate, weighted_sum_of_warnings,
+                                                               lines_of_code))
+    util.write_into_file_list(strings.RESULTS_FILENAME_COMPILER_MUST_BE_FIXED, must_be_fixed_warning_lines,
+                              append_to_file, True)
+    util.write_into_file_list(strings.RESULTS_FILENAME_COMPILER_SHOULD_BE_FIXED, should_be_fixed_warning_lines,
+                              append_to_file, True)
+    util.write_into_file_list(strings.RESULTS_FILENAME_COMPILER_COULD_BE_FIXED, could_be_fixed_warning_lines,
+                              append_to_file, False)
 
 
 def run_compiledb(build_path, make_command):
@@ -180,9 +193,8 @@ def run_make(build_path, lines_of_code, dont_check_for_warnings=False, make_flag
     if not (dont_check_for_warnings or running_make_clean(make_flags)):  # Don't look for warnings when running
         # "make clean" :)
         warning_lines = get_warning_lines_from_make_output(output)
-        warning_list = get_warning_list_from_warning_lines(warning_lines)
 
-        print_compilation_results(warning_list, warning_lines, lines_of_code, append_to_file)
+        print_compilation_results(warning_lines, lines_of_code, append_to_file)
 
 
 def parse_make_command_file_and_run_all_commands_in_it(make_command_file, program_dir_abs, working_directory,
@@ -282,6 +294,5 @@ def compile_program_clang(program_dir_abs, targets, lines_of_code, cpp=False, cl
         print(strings.COMPILATION_CRASHED.format(e.returncode, e.output))
         sys.exit(e.returncode)
     warning_lines = output.split('\n')
-    warning_list = get_warning_list_from_warning_lines(warning_lines)
 
-    print_compilation_results(warning_list, warning_lines, lines_of_code, False)
+    print_compilation_results(warning_lines, lines_of_code, False)
