@@ -82,7 +82,7 @@ RESULT_ASSERTION_RATE_DETAILED = 'Found {count} assertions in {loc} lines of pur
                               ' code (i.e. excluding blank lines and comment lines).' + '\n' \
                               'That\'s an assertion rate of {rate}, or {percentage}%.'
 RESULT_CPPCHECK_WARNING_RATE = 'Cppcheck warning rate: ' + RATE_COUNT_TOTAL
-RESULT_CLANG_TIDY_WARNING_RATE = 'Clang-tidy warning rate: ' + RATE_COUNT_TOTAL
+RESULT_WEIGHTED_CLANG_TIDY_WARNING_RATE = 'Weighted Clang-tidy warning rate: ' + RATE_COUNT_TOTAL
 RESULT_KWSTYLE_WARNING_RATE = 'KWStyle warning rate: ' + RATE_COUNT_TOTAL
 
 

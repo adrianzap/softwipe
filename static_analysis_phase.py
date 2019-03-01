@@ -12,6 +12,8 @@ import strings
 from tools_info import TOOLS
 import output_classes
 import util
+import compile_phase
+import classifications
 
 
 def assertion_used_in_code_line(line):
@@ -113,20 +115,19 @@ def get_clang_tidy_warning_lines_from_clang_tidy_output(output):
     return warning_lines
 
 
-def get_clang_tidy_warning_count_from_clang_tidy_warning_lines(warning_lines):
-    total_warning_count = 0
-    suppressed_warning_count = 0
+def get_weighted_clang_tidy_warning_count_from_clang_tidy_warning_lines(warning_lines):
+    warning_count = 0
 
     for line in warning_lines:
-        if util.clang_tidy_output_line_is_header(line):  # "n warnings generated"
-            count_on_this_line = int(line.split()[0])  # get n
-            total_warning_count = count_on_this_line if \
-                count_on_this_line > total_warning_count else total_warning_count
+        if compile_phase.line_is_warning_line(line):
+            warning_name = line.split()[-1][1:-1]
+            warning_category = warning_name.split('-')[0]
 
-        elif util.clang_tidy_output_line_is_trailer(line):  # "Suppressed m warnings"
-            suppressed_warning_count = int(line.split()[1])  # get m
+            warning_level = 1
+            if warning_category in classifications.CLANG_TIDY_WARNINGS:
+                warning_level = classifications.CLANG_TIDY_WARNINGS[warning_category]
 
-    warning_count = total_warning_count - suppressed_warning_count  # n - m
+            warning_count += warning_level
 
     return warning_count
 
@@ -169,14 +170,14 @@ def run_clang_tidy(source_files, lines_of_code, cpp):
         # clang-tidy can exit with exit code 1 if there is no compilation database, which might be the case when
         # compiling with just clang. Thus, ignore the exception here.
     warning_lines = get_clang_tidy_warning_lines_from_clang_tidy_output(output)
-    warning_count = get_clang_tidy_warning_count_from_clang_tidy_warning_lines(warning_lines)
-    warning_rate = warning_count / lines_of_code
+    weighted_warning_count = get_weighted_clang_tidy_warning_count_from_clang_tidy_warning_lines(warning_lines)
+    warning_rate = weighted_warning_count / lines_of_code
 
-    print(strings.RESULT_CLANG_TIDY_WARNING_RATE.format(warning_rate, warning_count, lines_of_code))
+    print(strings.RESULT_WEIGHTED_CLANG_TIDY_WARNING_RATE.format(warning_rate, weighted_warning_count, lines_of_code))
     beautified_warning_lines = beautify_clang_tidy_warning_lines(warning_lines)
     util.write_into_file_list(strings.RESULTS_FILENAME_CLANG_TIDY, beautified_warning_lines)
 
-    return warning_count
+    return weighted_warning_count
 
 
 def get_actual_rate_from_lizard_duplicate_rate_line(line):

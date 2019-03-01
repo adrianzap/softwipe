@@ -113,3 +113,16 @@ COMPILER_WARNINGS = {
  '-Wwritable-strings': 1,
  '-Wzero-as-null-pointer-constant': 2
 }
+
+CLANG_TIDY_WARNINGS = {
+ 'bugprone': 2,
+ 'clang': 2,  # Actually clang-analyzer (Clang Static Analyzer warnings) but we don't want a - in the category name
+ # since get_weighted_clang_tidy_warning_count_from_clang_tidy_warning_lines() wouldn't work with it
+ 'misc': 1,
+ 'modernize': 1,
+ 'mpi': 2,
+ 'performance': 1,
+ 'readability': 1,
+ 'boost': 1,
+ 'cppcoreguidelines': 1
+}
