@@ -35,7 +35,7 @@ def check_assert_usage(source_files, lines_of_code):
     Check how many assertions are used in the code.
     :param source_files: The list of files to count assertions in.
     :param lines_of_code: The total lines of code.
-    :return: The amount of assertions relative to the total lines of code.
+    :return: The amount of assertions relative to the total lines of code (i.e. the assertion rate).
     """
     print(strings.RUN_ASSERTION_CHECK_HEADER)
     assert_count = 0
@@ -153,7 +153,7 @@ def run_clang_tidy(source_files, lines_of_code, cpp):
     :param source_files: The list of source files to analyze.
     :param lines_of_code: The lines of pure code count.
     :param cpp: Whether C++ is used or not. True if C++, false if C.
-    :return: The amount of warnings clang-tidy outputs.
+    :return: The weighted clang-tidy warning rate.
     """
     print(strings.RUN_CLANG_TIDY_HEADER)
     clang_tidy_call = [TOOLS.CLANG_TIDY.exe_name]
@@ -268,19 +268,24 @@ def run_kwstyle(source_files, lines_of_code):
     Runs KWStyle.
     :param source_files: The list of source files to analyze.
     :param lines_of_code: The lines of pure code count.
-    :return: The amount of warnings KWStyle outputs.
+    :return: The KWStyle warning rate.
     """
     print(strings.RUN_KWSTYLE_HEADER)
 
     softwipe_directory = os.path.dirname(os.path.realpath(__file__))
     kwstyle_xml = os.path.join(softwipe_directory, 'KWStyle.xml')
     kwstyle_call = [TOOLS.KWSTYLE.exe_name, '-v', '-xml', kwstyle_xml]
-    kwstyle_call.extend(source_files)
 
-    try:
-        output = subprocess.check_output(kwstyle_call, universal_newlines=True, stderr=subprocess.STDOUT)
-    except subprocess.CalledProcessError as e:  # Same as with the lizard call. KWStyle exits with status 1 by default
-        output = e.output  # So catch that, ignore the exception, and keep the output of the command
+    output = ''
+    # KWStyle only works properly when specifying just one single input file. Thus, iterate and call KWStyle again
+    # for each source file, each time appending to the result output.
+    for source_file in source_files:
+        cur_kwstyle_call = kwstyle_call[::]
+        cur_kwstyle_call.append(source_file)
+        try:
+            output += subprocess.check_output(cur_kwstyle_call, universal_newlines=True, stderr=subprocess.STDOUT)
+        except subprocess.CalledProcessError as e:  # Same as with the lizard call. KWStyle exits with status 1 by
+            output += e.output  # default. So catch that, ignore the exception, and keep the output of the command
         
     warning_count = get_kwstyle_warning_count_from_kwstyle_output(output)
     warning_rate = warning_count / lines_of_code
@@ -288,7 +293,7 @@ def run_kwstyle(source_files, lines_of_code):
     print(strings.RESULT_KWSTYLE_WARNING_RATE.format(warning_rate, warning_count, lines_of_code))
     util.write_into_file_string(strings.RESULTS_FILENAME_KWSTYLE, output)
 
-    return warning_count
+    return warning_rate
 
 
 def run_static_analysis(source_files, lines_of_code, cpp):
