@@ -5,6 +5,7 @@ a way that is easy to handle.
 
 
 import strings
+import classifications
 
 
 class CppcheckOutput:
@@ -21,12 +22,14 @@ class CppcheckOutput:
         self.portability_count = 0
         self.information_count = 0
         self.performance_count = 0
+        self.total_weighted_count = 0
 
         for line in warning_lines:
             split_line = line.split()
             warning_type = [substring for substring in split_line if substring.startswith('(') and substring.endswith(
                 ')')][0]
 
+            # Add to the count of this warning type
             if warning_type == '(error)':
                 self.error_count += 1
             elif warning_type == '(warning)':
@@ -39,6 +42,13 @@ class CppcheckOutput:
                 self.information_count += 1
             elif warning_type == '(performance)':
                 self.performance_count += 1
+
+            # Add to the total weighted count
+            warning_type_without_parentheses = warning_type[1:-1]
+            warning_level = 1
+            if warning_type_without_parentheses in classifications.CPPCHECK_WARNINGS:
+                warning_level = classifications.CPPCHECK_WARNINGS[warning_type_without_parentheses]
+            self.total_weighted_count += warning_level
 
     def print_information(self, lines_of_code):
         if self.error_count > 0:
@@ -59,6 +69,10 @@ class CppcheckOutput:
             print('Performance issue rate:', strings.RATE_COUNT_TOTAL.format(performance_rate, self.performance_count,
                                                                              lines_of_code))
         # Information count is omitted because it is not considered interesting
+
+        total_cppcheck_rate = self.total_weighted_count / lines_of_code
+        print(strings.RESULT_WEIGHTED_CPPCHECK_WARNING_RATE.format(total_cppcheck_rate, self.total_weighted_count,
+                                                                   lines_of_code))
 
 
 class LizardOutput:

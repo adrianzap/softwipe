@@ -114,6 +114,15 @@ COMPILER_WARNINGS = {
  '-Wzero-as-null-pointer-constant': 2
 }
 
+CPPCHECK_WARNINGS = {
+ 'error': 3,
+ 'warning': 3,
+ 'style': 1,
+ 'performance': 1,
+ 'portability': 3,
+ 'information': 0
+}
+
 CLANG_TIDY_WARNINGS = {
  'bugprone': 2,
  'clang': 2,  # Actually clang-analyzer (Clang Static Analyzer warnings) but we don't want a - in the category name
