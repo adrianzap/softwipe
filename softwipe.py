@@ -135,7 +135,10 @@ def compile_program(args, lines_of_code, cpp):
         else:
             compile_phase.compile_program_clang(program_dir_abs, args.clang, lines_of_code, cpp)
     else:
-        compile_phase.compile_program_cmake(program_dir_abs, lines_of_code)
+        if command_file:
+            compile_phase.compile_program_cmake(program_dir_abs, lines_of_code, make_command_file=command_file[0])
+        else:
+            compile_phase.compile_program_cmake(program_dir_abs, lines_of_code)
 
 
 def execute_program(program_dir_abs, executefile, cmake, lines_of_code):

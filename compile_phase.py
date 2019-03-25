@@ -248,7 +248,7 @@ def compile_program_make(program_dir_abs, lines_of_code, make_command_file=None)
         run_compiledb(program_dir_abs, [TOOLS.MAKE.exe_name])
 
 
-def compile_program_cmake(program_dir_abs, lines_of_code, dont_check_for_warnings=False):
+def compile_program_cmake(program_dir_abs, lines_of_code, dont_check_for_warnings=False, make_command_file=None):
     """
     Compile the program using CMake.
     :param program_dir_abs: The absolute path to the root directory of the target program, where the CMakeLists.txt
@@ -256,11 +256,17 @@ def compile_program_cmake(program_dir_abs, lines_of_code, dont_check_for_warning
     :param lines_of_code: The lines of pure code count.
     :param dont_check_for_warnings: Do not check for warnings. Useful for automatically building a dependency,
     in which case you don't want warnings to be extracted from the compilation.
+    :param make_command_file: The path to a file containing the commands used to successfully compile the program
+    using make.
     """
     build_path = create_build_directory(program_dir_abs)
     clear_directory(build_path)  # If the path already existed, it should be cleared to ensure a fresh compilation
     run_cmake(program_dir_abs, build_path)
-    run_make(build_path, lines_of_code, dont_check_for_warnings)
+    if make_command_file:
+        parse_make_command_file_and_run_all_commands_in_it(make_command_file, program_dir_abs, build_path,
+                                                           lines_of_code)
+    else:
+        run_make(build_path, lines_of_code, dont_check_for_warnings)
 
 
 def compile_program_clang(program_dir_abs, targets, lines_of_code, cpp=False, clang_command_file=None):
