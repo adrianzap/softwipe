@@ -9,6 +9,7 @@ import re
 
 import strings
 import util
+import scoring
 
 
 def build_command(program_dir_abs, executefile, cmake):
@@ -113,4 +114,6 @@ def run_execution(program_dir_abs, executefile, cmake, lines_of_code):
     print(strings.RESULT_UBSAN_ERROR_RATE.format(ubsan_error_rate, ubsan_error_count, lines_of_code))
     util.write_into_file_string(strings.RESULTS_FILENAME_SANITIZERS, output)
 
-    return asan_error_count, ubsan_error_count
+    score = scoring.calculate_sanitizer_score(asan_error_rate + ubsan_error_rate)
+    scoring.print_score(score, 'Sanitizer')
+    return score

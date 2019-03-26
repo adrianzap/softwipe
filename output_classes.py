@@ -6,6 +6,7 @@ a way that is easy to handle.
 
 import strings
 import classifications
+import scoring
 
 
 class CppcheckOutput:
@@ -73,6 +74,7 @@ class CppcheckOutput:
         total_cppcheck_rate = self.total_weighted_count / lines_of_code
         print(strings.RESULT_WEIGHTED_CPPCHECK_WARNING_RATE.format(total_cppcheck_rate, self.total_weighted_count,
                                                                    lines_of_code))
+        return total_cppcheck_rate
 
 
 class LizardOutput:
@@ -94,10 +96,23 @@ class LizardOutput:
         self.unique_rate = unique_rate
         self.function_count = function_count
 
-    def print_information(self):
+    def print_information_and_return_scores(self):
         print('Average cyclomatic complexity:', self.average_cyclomatic_complexity)
+        cyclomatic_complexity_score = scoring.calculate_cyclomatic_complexity_score(self.average_cyclomatic_complexity)
+        scoring.print_score(cyclomatic_complexity_score, 'Cyclomatic complexity')
+
         warning_rate = self.warning_count / self.function_count
         print('Lizard warning rate (~= rate of functions that are too complex):', strings.RATE_COUNT_TOTAL.format(
             warning_rate, self.warning_count, self.function_count))
+        warning_score = scoring.calculate_lizard_warning_score(warning_rate)
+        scoring.print_score(warning_score, 'Lizard warning')
+
         print('Duplicate rate:', self.duplicate_rate)
+        duplicate_score = scoring.calculate_duplicate_score(self.duplicate_rate)
+        scoring.print_score(duplicate_score, 'Duplicate')
+
         print('Unique rate:', self.unique_rate)
+        unique_score = scoring.calculate_unique_score(self.unique_rate)
+        scoring.print_score(unique_score, 'Unique')
+
+        return cyclomatic_complexity_score, warning_score, duplicate_score, unique_score

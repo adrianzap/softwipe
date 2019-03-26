@@ -13,6 +13,7 @@ import strings
 from tools_info import TOOLS
 import util
 import classifications
+import scoring
 
 
 def create_build_directory(program_dir_abs, build_dir_name=strings.SOFTWIPE_BUILD_DIR_NAME):
@@ -141,6 +142,10 @@ def print_compilation_results(warning_lines, lines_of_code, append_to_file):
                               append_to_file, True)
     util.write_into_file_list(strings.RESULTS_FILENAME_COMPILER_COULD_BE_FIXED, could_be_fixed_warning_lines,
                               append_to_file, False)
+
+    score = scoring.calculate_compiler_score(weighted_warning_rate)
+    scoring.print_score(score, 'Compiler')
+    return score
 
 
 def run_compiledb(build_path, make_command):

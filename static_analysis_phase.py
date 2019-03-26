@@ -14,6 +14,7 @@ import output_classes
 import util
 import compile_phase
 import classifications
+import scoring
 
 
 def assertion_used_in_code_line(line):
@@ -35,7 +36,7 @@ def check_assert_usage(source_files, lines_of_code):
     Check how many assertions are used in the code.
     :param source_files: The list of files to count assertions in.
     :param lines_of_code: The total lines of code.
-    :return: The amount of assertions relative to the total lines of code (i.e. the assertion rate).
+    :return: The assertion score.
     """
     print(strings.RUN_ASSERTION_CHECK_HEADER)
     assert_count = 0
@@ -58,7 +59,9 @@ def check_assert_usage(source_files, lines_of_code):
     print(strings.RESULT_ASSERTION_RATE.format(assertion_rate, assert_count, lines_of_code))
     util.write_into_file_string(strings.RESULTS_FILENAME_ASSERTION_CHECK, detailled_result_string)
 
-    return assertion_rate
+    score = scoring.calculate_assertion_score(assertion_rate)
+    scoring.print_score(score, 'Assertion')
+    return score
 
 
 def get_cppcheck_warning_lines_from_cppcheck_output(output):
@@ -78,7 +81,7 @@ def run_cppcheck(source_files, lines_of_code, cpp):
     :param source_files: The list of source files to analyze.
     :param lines_of_code: The lines of pure code count.
     :param cpp: Whether we're using C++ or not. True if C++ is used, False if C is used.
-    :return: A CppcheckOutput object that contains the amount of warnings for each cppcheck warning type.
+    :return: The Cppcheck score.
     """
     # TODO cppcheck doesn't know about boost so for boost calls it outputs an error "invalid C code" --> ignore these
     #  errors
@@ -91,10 +94,12 @@ def run_cppcheck(source_files, lines_of_code, cpp):
     warning_lines = get_cppcheck_warning_lines_from_cppcheck_output(output)
     cppcheck_output = output_classes.CppcheckOutput(warning_lines)
 
-    cppcheck_output.print_information(lines_of_code)
+    weighted_cppcheck_rate = cppcheck_output.print_information(lines_of_code)
     util.write_into_file_list(strings.RESULTS_FILENAME_CPPCHECK, warning_lines)
 
-    return cppcheck_output
+    score = scoring.calculate_cppcheck_score(weighted_cppcheck_rate)
+    scoring.print_score(score, 'Cppcheck')
+    return score
 
 
 def get_clang_tidy_warning_lines_from_clang_tidy_output(output):
@@ -153,7 +158,7 @@ def run_clang_tidy(source_files, lines_of_code, cpp):
     :param source_files: The list of source files to analyze.
     :param lines_of_code: The lines of pure code count.
     :param cpp: Whether C++ is used or not. True if C++, false if C.
-    :return: The weighted clang-tidy warning rate.
+    :return: The clang-tidy score.
     """
     print(strings.RUN_CLANG_TIDY_HEADER)
     clang_tidy_call = [TOOLS.CLANG_TIDY.exe_name]
@@ -177,7 +182,9 @@ def run_clang_tidy(source_files, lines_of_code, cpp):
     beautified_warning_lines = beautify_clang_tidy_warning_lines(warning_lines)
     util.write_into_file_list(strings.RESULTS_FILENAME_CLANG_TIDY, beautified_warning_lines)
 
-    return weighted_warning_count
+    score = scoring.calculate_clang_tidy_score(warning_rate)
+    scoring.print_score(score, 'Clang-tidy')
+    return score
 
 
 def get_actual_rate_from_lizard_duplicate_rate_line(line):
@@ -228,7 +235,7 @@ def run_lizard(source_files):
     """
     Runs Lizard.
     :param source_files: The list of source files to analyze.
-    :return: A LizardOutput object that contains all the information we want from lizard.
+    :return: The cyclomatic complexity score, warning score, duplicate score, and unique score
     """
     # NOTE Although lizard can be used as a python module ("import lizard") it is actually easier to parse its output
     # (for now at least - this might of course change). This is because the module is not well documented so it's
@@ -246,10 +253,11 @@ def run_lizard(source_files):
         # while still keeping the output of the command
 
     lizard_output = get_lizard_output_object_from_lizard_printed_output(output)
-    lizard_output.print_information()
+    cyclomatic_complexity_score, warning_score, duplicate_score, unique_score = \
+        lizard_output.print_information_and_return_scores()  # Also prints the scores
     util.write_into_file_string(strings.RESULTS_FILENAME_LIZARD, output)
 
-    return lizard_output
+    return cyclomatic_complexity_score, warning_score, duplicate_score, unique_score
 
 
 def get_kwstyle_warning_count_from_kwstyle_output(output):
@@ -268,7 +276,7 @@ def run_kwstyle(source_files, lines_of_code):
     Runs KWStyle.
     :param source_files: The list of source files to analyze.
     :param lines_of_code: The lines of pure code count.
-    :return: The KWStyle warning rate.
+    :return: The KWStyle score.
     """
     print(strings.RUN_KWSTYLE_HEADER)
 
@@ -293,7 +301,9 @@ def run_kwstyle(source_files, lines_of_code):
     print(strings.RESULT_KWSTYLE_WARNING_RATE.format(warning_rate, warning_count, lines_of_code))
     util.write_into_file_string(strings.RESULTS_FILENAME_KWSTYLE, output)
 
-    return warning_rate
+    score = scoring.calculate_kwstyle_score(warning_rate)
+    scoring.print_score(score, 'KWStyle')
+    return score
 
 
 def run_static_analysis(source_files, lines_of_code, cpp):
@@ -304,8 +314,8 @@ def run_static_analysis(source_files, lines_of_code, cpp):
     :param cpp: Whether we're using C++ or not. True if C++ is used, False if C is used.
     """
     # TODO How to return all the information that is generated here to the caller? One huge object?
-    assertion_rate = check_assert_usage(source_files, lines_of_code)
-    cppcheck_output = run_cppcheck(source_files, lines_of_code, cpp)
-    clang_tidy_warning_rate = run_clang_tidy(source_files, lines_of_code, cpp)
-    lizard_output = run_lizard(source_files)
-    kwstyle_warnings = run_kwstyle(source_files, lines_of_code)
+    assertion_score = check_assert_usage(source_files, lines_of_code)
+    cppcheck_score = run_cppcheck(source_files, lines_of_code, cpp)
+    clang_tidy_score = run_clang_tidy(source_files, lines_of_code, cpp)
+    lizard_score = run_lizard(source_files)
+    kwstyle_score = run_kwstyle(source_files, lines_of_code)
