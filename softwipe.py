@@ -13,6 +13,7 @@ import static_analysis_phase
 import execution_phase
 import util
 import automatic_tool_installation
+import scoring
 
 
 def parse_arguments():
@@ -117,7 +118,7 @@ def compile_program(args, lines_of_code, cpp):
     :param args: The "args" Namespace as returned from parse_arguments().
     :param lines_of_code: The lines of pure code count.
     :param cpp: Whether C++ is used or not. True if C++, False if C.
-    :return: The compiler warning list which contains the names of al
+    :return: The compiler score.
     """
     print(strings.RUN_COMPILER_HEADER)
     program_dir_abs = os.path.abspath(args.programdir)
@@ -125,20 +126,24 @@ def compile_program(args, lines_of_code, cpp):
 
     if args.make:
         if command_file:
-            compile_phase.compile_program_make(program_dir_abs, lines_of_code, make_command_file=command_file[0])
+            score = compile_phase.compile_program_make(program_dir_abs, lines_of_code,
+                                                       make_command_file=command_file[0])
         else:
-            compile_phase.compile_program_make(program_dir_abs, lines_of_code)
+            score = compile_phase.compile_program_make(program_dir_abs, lines_of_code)
     elif args.clang:
         if command_file:
-            compile_phase.compile_program_clang(program_dir_abs, args.clang, lines_of_code, cpp,
-                                                clang_command_file=command_file[0])
+            score = compile_phase.compile_program_clang(program_dir_abs, args.clang, lines_of_code, cpp,
+                                                        clang_command_file=command_file[0])
         else:
-            compile_phase.compile_program_clang(program_dir_abs, args.clang, lines_of_code, cpp)
+            score = compile_phase.compile_program_clang(program_dir_abs, args.clang, lines_of_code, cpp)
     else:
         if command_file:
-            compile_phase.compile_program_cmake(program_dir_abs, lines_of_code, make_command_file=command_file[0])
+            score = compile_phase.compile_program_cmake(program_dir_abs, lines_of_code,
+                                                        make_command_file=command_file[0])
         else:
-            compile_phase.compile_program_cmake(program_dir_abs, lines_of_code)
+            score = compile_phase.compile_program_cmake(program_dir_abs, lines_of_code)
+
+    return score
 
 
 def execute_program(program_dir_abs, executefile, cmake, lines_of_code):
@@ -148,8 +153,10 @@ def execute_program(program_dir_abs, executefile, cmake, lines_of_code):
     :param executefile: The executefile that contains a command line for executing the program.
     :param cmake: Whether CMake has been used for compilation or not.
     :param lines_of_code: The lines of pure code count.
+    :return The sanitizer score.
     """
-    execution_phase.run_execution(program_dir_abs, executefile, cmake, lines_of_code)
+    score = execution_phase.run_execution(program_dir_abs, executefile, cmake, lines_of_code)
+    return score
 
 
 def compile_and_execute_program_with_sanitizers(args, lines_of_code, program_dir_abs, cpp):
@@ -159,10 +166,12 @@ def compile_and_execute_program_with_sanitizers(args, lines_of_code, program_dir
     :param lines_of_code: The lines of pure code count.
     :param program_dir_abs: The absolute path to the root directory of the target program.
     :param cpp: Whether C++ is used or not. True if C++, False if C.
+    :return The compiler and sanitizer scores.
     """
-    compile_program(args, lines_of_code, cpp)
+    compiler_score = compile_program(args, lines_of_code, cpp)
     execute_file = args.executefile[0] if args.executefile else None
-    execute_program(program_dir_abs, execute_file, args.cmake, lines_of_code)
+    sanitizer_score = execute_program(program_dir_abs, execute_file, args.cmake, lines_of_code)
+    return compiler_score, sanitizer_score
 
 
 def static_analysis(source_files, lines_of_code, cpp):
@@ -171,8 +180,13 @@ def static_analysis(source_files, lines_of_code, cpp):
     :param source_files: The list of source files to analyze.
     :param lines_of_code: The lines of pure code count for the source_files.
     :param cpp: Whether C++ is used or not. True if C++, False if C.
+    :return: All the static analysis scores: assertion_score, cppcheck_score, clang_tidy_score,
+    cyclomatic_complexity_score, warning_score, duplicate_score, unique_score, kwstyle_score.
     """
-    static_analysis_phase.run_static_analysis(source_files, lines_of_code, cpp)
+    assertion_score, cppcheck_score, clang_tidy_score, cyclomatic_complexity_score, warning_score, duplicate_score, \
+    unique_score, kwstyle_score = static_analysis_phase.run_static_analysis(source_files, lines_of_code, cpp)
+    return assertion_score, cppcheck_score, clang_tidy_score, cyclomatic_complexity_score, warning_score, \
+           duplicate_score, unique_score, kwstyle_score
 
 
 def main():
@@ -189,8 +203,15 @@ def main():
     source_files = util.find_all_source_files(program_dir_abs, exclude)
     lines_of_code = util.count_lines_of_code(source_files)
 
-    compile_and_execute_program_with_sanitizers(args, lines_of_code, program_dir_abs, cpp)
-    static_analysis(source_files, lines_of_code, cpp)
+    compiler_score, sanitizer_score = compile_and_execute_program_with_sanitizers(args, lines_of_code, program_dir_abs,
+                                                                                  cpp)
+    assertion_score, cppcheck_score, clang_tidy_score, cyclomatic_complexity_score, warning_score, \
+    duplicate_score, unique_score, kwstyle_score = static_analysis(source_files, lines_of_code, cpp)
+
+    all_scores = [compiler_score, sanitizer_score, assertion_score, cppcheck_score, clang_tidy_score,
+                  cyclomatic_complexity_score, warning_score, duplicate_score, unique_score, kwstyle_score]
+    overall_score = scoring.average_score(all_scores)
+    scoring.print_score(overall_score, 'Overall program')
 
 
 if __name__ == "__main__":

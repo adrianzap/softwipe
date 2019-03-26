@@ -13,6 +13,16 @@ def print_score(score, score_name=None):
     print()
 
 
+def average_score(list_of_scores):
+    """
+    Calculate an average score over a list of scores.
+    :param list_of_scores: A list containing all scores to average over.
+    :return: The average score.
+    """
+    avg = sum(list_of_scores) / float(len(list_of_scores))
+    return avg
+
+
 def _calculate_score_generic(rate, best, worst):
     """
     Calculates a score from 0 to 10 from a rate, given the best and worst rates. This is a generic function that

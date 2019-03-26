@@ -312,10 +312,14 @@ def run_static_analysis(source_files, lines_of_code, cpp):
     :param source_files: The list of source files to analyze.
     :param lines_of_code: The lines of pure code count for the source_files.
     :param cpp: Whether we're using C++ or not. True if C++ is used, False if C is used.
+    :return All the scores: assertion_score, cppcheck_score, clang_tidy_score, cyclomatic_complexity_score,
+    warning_score, duplicate_score, unique_score, kwstyle_score.
     """
-    # TODO How to return all the information that is generated here to the caller? One huge object?
     assertion_score = check_assert_usage(source_files, lines_of_code)
     cppcheck_score = run_cppcheck(source_files, lines_of_code, cpp)
     clang_tidy_score = run_clang_tidy(source_files, lines_of_code, cpp)
-    lizard_score = run_lizard(source_files)
+    cyclomatic_complexity_score, warning_score, duplicate_score, unique_score = run_lizard(source_files)
     kwstyle_score = run_kwstyle(source_files, lines_of_code)
+
+    return assertion_score, cppcheck_score, clang_tidy_score, cyclomatic_complexity_score, warning_score, \
+           duplicate_score, unique_score, kwstyle_score
