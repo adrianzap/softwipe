@@ -9,7 +9,7 @@ def print_score(score, score_name=None):
     :param score: The score to print.
     :param score_name: Give the score a name which will be printed as well.
     """
-    print(score_name, 'Score: {0:.1f}'.format(round(score, 1)))
+    print(score_name, 'Score: {0:.1f}/10'.format(round(score, 1)))
     print()
 
 
