@@ -178,7 +178,7 @@ def run_make(build_path, lines_of_code, dont_check_for_warnings=False, make_flag
     :param make_verbose: Whether the make command output should be verbose or not.
     :param append_to_file: If True, append to the softwipe_compilation_results.txt file rather than writing it.
     Useful when running multiple make commands for the compilation to not overwrite previous results.
-    :return: A list which contains the names of all warnings that have been generated when compiling.
+    :return: The compiler score, or None if not checking for warnings.
     """
     if make_flags is None:
         make_flags = []
@@ -199,13 +199,18 @@ def run_make(build_path, lines_of_code, dont_check_for_warnings=False, make_flag
         # "make clean" :)
         warning_lines = get_warning_lines_from_make_output(output)
 
-        print_compilation_results(warning_lines, lines_of_code, append_to_file)
+        score = print_compilation_results(warning_lines, lines_of_code, append_to_file)
+    else:
+        score = None
+
+    return score
 
 
 def parse_make_command_file_and_run_all_commands_in_it(make_command_file, program_dir_abs, working_directory,
                                                        lines_of_code):
     commands = open(make_command_file, 'r').readlines()
     have_already_written_into_file = False
+    score = 0
     for command in commands:
         command = command.rstrip()  # Remove trailing newline from the command to prevent issues with the make_flags
         if command.startswith('make'):
@@ -214,7 +219,9 @@ def parse_make_command_file_and_run_all_commands_in_it(make_command_file, progra
             make_flags += ' ' + strings.SET_ALL_MAKE_FLAGS
 
             append_to_file = True if have_already_written_into_file else False
-            run_make(working_directory, lines_of_code, make_flags=make_flags, append_to_file=append_to_file)
+            r = run_make(working_directory, lines_of_code, make_flags=make_flags, append_to_file=append_to_file)
+            if r:
+                score += r
             have_already_written_into_file = True
 
             run_compiledb(working_directory, command.split())
@@ -229,6 +236,8 @@ def parse_make_command_file_and_run_all_commands_in_it(make_command_file, progra
                 else:  # cd to a relative path
                     working_directory = os.path.join(program_dir_abs, cd_target)
 
+    return score
+
 
 def compile_program_make(program_dir_abs, lines_of_code, make_command_file=None):
     """
@@ -238,6 +247,7 @@ def compile_program_make(program_dir_abs, lines_of_code, make_command_file=None)
     :param lines_of_code: The lines of pure code count.
     :param make_command_file: The path to a file containing the commands used to successfully compile the program
     using make.
+    :return The compiler score.
     """
     try:
         run_make(program_dir_abs, lines_of_code, make_flags='clean')
@@ -246,11 +256,13 @@ def compile_program_make(program_dir_abs, lines_of_code, make_command_file=None)
 
     if make_command_file:
         working_directory = program_dir_abs  # This will be used as the build path, which might get changed
-        parse_make_command_file_and_run_all_commands_in_it(make_command_file, program_dir_abs, working_directory,
-                                                           lines_of_code)
+        score = parse_make_command_file_and_run_all_commands_in_it(make_command_file, program_dir_abs,
+                                                                   working_directory, lines_of_code)
     else:
-        run_make(program_dir_abs, lines_of_code, make_flags=strings.SET_ALL_MAKE_FLAGS)
+        score = run_make(program_dir_abs, lines_of_code, make_flags=strings.SET_ALL_MAKE_FLAGS)
         run_compiledb(program_dir_abs, [TOOLS.MAKE.exe_name])
+
+    return score
 
 
 def compile_program_cmake(program_dir_abs, lines_of_code, dont_check_for_warnings=False, make_command_file=None):
@@ -263,15 +275,18 @@ def compile_program_cmake(program_dir_abs, lines_of_code, dont_check_for_warning
     in which case you don't want warnings to be extracted from the compilation.
     :param make_command_file: The path to a file containing the commands used to successfully compile the program
     using make.
+    :return The compiler score.
     """
     build_path = create_build_directory(program_dir_abs)
     clear_directory(build_path)  # If the path already existed, it should be cleared to ensure a fresh compilation
     run_cmake(program_dir_abs, build_path)
     if make_command_file:
-        parse_make_command_file_and_run_all_commands_in_it(make_command_file, program_dir_abs, build_path,
-                                                           lines_of_code)
+        score = parse_make_command_file_and_run_all_commands_in_it(make_command_file, program_dir_abs, build_path,
+                                                                   lines_of_code)
     else:
-        run_make(build_path, lines_of_code, dont_check_for_warnings)
+        score = run_make(build_path, lines_of_code, dont_check_for_warnings)
+
+    return score
 
 
 def compile_program_clang(program_dir_abs, targets, lines_of_code, cpp=False, clang_command_file=None):
@@ -283,6 +298,7 @@ def compile_program_clang(program_dir_abs, targets, lines_of_code, cpp=False, cl
     :param cpp: Whether we're doing C++ or not. True if C++ (so clang++ will be used), False if C (so clang will be
     used).
     :param clang_command_file: The path to a file containing compiler options used for compilation.
+    :return The compiler score.
     """
     compiler = TOOLS.CLANGPP.exe_name if cpp else TOOLS.CLANG.exe_name
     clang_call = [compiler, '-o', strings.SOFTWIPE_COMPILED_EXE_NAME]
@@ -306,4 +322,5 @@ def compile_program_clang(program_dir_abs, targets, lines_of_code, cpp=False, cl
         sys.exit(e.returncode)
     warning_lines = output.split('\n')
 
-    print_compilation_results(warning_lines, lines_of_code, False)
+    score = print_compilation_results(warning_lines, lines_of_code, False)
+    return score

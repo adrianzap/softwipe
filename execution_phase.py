@@ -80,6 +80,7 @@ def run_execution(program_dir_abs, executefile, cmake, lines_of_code):
     :param executefile: The executefile that contains a command line for executing the program.
     :param cmake: Whether CMake has been used for compilation or not.
     :param lines_of_code: The lines of pure code count.
+    :return The sanitizer score.
     """
     print(strings.RUN_EXECUTION_WITH_SANITIZERS_HEADER)
 
