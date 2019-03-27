@@ -168,10 +168,15 @@ def compile_and_execute_program_with_sanitizers(args, lines_of_code, program_dir
     :param cpp: Whether C++ is used or not. True if C++, False if C.
     :return The compiler and sanitizer scores.
     """
-    compiler_score = compile_program(args, lines_of_code, cpp)
+    weighted_sum_of_compiler_warnings = compile_program(args, lines_of_code, cpp)
     execute_file = args.executefile[0] if args.executefile else None
-    sanitizer_score = execute_program(program_dir_abs, execute_file, args.cmake, lines_of_code)
-    return compiler_score, sanitizer_score
+    weighted_sum_of_sanitizer_warnings = execute_program(program_dir_abs, execute_file, args.cmake, lines_of_code)
+
+    weighted_warning_rate = (weighted_sum_of_compiler_warnings + weighted_sum_of_sanitizer_warnings) / lines_of_code
+    score = scoring.calculate_compiler_and_sanitizer_score(weighted_warning_rate)
+    scoring.print_score(score, 'Compiler + Sanitizer')
+
+    return score
 
 
 def static_analysis(source_files, lines_of_code, cpp):
@@ -203,12 +208,12 @@ def main():
     source_files = util.find_all_source_files(program_dir_abs, exclude)
     lines_of_code = util.count_lines_of_code(source_files)
 
-    compiler_score, sanitizer_score = compile_and_execute_program_with_sanitizers(args, lines_of_code, program_dir_abs,
+    compiler_and_sanitizer_score = compile_and_execute_program_with_sanitizers(args, lines_of_code, program_dir_abs,
                                                                                   cpp)
     assertion_score, cppcheck_score, clang_tidy_score, cyclomatic_complexity_score, warning_score, \
     duplicate_score, unique_score, kwstyle_score = static_analysis(source_files, lines_of_code, cpp)
 
-    all_scores = [compiler_score, sanitizer_score, assertion_score, cppcheck_score, clang_tidy_score,
+    all_scores = [compiler_and_sanitizer_score, assertion_score, cppcheck_score, clang_tidy_score,
                   cyclomatic_complexity_score, warning_score, duplicate_score, unique_score, kwstyle_score]
     overall_score = scoring.average_score(all_scores)
     scoring.print_score(overall_score, 'Overall program')

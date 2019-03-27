@@ -52,9 +52,6 @@ def _calculate_score_generic(rate, best, worst):
 COMPILER_BEST = 0.028
 COMPILER_WORST = 0.57
 
-SANITIZER_BEST = 0
-SANITIZER_WORST = 0.0002  # TODO Maybe add the sanitizer rate to the compiler rate as level 3 warnings?
-
 ASSERTIONS_BEST = 0.034
 ASSERTIONS_WORST = 0
 
@@ -82,12 +79,8 @@ KWSTYLE_WORST = 1.6
 
 # FUNCTIONS THAT CALCULATE THE SCORES
 
-def calculate_compiler_score(rate):
+def calculate_compiler_and_sanitizer_score(rate):
     return _calculate_score_generic(rate, COMPILER_BEST, COMPILER_WORST)
-
-
-def calculate_sanitizer_score(rate):
-    return _calculate_score_generic(rate, SANITIZER_BEST, SANITIZER_WORST)
 
 
 def calculate_assertion_score(rate):

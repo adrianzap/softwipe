@@ -80,7 +80,7 @@ def run_execution(program_dir_abs, executefile, cmake, lines_of_code):
     :param executefile: The executefile that contains a command line for executing the program.
     :param cmake: Whether CMake has been used for compilation or not.
     :param lines_of_code: The lines of pure code count.
-    :return The sanitizer score.
+    :return The weighted sum of sanitizer errors.
     """
     print(strings.RUN_EXECUTION_WITH_SANITIZERS_HEADER)
 
@@ -115,6 +115,5 @@ def run_execution(program_dir_abs, executefile, cmake, lines_of_code):
     print(strings.RESULT_UBSAN_ERROR_RATE.format(ubsan_error_rate, ubsan_error_count, lines_of_code))
     util.write_into_file_string(strings.RESULTS_FILENAME_SANITIZERS, output)
 
-    score = scoring.calculate_sanitizer_score(asan_error_rate + ubsan_error_rate)
-    scoring.print_score(score, 'Sanitizer')
-    return score
+    weighted_error_count = 3 * asan_error_count + 3 * ubsan_error_count
+    return weighted_error_count
