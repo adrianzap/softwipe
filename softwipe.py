@@ -82,6 +82,9 @@ def parse_arguments():
                                                       'PATH environment variable. Use this if you have a dependency '
                                                       'installed but not accessible via your default PATH')
 
+    parser.add_argument('--no-execution', action='store_true', help='Do not execute your program. This skips the '
+                                                                    'clang sanitizer check')
+
     args = parser.parse_args()
     return args
 
@@ -155,24 +158,29 @@ def execute_program(program_dir_abs, executefile, cmake, lines_of_code):
     :param executefile: The executefile that contains a command line for executing the program.
     :param cmake: Whether CMake has been used for compilation or not.
     :param lines_of_code: The lines of pure code count.
-    :return The sanitizer score.
+    :return The weighted sanitizer error count.
     """
-    score = execution_phase.run_execution(program_dir_abs, executefile, cmake, lines_of_code)
-    return score
+    weighted_error_count = execution_phase.run_execution(program_dir_abs, executefile, cmake, lines_of_code)
+    return weighted_error_count
 
 
-def compile_and_execute_program_with_sanitizers(args, lines_of_code, program_dir_abs, cpp):
+def compile_and_execute_program_with_sanitizers(args, lines_of_code, program_dir_abs, cpp, no_exec=False):
     """
     Automatically compile and execute the program
     :param args: The "args" Namespace as returned from parse_arguments().
     :param lines_of_code: The lines of pure code count.
     :param program_dir_abs: The absolute path to the root directory of the target program.
     :param cpp: Whether C++ is used or not. True if C++, False if C.
-    :return The compiler and sanitizer scores.
+    :param no_exec: If True, skip execution of the program.
+    :return The compiler + sanitizer score.
     """
     weighted_sum_of_compiler_warnings = compile_program(args, lines_of_code, cpp)
-    execute_file = args.executefile[0] if args.executefile else None
-    weighted_sum_of_sanitizer_warnings = execute_program(program_dir_abs, execute_file, args.cmake, lines_of_code)
+    if not no_exec:
+        execute_file = args.executefile[0] if args.executefile else None
+        weighted_sum_of_sanitizer_warnings = execute_program(program_dir_abs, execute_file, args.cmake, lines_of_code)
+    else:
+        weighted_sum_of_sanitizer_warnings = 0
+        print('Warning: Program execution was skipped. Thus, clang sanitizer results are not available.')
 
     weighted_warning_rate = (weighted_sum_of_compiler_warnings + weighted_sum_of_sanitizer_warnings) / lines_of_code
     score = scoring.calculate_compiler_and_sanitizer_score(weighted_warning_rate)
@@ -211,7 +219,7 @@ def main():
     lines_of_code = util.count_lines_of_code(source_files)
 
     compiler_and_sanitizer_score = compile_and_execute_program_with_sanitizers(args, lines_of_code, program_dir_abs,
-                                                                                  cpp)
+                                                                               cpp, args.no_execution)
     assertion_score, cppcheck_score, clang_tidy_score, cyclomatic_complexity_score, warning_score, \
     duplicate_score, unique_score, kwstyle_score = static_analysis(source_files, lines_of_code, cpp)
 
