@@ -126,6 +126,9 @@ COMMAND_FILE_HELP = """        --- Command file help ---
 The command file (provided via -f option) is a file that contains:
  -for make-based projects: commands that are used to build the program
  -for compiler-based projects: compiler options
+Note that you can also specify a command file for CMake-based programs, if an
+additional argument needs to be given to the "make" call for correctly
+compiling your program.
 
     ==== Make-based projects ====
 The command file contains all commands that must be executed to correctly build

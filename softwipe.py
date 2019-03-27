@@ -40,8 +40,10 @@ def parse_arguments():
     parser = argparse.ArgumentParser(description='Check the software quality of a C/C++ program\n\n'
                                                  'Important arguments you probably want to use:\n'
                                                  '  -c/-C to tell me whether your program is C or C++\n'
-                                                 '  -l/-m/-M to tell me how to build your program\n'
-                                                 '  -e to specify a file that tells me how to execute your program\n',
+                                                 '  -M/-m/-l to tell me how to build your program\n'
+                                                 '  -e to specify a file that tells me how to execute your program\n'
+                                                 'Example command line for a CMake-based C++ program:\n'
+                                                 './softwipe.py -CM path/to/program -e path/to/executefile\n',
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
 
     parser.add_argument('programdir', help="the root directory of your target program")
