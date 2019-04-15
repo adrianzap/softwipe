@@ -59,6 +59,9 @@ def find_all_source_files(program_dir_abs, exclude):
             continue
 
         for file in files:
+            file_abspath = os.path.join(dirpath, file)
+            if file_abspath.startswith(excluded_paths):
+                continue
             if file.endswith(source_file_endings):
                 source_files.append(os.path.join(dirpath, file))
 
