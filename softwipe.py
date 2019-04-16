@@ -196,12 +196,12 @@ def static_analysis(source_files, lines_of_code, cpp):
     :param lines_of_code: The lines of pure code count for the source_files.
     :param cpp: Whether C++ is used or not. True if C++, False if C.
     :return: All the static analysis scores: assertion_score, cppcheck_score, clang_tidy_score,
-    cyclomatic_complexity_score, warning_score, duplicate_score, unique_score, kwstyle_score.
+    cyclomatic_complexity_score, warning_score, unique_score, kwstyle_score.
     """
-    assertion_score, cppcheck_score, clang_tidy_score, cyclomatic_complexity_score, warning_score, duplicate_score, \
-    unique_score, kwstyle_score = static_analysis_phase.run_static_analysis(source_files, lines_of_code, cpp)
+    assertion_score, cppcheck_score, clang_tidy_score, cyclomatic_complexity_score, warning_score, unique_score, \
+    kwstyle_score = static_analysis_phase.run_static_analysis(source_files, lines_of_code, cpp)
     return assertion_score, cppcheck_score, clang_tidy_score, cyclomatic_complexity_score, warning_score, \
-           duplicate_score, unique_score, kwstyle_score
+           unique_score, kwstyle_score
 
 
 def main():
@@ -221,10 +221,10 @@ def main():
     compiler_and_sanitizer_score = compile_and_execute_program_with_sanitizers(args, lines_of_code, program_dir_abs,
                                                                                cpp, args.no_execution)
     assertion_score, cppcheck_score, clang_tidy_score, cyclomatic_complexity_score, warning_score, \
-    duplicate_score, unique_score, kwstyle_score = static_analysis(source_files, lines_of_code, cpp)
+    unique_score, kwstyle_score = static_analysis(source_files, lines_of_code, cpp)
 
     all_scores = [compiler_and_sanitizer_score, assertion_score, cppcheck_score, clang_tidy_score,
-                  cyclomatic_complexity_score, warning_score, duplicate_score, unique_score, kwstyle_score]
+                  cyclomatic_complexity_score, warning_score, unique_score, kwstyle_score]
     overall_score = scoring.average_score(all_scores)
     scoring.print_score(overall_score, 'Overall program')
 

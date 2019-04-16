@@ -85,14 +85,12 @@ class LizardOutput:
         average_cyclomatic_complexity: The average cyclomatic complexity of all functions.
         warning_count: The number of Lizard warnings. These warnings indicate too high cyclomatic complexity,
         too long functions, or too many function parameters.
-        duplicate_rate: The duplicate rate
         unique_rate: The unique rate
         function_count: The total number of functions
     """
-    def __init__(self, average_cyclomatic_complexity, warning_count, duplicate_rate, unique_rate, function_count):
+    def __init__(self, average_cyclomatic_complexity, warning_count, unique_rate, function_count):
         self.average_cyclomatic_complexity = average_cyclomatic_complexity
         self.warning_count = warning_count
-        self.duplicate_rate = duplicate_rate
         self.unique_rate = unique_rate
         self.function_count = function_count
 
@@ -107,12 +105,8 @@ class LizardOutput:
         warning_score = scoring.calculate_lizard_warning_score(warning_rate)
         scoring.print_score(warning_score, 'Lizard warning')
 
-        print('Duplicate rate:', self.duplicate_rate)
-        duplicate_score = scoring.calculate_duplicate_score(self.duplicate_rate)
-        scoring.print_score(duplicate_score, 'Duplicate')
-
-        print('Unique rate:', self.unique_rate)
+        print('Unique code rate:', self.unique_rate)
         unique_score = scoring.calculate_unique_score(self.unique_rate)
-        scoring.print_score(unique_score, 'Unique')
+        scoring.print_score(unique_score, 'Unique (code duplication)')
 
-        return cyclomatic_complexity_score, warning_score, duplicate_score, unique_score
+        return cyclomatic_complexity_score, warning_score, unique_score

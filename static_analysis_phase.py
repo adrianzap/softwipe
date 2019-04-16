@@ -221,13 +221,11 @@ def get_lizard_output_object_from_lizard_printed_output(output):
     warning_cnt = int(split_summary_line[5])
 
     # Get -Eduplicate information
-    duplicate_rate_line = output_lines[-3]
     unique_rate_line = output_lines[-2]
 
-    duplicate_rate = get_actual_rate_from_lizard_duplicate_rate_line(duplicate_rate_line)
     unique_rate = get_actual_rate_from_lizard_duplicate_rate_line(unique_rate_line)
 
-    lizard_output = output_classes.LizardOutput(avg_ccn, warning_cnt, duplicate_rate, unique_rate, function_count)
+    lizard_output = output_classes.LizardOutput(avg_ccn, warning_cnt, unique_rate, function_count)
     return lizard_output
 
 
@@ -235,7 +233,7 @@ def run_lizard(source_files):
     """
     Runs Lizard.
     :param source_files: The list of source files to analyze.
-    :return: The cyclomatic complexity score, warning score, duplicate score, and unique score
+    :return: The cyclomatic complexity score, warning score, and unique score
     """
     # NOTE Although lizard can be used as a python module ("import lizard") it is actually easier to parse its output
     # (for now at least - this might of course change). This is because the module is not well documented so it's
@@ -253,11 +251,11 @@ def run_lizard(source_files):
         # while still keeping the output of the command
 
     lizard_output = get_lizard_output_object_from_lizard_printed_output(output)
-    cyclomatic_complexity_score, warning_score, duplicate_score, unique_score = \
+    cyclomatic_complexity_score, warning_score, unique_score = \
         lizard_output.print_information_and_return_scores()  # Also prints the scores
     util.write_into_file_string(strings.RESULTS_FILENAME_LIZARD, output)
 
-    return cyclomatic_complexity_score, warning_score, duplicate_score, unique_score
+    return cyclomatic_complexity_score, warning_score, unique_score
 
 
 def get_kwstyle_warning_count_from_kwstyle_output(output):
@@ -313,13 +311,13 @@ def run_static_analysis(source_files, lines_of_code, cpp):
     :param lines_of_code: The lines of pure code count for the source_files.
     :param cpp: Whether we're using C++ or not. True if C++ is used, False if C is used.
     :return All the scores: assertion_score, cppcheck_score, clang_tidy_score, cyclomatic_complexity_score,
-    warning_score, duplicate_score, unique_score, kwstyle_score.
+    warning_score, unique_score, kwstyle_score.
     """
     assertion_score = check_assert_usage(source_files, lines_of_code)
     cppcheck_score = run_cppcheck(source_files, lines_of_code, cpp)
     clang_tidy_score = run_clang_tidy(source_files, lines_of_code, cpp)
-    cyclomatic_complexity_score, warning_score, duplicate_score, unique_score = run_lizard(source_files)
+    cyclomatic_complexity_score, warning_score, unique_score = run_lizard(source_files)
     kwstyle_score = run_kwstyle(source_files, lines_of_code)
 
     return assertion_score, cppcheck_score, clang_tidy_score, cyclomatic_complexity_score, warning_score, \
-           duplicate_score, unique_score, kwstyle_score
+           unique_score, kwstyle_score
