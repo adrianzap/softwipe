@@ -83,8 +83,6 @@ def run_cppcheck(source_files, lines_of_code, cpp):
     :param cpp: Whether we're using C++ or not. True if C++ is used, False if C is used.
     :return: The Cppcheck score.
     """
-    # TODO cppcheck doesn't know about boost so for boost calls it outputs an error "invalid C code" --> ignore these
-    #  errors
     print(strings.RUN_CPPCHECK_HEADER)
     language = 'c++' if cpp else 'c'
     cppcheck_call = [TOOLS.CPPCHECK.exe_name, '--enable=all', '--force', '--language=' + language]
