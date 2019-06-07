@@ -105,19 +105,24 @@ def add_to_path_variable(paths):
         os.environ['PATH'] += os.pathsep + path
 
 
-def adjust_path_variable(args):
+def add_kwstyle_to_path_variable():
     """
-    Adjusts the PATH variable if necessary by adding user specified paths (if any were specified) and adding KWStyle
-    to the PATH if it is contained in the softwipe directory (which it is if the user did the auto-installation of it).
+    Adjusts the PATH variable by adding KWStyle to the PATH if it is contained in the softwipe directory (which it is
+    if the user did the auto-installation of it).
+    """
+    kwstyle_dir = os.path.join(util.get_softwipe_directory(), 'KWStyle')
+    if os.path.isdir(kwstyle_dir):
+        add_to_path_variable(os.path.join(kwstyle_dir, strings.SOFTWIPE_BUILD_DIR_NAME))
+
+
+def add_user_paths_to_path_variable(args):
+    """
+    Adjusts the PATH variable if necessary by adding user specified paths (if any were specified) to the PATH.
     :param args: The "args" Namespace as returned from parse_arguments().
     """
     user_paths = args.path[0] if args.path else None
     if user_paths:
         add_to_path_variable(user_paths)
-
-    kwstyle_dir = os.path.join(util.get_softwipe_directory(), 'KWStyle')
-    if os.path.isdir(kwstyle_dir):
-        add_to_path_variable(os.path.join(kwstyle_dir, strings.SOFTWIPE_BUILD_DIR_NAME))
 
 
 def warn_if_user_is_root():
@@ -225,11 +230,19 @@ def static_analysis(source_files, lines_of_code, cpp):
 
 
 def main():
+    add_kwstyle_to_path_variable()
+
+    # Allow the user to auto-install the dependencies by just running "./softwipe.py" without any arguments
+    if len(sys.argv) == 1:
+        automatic_tool_installation.check_if_all_required_tools_are_installed()
+
     args = parse_arguments()
 
-    adjust_path_variable(args)
+    # Normal check for the dependencies
+    if len(sys.argv) != 1:
+        automatic_tool_installation.check_if_all_required_tools_are_installed()
 
-    automatic_tool_installation.check_if_all_required_tools_are_installed()
+    add_user_paths_to_path_variable(args)
 
     if not args.allow_running_as_root:
         warn_if_user_is_root()
