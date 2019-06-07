@@ -95,6 +95,11 @@ MAKE_SURE_TOOLS_ARE_INSTALLED = 'Make sure all tools are installed on your syste
                                 'location into your PATH or provide a full path to each tool as its exe_name in ' \
                                 'tools_info.py.'
 
+USER_IS_ROOT_WARNING = 'You are running as root! This will cause my output files to be inaccessible without root ' \
+                       'privileges (so I cannot overwrite them without root privileges anymore). Please only ' \
+                       'continue as root if necessary.\n' \
+                       'Do you want to continue as root? (Y/n)'
+
 
 USER_DID_NOT_SPECIFY_EXECUTE_FILE_USING_AOUT_NOW = 'Warning! You did not specify an executefile. I\'m trying to run ' \
                                                    'your program using "a.out" or "' + SOFTWIPE_COMPILED_EXE_NAME + \

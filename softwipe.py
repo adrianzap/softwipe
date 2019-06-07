@@ -85,6 +85,9 @@ def parse_arguments():
     parser.add_argument('--no-execution', action='store_true', help='Do not execute your program. This skips the '
                                                                     'clang sanitizer check')
 
+    parser.add_argument('--allow-running-as-root', action='store_true', help='Do not print a warning if the user is '
+                                                                             'root')
+
     args = parser.parse_args()
     return args
 
@@ -115,6 +118,23 @@ def adjust_path_variable(args):
     kwstyle_dir = os.path.join(util.get_softwipe_directory(), 'KWStyle')
     if os.path.isdir(kwstyle_dir):
         add_to_path_variable(os.path.join(kwstyle_dir, strings.SOFTWIPE_BUILD_DIR_NAME))
+
+
+def warn_if_user_is_root():
+    """
+    Check if the user is root, and print a warning if he is.
+    """
+    if os.geteuid() == 0:  # if user is root
+        print(strings.USER_IS_ROOT_WARNING)
+        while True:
+            user_in = input('>>> ')
+            if user_in == 'Y' or user_in == 'Yes':
+                print("Okay, running as root now!")
+                break
+            elif user_in == 'n' or user_in == 'no':
+                sys.exit(1)
+            else:
+                print('Please answer with "Y" (Yes) or "n" (no)!')
 
 
 def compile_program(args, lines_of_code, cpp):
@@ -210,6 +230,9 @@ def main():
     adjust_path_variable(args)
 
     automatic_tool_installation.check_if_all_required_tools_are_installed()
+
+    if not args.allow_running_as_root:
+        warn_if_user_is_root()
 
     cpp = True if args.cpp else False
     program_dir_abs = os.path.abspath(args.programdir)
