@@ -8,16 +8,17 @@ COMPILER_WARNING_FLAGS = '-Weverything -Wno-padded -Wno-c++98-compat -Wno-c++98-
 COMPILER_SANITIZER_FLAGS = '-g -fno-omit-frame-pointer -fsanitize=address -fsanitize-recover=address ' \
                            '-fsanitize=undefined'
 COMPILE_FLAGS = COMPILER_WARNING_FLAGS + ' ' + COMPILER_SANITIZER_FLAGS
-SET_CFLAGS = 'CFLAGS="{}"'.format(COMPILE_FLAGS)
-SET_CXXFLAGS = 'CXXFLAGS="{}"'.format(COMPILE_FLAGS)
-SET_CPPFLAGS = 'CPPFLAGS="{}"'.format(COMPILE_FLAGS)
-SET_LDFLAGS = 'LDFLAGS="{}"'.format(COMPILE_FLAGS)
 
-SET_CC = 'CC="clang"'
-SET_CXX = 'CXX="clang++"'
+def create_make_flags(compiler_flags):
+    set_cflags = 'CFLAGS="{}"'.format(compiler_flags)
+    set_cxxflags = 'CXXFLAGS="{}"'.format(compiler_flags)
+    set_cppflags = 'CPPFLAGS="{}"'.format(compiler_flags)
+    set_ldflags = 'LDFLAGS="{}"'.format(compiler_flags)
 
-SET_ALL_MAKE_FLAGS = SET_CC + ' ' + SET_CXX + ' ' + SET_CFLAGS + ' ' + SET_CXXFLAGS + ' ' + SET_CPPFLAGS + ' ' + \
-                     SET_LDFLAGS
+    set_cc = 'CC="clang"'
+    set_cxx = 'CXX="clang++"'
+
+    return set_cc + ' ' + set_cxx + ' ' + set_cflags + ' ' + set_cxxflags + ' ' + set_cppflags + ' ' + set_ldflags
 
 
 NO_MAKE_CLEAN_TARGET_FOUND = 'Seems like there is no "make clean" target :( Please make sure the build directory is ' \

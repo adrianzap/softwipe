@@ -29,18 +29,20 @@ def clear_directory(directory):
             os.remove(path)
 
 
-def build_cmake_call(program_dir_abs):
+def build_cmake_call(program_dir_abs, compiler_flags):
     """
     Build the CMake call.
     :param program_dir_abs: The absolute path to the root directory of the target program.
+    :param compiler_flags: The flags to be used for compilation. Typically, these should be strings.COMPILE_FLAGS or,
+    if no_execution, strings.COMPILER_WARNING_FLAGS.
     :return: The full CMake call as a list.
     """
     # The cmake call activates the compiler warnings we want and the flags that activate the clang sanitizers twice to
     # ensure that they really get activated: via environment variable, and via a new build type. Both activation
     # methods are safe in that they do not affect the users code or the compilation process in a bad way.
-    cmake_call = [TOOLS.CMAKE.exe_name, '-E', 'env', 'CXXFLAGS=' + strings.COMPILE_FLAGS,
-                  'CFLAGS=' + strings.COMPILE_FLAGS, 'LDFLAGS=' + strings.COMPILE_FLAGS,  # set environment variables to
-                  # activate the warnings
+    cmake_call = [TOOLS.CMAKE.exe_name, '-E', 'env', 'CXXFLAGS=' + compiler_flags,
+                  'CFLAGS=' + compiler_flags, 'LDFLAGS=' + compiler_flags,  # set environment variables to activate
+                  # the warnings
                   TOOLS.CMAKE.exe_name, '-DCMAKE_CXX_COMPILER=' + TOOLS.CLANGPP.exe_name, '-DCMAKE_CC_COMPILER=' +
                   TOOLS.CLANG.exe_name, '-DCMAKE_C_COMPILER=' + TOOLS.CLANG.exe_name,  # Ensure that clang is used
                   '-DCMAKE_EXPORT_COMPILE_COMMANDS=1',  # Ensure that the compilation database JSON that is required
@@ -52,13 +54,15 @@ def build_cmake_call(program_dir_abs):
     return cmake_call
 
 
-def run_cmake(program_dir_abs, build_path):
+def run_cmake(program_dir_abs, build_path, compiler_flags):
     """
     Run the cmake command for the program in program_dir_abs as if pwd would be build_path.
     :param program_dir_abs: The absolute path to the root directory of the target program.
     :param build_path: The build path in which CMake should build everything.
+    :param compiler_flags: The flags to be used for compilation. Typically, these should be strings.COMPILE_FLAGS or,
+    if no_execution, strings.COMPILER_WARNING_FLAGS.
     """
-    cmake_call = build_cmake_call(program_dir_abs)
+    cmake_call = build_cmake_call(program_dir_abs, compiler_flags)
     try:
         output = subprocess.check_output(cmake_call, cwd=build_path, universal_newlines=True, stderr=subprocess.STDOUT)
     except subprocess.CalledProcessError as e:
@@ -204,7 +208,7 @@ def run_make(build_path, lines_of_code, dont_check_for_warnings=False, make_flag
 
 
 def parse_make_command_file_and_run_all_commands_in_it(make_command_file, program_dir_abs, working_directory,
-                                                       lines_of_code):
+                                                       lines_of_code, compiler_flags):
     commands = open(make_command_file, 'r').readlines()
     have_already_written_into_file = False
     weighted_sum_of_warnings = 0
@@ -213,7 +217,7 @@ def parse_make_command_file_and_run_all_commands_in_it(make_command_file, progra
         if command.startswith('make'):
             make_flags = command[4:]
 
-            make_flags += ' ' + strings.SET_ALL_MAKE_FLAGS
+            make_flags += ' ' + strings.create_make_flags(compiler_flags=compiler_flags)
 
             append_to_file = True if have_already_written_into_file else False
             r = run_make(working_directory, lines_of_code, make_flags=make_flags, append_to_file=append_to_file)
@@ -236,12 +240,14 @@ def parse_make_command_file_and_run_all_commands_in_it(make_command_file, progra
     return weighted_sum_of_warnings
 
 
-def compile_program_make(program_dir_abs, lines_of_code, make_command_file=None):
+def compile_program_make(program_dir_abs, lines_of_code, compiler_flags, make_command_file=None):
     """
     Compile the program using Make (i.e. plain old Makefiles).
     :param program_dir_abs: The absolute path to the root directory of the target program, where the Makefile is
     located.
     :param lines_of_code: The lines of pure code count.
+    :param compiler_flags: The flags to be used for compilation. Typically, these should be strings.COMPILE_FLAGS or,
+    if no_execution, strings.COMPILER_WARNING_FLAGS.
     :param make_command_file: The path to a file containing the commands used to successfully compile the program
     using make.
     :return The weighted sum of compiler warnings.
@@ -255,20 +261,25 @@ def compile_program_make(program_dir_abs, lines_of_code, make_command_file=None)
         working_directory = program_dir_abs  # This will be used as the build path, which might get changed
         weighted_sum_of_warnings = parse_make_command_file_and_run_all_commands_in_it(make_command_file,
                                                                                       program_dir_abs,
-                                                                                      working_directory, lines_of_code)
+                                                                                      working_directory,
+                                                                                      lines_of_code, compiler_flags)
     else:
-        weighted_sum_of_warnings = run_make(program_dir_abs, lines_of_code, make_flags=strings.SET_ALL_MAKE_FLAGS)
+        weighted_sum_of_warnings = run_make(program_dir_abs, lines_of_code, make_flags=strings.create_make_flags(
+            compiler_flags=compiler_flags))
         run_compiledb(program_dir_abs, [TOOLS.MAKE.exe_name])
 
     return weighted_sum_of_warnings
 
 
-def compile_program_cmake(program_dir_abs, lines_of_code, dont_check_for_warnings=False, make_command_file=None):
+def compile_program_cmake(program_dir_abs, lines_of_code, compiler_flags, dont_check_for_warnings=False,
+                          make_command_file=None):
     """
     Compile the program using CMake.
     :param program_dir_abs: The absolute path to the root directory of the target program, where the CMakeLists.txt
     is located.
     :param lines_of_code: The lines of pure code count.
+    :param compiler_flags: The flags to be used for compilation. Typically, these should be strings.COMPILE_FLAGS or,
+    if no_execution, strings.COMPILER_WARNING_FLAGS.
     :param dont_check_for_warnings: Do not check for warnings. Useful for automatically building a dependency,
     in which case you don't want warnings to be extracted from the compilation.
     :param make_command_file: The path to a file containing the commands used to successfully compile the program
@@ -277,23 +288,26 @@ def compile_program_cmake(program_dir_abs, lines_of_code, dont_check_for_warning
     """
     build_path = create_build_directory(program_dir_abs)
     clear_directory(build_path)  # If the path already existed, it should be cleared to ensure a fresh compilation
-    run_cmake(program_dir_abs, build_path)
+    run_cmake(program_dir_abs, build_path, compiler_flags)
     if make_command_file:
         weighted_sum_of_warnings = parse_make_command_file_and_run_all_commands_in_it(make_command_file,
                                                                                       program_dir_abs, build_path,
-                                                                                      lines_of_code)
+                                                                                      lines_of_code, compiler_flags)
     else:
-        weighted_sum_of_warnings = run_make(build_path, lines_of_code, dont_check_for_warnings)
+        weighted_sum_of_warnings = run_make(build_path, lines_of_code, dont_check_for_warnings,
+                                            make_flags=strings.create_make_flags(compiler_flags=compiler_flags))
 
     return weighted_sum_of_warnings
 
 
-def compile_program_clang(program_dir_abs, targets, lines_of_code, cpp=False, clang_command_file=None):
+def compile_program_clang(program_dir_abs, targets, lines_of_code, compiler_flags, cpp=False, clang_command_file=None):
     """
     Compile the program using clang.
     :param program_dir_abs: The absolute path to the root directory of the target program.
     :param targets: The source files that should be compiled.
     :param lines_of_code: The lines of pure code count.
+    :param compiler_flags: The flags to be used for compilation. Typically, these should be strings.COMPILE_FLAGS or,
+    if no_execution, strings.COMPILER_WARNING_FLAGS.
     :param cpp: Whether we're doing C++ or not. True if C++ (so clang++ will be used), False if C (so clang will be
     used).
     :param clang_command_file: The path to a file containing compiler options used for compilation.
@@ -306,7 +320,7 @@ def compile_program_clang(program_dir_abs, targets, lines_of_code, cpp=False, cl
         options = open(clang_command_file, 'r').read().split()
         clang_call.extend(options)
 
-    compile_flags = strings.COMPILE_FLAGS.split()
+    compile_flags = compiler_flags.split()
     clang_call.extend(compile_flags)
 
     for target in targets:
