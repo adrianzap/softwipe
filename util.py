@@ -35,24 +35,35 @@ def print_lines(lines):
         print(line)
 
 
-def find_all_source_files(program_dir_abs, exclude):
+def get_excluded_paths(program_dir_abs, exclude):
     """
-    Find all source files in program_dir_abs. Traverses the directory recursively and returns all source files,
-    i.e. all *.c or *.cpp or *.h or *.hpp files.
+    Return the paths (files and dirs) that should be excluded from being analyzed by softwipe.
     :param program_dir_abs: The absolute path to the root directory of the program.
-    :param exclude: A comma separated list of files and directories to exclude from being found.
-    :return: A list containing absolute paths to all source files.
+    :param exclude: A comma separated list of files and directories to exclude, as given via command line (-x option).
+    :return: A tupel containing all excluded paths.
     """
-    source_files = []
-
-    source_file_endings = ('.c', '.cc', '.cpp', '.cxx', '.h', '.hpp')
-
     excluded_paths = (os.path.join(program_dir_abs, 'build'), os.path.join(program_dir_abs, 'cmake-build-debug'),
                       os.path.join(program_dir_abs, 'compile'), os.path.join(program_dir_abs,
                                                                              strings.SOFTWIPE_BUILD_DIR_NAME))
     if exclude:
         for x in exclude.split(','):
             excluded_paths += (os.path.abspath(x),)
+
+    return excluded_paths
+
+
+def find_all_source_files(program_dir_abs, excluded_paths):
+    """
+    Find all source files in program_dir_abs. Traverses the directory recursively and returns all source files,
+    i.e. all *.c or *.cpp or *.h or *.hpp files.
+    :param program_dir_abs: The absolute path to the root directory of the program.
+    :param excluded_paths: A tupel containing the paths to be excluded. The tupel should be obtained via the
+    get_excluded_paths() function.
+    :return: A list containing absolute paths to all source files.
+    """
+    source_files = []
+
+    source_file_endings = ('.c', '.cc', '.cpp', '.cxx', '.h', '.hpp')
 
     for dirpath, dirs, files in os.walk(program_dir_abs):
         if dirpath.startswith(excluded_paths):

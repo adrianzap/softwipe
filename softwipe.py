@@ -253,8 +253,9 @@ def main():
     cpp = True if args.cpp else False
     program_dir_abs = os.path.abspath(args.programdir)
     exclude = args.exclude[0] if args.exclude else None
+    excluded_paths = util.get_excluded_paths(program_dir_abs, exclude)
 
-    source_files = util.find_all_source_files(program_dir_abs, exclude)
+    source_files = util.find_all_source_files(program_dir_abs, excluded_paths)
     lines_of_code = util.count_lines_of_code(source_files)
 
     compiler_and_sanitizer_score = compile_and_execute_program_with_sanitizers(args, lines_of_code, program_dir_abs,
