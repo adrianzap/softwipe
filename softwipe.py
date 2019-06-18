@@ -142,7 +142,7 @@ def warn_if_user_is_root():
                 print('Please answer with "Y" (Yes) or "n" (no)!')
 
 
-def compile_program(args, lines_of_code, cpp, compiler_flags):
+def compile_program(args, lines_of_code, cpp, compiler_flags, excluded_paths):
     """
     Run the automatic compilation of the target project.
     :param args: The "args" Namespace as returned from parse_arguments().
@@ -150,6 +150,7 @@ def compile_program(args, lines_of_code, cpp, compiler_flags):
     :param cpp: Whether C++ is used or not. True if C++, False if C.
     :param compiler_flags: The flags to be used for compilation. Typically, these should be strings.COMPILE_FLAGS or,
     if no_execution, strings.COMPILER_WARNING_FLAGS.
+    :param excluded_paths: A tupel containing the paths to be excluded.
     :return: The compiler score.
     """
     print(strings.RUN_COMPILER_HEADER)
@@ -158,22 +159,23 @@ def compile_program(args, lines_of_code, cpp, compiler_flags):
 
     if args.make:
         if command_file:
-            score = compile_phase.compile_program_make(program_dir_abs, lines_of_code, compiler_flags,
+            score = compile_phase.compile_program_make(program_dir_abs, lines_of_code, compiler_flags, excluded_paths,
                                                        make_command_file=command_file[0])
         else:
-            score = compile_phase.compile_program_make(program_dir_abs, lines_of_code, compiler_flags)
+            score = compile_phase.compile_program_make(program_dir_abs, lines_of_code, compiler_flags, excluded_paths)
     elif args.clang:
         if command_file:
-            score = compile_phase.compile_program_clang(program_dir_abs, args.clang, lines_of_code, compiler_flags, cpp,
-                                                        clang_command_file=command_file[0])
+            score = compile_phase.compile_program_clang(program_dir_abs, args.clang, lines_of_code, compiler_flags,
+                                                        excluded_paths, cpp, clang_command_file=command_file[0])
         else:
-            score = compile_phase.compile_program_clang(program_dir_abs, args.clang, lines_of_code, compiler_flags, cpp)
+            score = compile_phase.compile_program_clang(program_dir_abs, args.clang, lines_of_code, compiler_flags,
+                                                        excluded_paths, cpp)
     else:
         if command_file:
-            score = compile_phase.compile_program_cmake(program_dir_abs, lines_of_code, compiler_flags,
+            score = compile_phase.compile_program_cmake(program_dir_abs, lines_of_code, compiler_flags, excluded_paths,
                                                         make_command_file=command_file[0])
         else:
-            score = compile_phase.compile_program_cmake(program_dir_abs, lines_of_code, compiler_flags)
+            score = compile_phase.compile_program_cmake(program_dir_abs, lines_of_code, compiler_flags, excluded_paths)
 
     return score
 
@@ -191,18 +193,20 @@ def execute_program(program_dir_abs, executefile, cmake, lines_of_code):
     return weighted_error_count
 
 
-def compile_and_execute_program_with_sanitizers(args, lines_of_code, program_dir_abs, cpp, no_exec=False):
+def compile_and_execute_program_with_sanitizers(args, lines_of_code, program_dir_abs, cpp, excluded_paths,
+                                                no_exec=False):
     """
     Automatically compile and execute the program
     :param args: The "args" Namespace as returned from parse_arguments().
     :param lines_of_code: The lines of pure code count.
     :param program_dir_abs: The absolute path to the root directory of the target program.
     :param cpp: Whether C++ is used or not. True if C++, False if C.
+    :param excluded_paths: A tupel containing the paths to be excluded.
     :param no_exec: If True, skip execution of the program.
     :return The compiler + sanitizer score.
     """
     compiler_flags = strings.COMPILER_WARNING_FLAGS if no_exec else strings.COMPILE_FLAGS
-    weighted_sum_of_compiler_warnings = compile_program(args, lines_of_code, cpp, compiler_flags)
+    weighted_sum_of_compiler_warnings = compile_program(args, lines_of_code, cpp, compiler_flags, excluded_paths)
     if not no_exec:
         execute_file = args.executefile[0] if args.executefile else None
         weighted_sum_of_sanitizer_warnings = execute_program(program_dir_abs, execute_file, args.cmake, lines_of_code)
@@ -259,9 +263,9 @@ def main():
     lines_of_code = util.count_lines_of_code(source_files)
 
     compiler_and_sanitizer_score = compile_and_execute_program_with_sanitizers(args, lines_of_code, program_dir_abs,
-                                                                               cpp, args.no_execution)
+                                                                               cpp, excluded_paths, args.no_execution)
     assertion_score, cppcheck_score, clang_tidy_score, cyclomatic_complexity_score, warning_score, \
-    unique_score, kwstyle_score = static_analysis(source_files, lines_of_code, cpp)
+        unique_score, kwstyle_score = static_analysis(source_files, lines_of_code, cpp)
 
     all_scores = [compiler_and_sanitizer_score, assertion_score, cppcheck_score, clang_tidy_score,
                   cyclomatic_complexity_score, warning_score, unique_score, kwstyle_score]

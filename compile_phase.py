@@ -149,6 +149,38 @@ def print_compilation_results(warning_lines, lines_of_code, append_to_file):
     return weighted_sum_of_warnings
 
 
+def remove_excluded_paths_from_warning_lines(warning_lines, excluded_paths):
+    new_warning_lines = []
+    do_add_lines = True
+    lines_to_remove = set()  # will contain indices of lines that should be removed later
+    for i, line in enumerate(warning_lines):
+        if line_is_warning_line(line):
+            # if this is a warning for an excluded path
+            if any(excluded_path in line for excluded_path in excluded_paths):
+                do_add_lines = False
+                # If lines before this one were "In file included from..." lines, remove those retrospectively
+                # (that is, add them to lines_to_remove)
+                cur_index = len(new_warning_lines) - 1  # index of last element in new_warning_lines
+                while cur_index >= 0 and new_warning_lines[cur_index].startswith("In file included from"):
+                    lines_to_remove.add(cur_index)
+                    cur_index -= 1
+            else:
+                do_add_lines = True
+        elif line.startswith("In file included from"):
+            do_add_lines = True
+
+        if do_add_lines:
+            new_warning_lines.append(line)
+
+    # Now, remove "In file included from..." lines that prepended excluded warning lines retrospectively
+    lines_to_remove_list = sorted(lines_to_remove, reverse=True)  # Must iterate from highest to lowest index for
+    # correct deletions, thus sort in reverse
+    for i in lines_to_remove_list:
+        del new_warning_lines[i]
+
+    return new_warning_lines
+
+
 def run_compiledb(build_path, make_command):
     """
     Run compiledb (Compilation Database Generator) which creates the JSON compilation database (that is required for
@@ -166,12 +198,13 @@ def running_make_clean(make_flags):
     return make_flags.strip().startswith('clean')
 
 
-def run_make(build_path, lines_of_code, dont_check_for_warnings=False, make_flags='', make_verbose=False,
-             append_to_file=False):
+def run_make(build_path, lines_of_code, excluded_paths, dont_check_for_warnings=False, make_flags='',
+             make_verbose=False, append_to_file=False):
     """
     Run the make command and print the warnings that it outputs while compiling.
     :param build_path: The build path, where the Makefile is located.
     :param lines_of_code: The lines of pure code count.
+    :param excluded_paths: A tupel containing the paths to be excluded.
     :param dont_check_for_warnings: Do not check for warnings. Useful for automatically building a dependency,
     in which case you don't want warnings to be extracted from the compilation.
     :param make_flags: A string containing arguments passed to the make command. E.g., if make_flags='-foo BAR',
@@ -200,6 +233,8 @@ def run_make(build_path, lines_of_code, dont_check_for_warnings=False, make_flag
         # "make clean" :)
         warning_lines = get_warning_lines_from_make_output(output)
 
+        warning_lines = remove_excluded_paths_from_warning_lines(warning_lines, excluded_paths)
+
         weighted_sum_of_warnings = print_compilation_results(warning_lines, lines_of_code, append_to_file)
     else:
         weighted_sum_of_warnings = None
@@ -208,7 +243,7 @@ def run_make(build_path, lines_of_code, dont_check_for_warnings=False, make_flag
 
 
 def parse_make_command_file_and_run_all_commands_in_it(make_command_file, program_dir_abs, working_directory,
-                                                       lines_of_code, compiler_flags):
+                                                       lines_of_code, compiler_flags, excluded_paths):
     commands = open(make_command_file, 'r').readlines()
     have_already_written_into_file = False
     weighted_sum_of_warnings = 0
@@ -220,7 +255,8 @@ def parse_make_command_file_and_run_all_commands_in_it(make_command_file, progra
             make_flags += ' ' + strings.create_make_flags(compiler_flags=compiler_flags)
 
             append_to_file = True if have_already_written_into_file else False
-            r = run_make(working_directory, lines_of_code, make_flags=make_flags, append_to_file=append_to_file)
+            r = run_make(working_directory, lines_of_code, excluded_paths, make_flags=make_flags,
+                         append_to_file=append_to_file)
             if r:
                 weighted_sum_of_warnings += r
             have_already_written_into_file = True
@@ -240,7 +276,7 @@ def parse_make_command_file_and_run_all_commands_in_it(make_command_file, progra
     return weighted_sum_of_warnings
 
 
-def compile_program_make(program_dir_abs, lines_of_code, compiler_flags, make_command_file=None):
+def compile_program_make(program_dir_abs, lines_of_code, compiler_flags, excluded_paths, make_command_file=None):
     """
     Compile the program using Make (i.e. plain old Makefiles).
     :param program_dir_abs: The absolute path to the root directory of the target program, where the Makefile is
@@ -248,12 +284,13 @@ def compile_program_make(program_dir_abs, lines_of_code, compiler_flags, make_co
     :param lines_of_code: The lines of pure code count.
     :param compiler_flags: The flags to be used for compilation. Typically, these should be strings.COMPILE_FLAGS or,
     if no_execution, strings.COMPILER_WARNING_FLAGS.
+    :param excluded_paths: A tupel containing the paths to be excluded.
     :param make_command_file: The path to a file containing the commands used to successfully compile the program
     using make.
     :return The weighted sum of compiler warnings.
     """
     try:
-        run_make(program_dir_abs, lines_of_code, make_flags='clean')
+        run_make(program_dir_abs, lines_of_code, excluded_paths, make_flags='clean')
     except subprocess.CalledProcessError:
         print(strings.NO_MAKE_CLEAN_TARGET_FOUND)
 
@@ -262,16 +299,17 @@ def compile_program_make(program_dir_abs, lines_of_code, compiler_flags, make_co
         weighted_sum_of_warnings = parse_make_command_file_and_run_all_commands_in_it(make_command_file,
                                                                                       program_dir_abs,
                                                                                       working_directory,
-                                                                                      lines_of_code, compiler_flags)
+                                                                                      lines_of_code, compiler_flags,
+                                                                                      excluded_paths)
     else:
-        weighted_sum_of_warnings = run_make(program_dir_abs, lines_of_code, make_flags=strings.create_make_flags(
-            compiler_flags=compiler_flags))
+        weighted_sum_of_warnings = run_make(program_dir_abs, lines_of_code, excluded_paths,
+                                            make_flags=strings.create_make_flags(compiler_flags=compiler_flags))
         run_compiledb(program_dir_abs, [TOOLS.MAKE.exe_name])
 
     return weighted_sum_of_warnings
 
 
-def compile_program_cmake(program_dir_abs, lines_of_code, compiler_flags, dont_check_for_warnings=False,
+def compile_program_cmake(program_dir_abs, lines_of_code, compiler_flags, excluded_paths, dont_check_for_warnings=False,
                           make_command_file=None):
     """
     Compile the program using CMake.
@@ -280,6 +318,7 @@ def compile_program_cmake(program_dir_abs, lines_of_code, compiler_flags, dont_c
     :param lines_of_code: The lines of pure code count.
     :param compiler_flags: The flags to be used for compilation. Typically, these should be strings.COMPILE_FLAGS or,
     if no_execution, strings.COMPILER_WARNING_FLAGS.
+    :param excluded_paths: A tupel containing the paths to be excluded.
     :param dont_check_for_warnings: Do not check for warnings. Useful for automatically building a dependency,
     in which case you don't want warnings to be extracted from the compilation.
     :param make_command_file: The path to a file containing the commands used to successfully compile the program
@@ -292,15 +331,17 @@ def compile_program_cmake(program_dir_abs, lines_of_code, compiler_flags, dont_c
     if make_command_file:
         weighted_sum_of_warnings = parse_make_command_file_and_run_all_commands_in_it(make_command_file,
                                                                                       program_dir_abs, build_path,
-                                                                                      lines_of_code, compiler_flags)
+                                                                                      lines_of_code, compiler_flags,
+                                                                                      excluded_paths)
     else:
-        weighted_sum_of_warnings = run_make(build_path, lines_of_code, dont_check_for_warnings,
+        weighted_sum_of_warnings = run_make(build_path, lines_of_code, excluded_paths, dont_check_for_warnings,
                                             make_flags=strings.create_make_flags(compiler_flags=compiler_flags))
 
     return weighted_sum_of_warnings
 
 
-def compile_program_clang(program_dir_abs, targets, lines_of_code, compiler_flags, cpp=False, clang_command_file=None):
+def compile_program_clang(program_dir_abs, targets, lines_of_code, compiler_flags, excluded_paths, cpp=False,
+                          clang_command_file=None):
     """
     Compile the program using clang.
     :param program_dir_abs: The absolute path to the root directory of the target program.
@@ -308,6 +349,7 @@ def compile_program_clang(program_dir_abs, targets, lines_of_code, compiler_flag
     :param lines_of_code: The lines of pure code count.
     :param compiler_flags: The flags to be used for compilation. Typically, these should be strings.COMPILE_FLAGS or,
     if no_execution, strings.COMPILER_WARNING_FLAGS.
+    :param excluded_paths: A tupel containing the paths to be excluded.
     :param cpp: Whether we're doing C++ or not. True if C++ (so clang++ will be used), False if C (so clang will be
     used).
     :param clang_command_file: The path to a file containing compiler options used for compilation.
@@ -334,6 +376,8 @@ def compile_program_clang(program_dir_abs, targets, lines_of_code, compiler_flag
         print(strings.COMPILATION_CRASHED.format(e.returncode, e.output))
         sys.exit(e.returncode)
     warning_lines = output.split('\n')
+
+    warning_lines = remove_excluded_paths_from_warning_lines(warning_lines, excluded_paths)
 
     weighted_sum_of_warnings = print_compilation_results(warning_lines, lines_of_code, False)
     return weighted_sum_of_warnings
