@@ -101,6 +101,9 @@ USER_IS_ROOT_WARNING = 'You are running as root! This will cause my output files
                        'continue as root if necessary.\n' \
                        'Do you want to continue as root? (Y/n)'
 
+WARNING_PROGRAM_EXECUTION_SKIPPED = 'Warning: Program execution was skipped. Thus, clang sanitizer results are not ' \
+                                    'available.'
+
 
 USER_DID_NOT_SPECIFY_EXECUTE_FILE_USING_AOUT_NOW = 'Warning! You did not specify an executefile. I\'m trying to run ' \
                                                    'your program using "a.out" or "' + SOFTWIPE_COMPILED_EXE_NAME + \

@@ -9,7 +9,10 @@ import re
 
 import strings
 import util
-import scoring
+
+
+class ExecutionFailedException(Exception):
+    pass
 
 
 def build_command(program_dir_abs, executefile, cmake):
@@ -101,11 +104,11 @@ def run_execution(program_dir_abs, executefile, cmake, lines_of_code):
                 print(strings.EXECUTION_FILE_NOT_FOUND.format(command[0]))
                 print(e2)
                 print(strings.EXECUTION_FILE_NOT_FOUND.format(command2[0]))
-                sys.exit(1)
+                raise ExecutionFailedException
         else:
             print(e1)
             print(strings.EXECUTION_FILE_NOT_FOUND.format(command[0]))
-            sys.exit(1)
+            raise ExecutionFailedException
 
     asan_error_count, ubsan_error_count = get_sanitizer_error_count_from_sanitizer_output(output)
     asan_error_rate = asan_error_count / lines_of_code

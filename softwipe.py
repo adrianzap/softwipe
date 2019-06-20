@@ -189,7 +189,11 @@ def execute_program(program_dir_abs, executefile, cmake, lines_of_code):
     :param lines_of_code: The lines of pure code count.
     :return The weighted sanitizer error count.
     """
-    weighted_error_count = execution_phase.run_execution(program_dir_abs, executefile, cmake, lines_of_code)
+    try:
+        weighted_error_count = execution_phase.run_execution(program_dir_abs, executefile, cmake, lines_of_code)
+    except execution_phase.ExecutionFailedException as e:
+        print(strings.WARNING_PROGRAM_EXECUTION_SKIPPED)
+        weighted_error_count = 0
     return weighted_error_count
 
 
@@ -212,7 +216,7 @@ def compile_and_execute_program_with_sanitizers(args, lines_of_code, program_dir
         weighted_sum_of_sanitizer_warnings = execute_program(program_dir_abs, execute_file, args.cmake, lines_of_code)
     else:
         weighted_sum_of_sanitizer_warnings = 0
-        print('Warning: Program execution was skipped. Thus, clang sanitizer results are not available.')
+        print(strings.WARNING_PROGRAM_EXECUTION_SKIPPED)
 
     weighted_warning_rate = (weighted_sum_of_compiler_warnings + weighted_sum_of_sanitizer_warnings) / lines_of_code
     score = scoring.calculate_compiler_and_sanitizer_score(weighted_warning_rate)
