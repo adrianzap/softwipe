@@ -340,8 +340,7 @@ def compile_program_cmake(program_dir_abs, lines_of_code, compiler_flags, exclud
     return weighted_sum_of_warnings
 
 
-def compile_program_clang(program_dir_abs, targets, lines_of_code, compiler_flags, excluded_paths, cpp=False,
-                          clang_command_file=None):
+def compile_program_clang(program_dir_abs, targets, lines_of_code, compiler_flags, excluded_paths, cpp=False):
     """
     Compile the program using clang.
     :param program_dir_abs: The absolute path to the root directory of the target program.
@@ -352,15 +351,10 @@ def compile_program_clang(program_dir_abs, targets, lines_of_code, compiler_flag
     :param excluded_paths: A tupel containing the paths to be excluded.
     :param cpp: Whether we're doing C++ or not. True if C++ (so clang++ will be used), False if C (so clang will be
     used).
-    :param clang_command_file: The path to a file containing compiler options used for compilation.
     :return The weighted sum of compiler warnings.
     """
     compiler = TOOLS.CLANGPP.exe_name if cpp else TOOLS.CLANG.exe_name
     clang_call = [compiler, '-o', strings.SOFTWIPE_COMPILED_EXE_NAME]
-
-    if clang_command_file:
-        options = open(clang_command_file, 'r').read().split()
-        clang_call.extend(options)
 
     compile_flags = compiler_flags.split()
     clang_call.extend(compile_flags)

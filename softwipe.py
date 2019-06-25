@@ -21,19 +21,24 @@ def parse_arguments():
     Parse command line arguments.
     :return: The "args" Namespace that contains the command line arguments specified by the user.
     """
-    # Preparser, used for the command file & execute file help. Without the preparser, one would get an error because
-    # 'programdir' is a required argument but is missing. With the preparser, the help can be printed anyway.
+    # Preparser, used for the command, execute, and compiler options file helps. Without the preparser, one would get
+    # an error because 'programdir' is a required argument but is missing. With the preparser, the help can be
+    # printed anyway.
     preparser = argparse.ArgumentParser(add_help=False)
     preparser.add_argument('--commandfilehelp', default=False, action='store_true')
     preparser.add_argument('--executefilehelp', default=False, action='store_true')
+    preparser.add_argument('--compileroptionsfilehelp', default=False, action='store_true')
     preargs, unk = preparser.parse_known_args()
 
-    # Both helps can be printed at once
+    # All helps can be printed at once
     if preargs.executefilehelp:
         print(strings.EXECUTE_FILE_HELP)
     if preargs.commandfilehelp:
         print(strings.COMMAND_FILE_HELP)
-    if preargs.executefilehelp or preargs.commandfilehelp:  # Exit if either one or both helps have been printed
+    if preargs.compileroptionsfilehelp:
+        print(strings.COMPILER_OPTIONS_FILE_HELP)
+    if preargs.executefilehelp or preargs.commandfilehelp or preargs.compileroptionsfilehelp:
+        # Exit if either one, any of the, or all helps have been printed
         sys.exit(0)
 
     # Main parser
@@ -74,6 +79,13 @@ def parse_arguments():
                                                              'building a simple compiler-based project')
     parser.add_argument('--commandfilehelp', action='store_true', help='print detailed information about how the '
                                                                        'command file works and exit')
+
+    parser.add_argument('-o', '--compileroptionsfile', nargs=1, help='path to a "compiler options file" which '
+                                                                     'contains one line with options that must be '
+                                                                     'passed to the compiler')
+    parser.add_argument('--compileroptionsfilehelp', action='store_true', help='print detailed information about how '
+                                                                               'the compiler options file works and '
+                                                                               'exit')
 
     parser.add_argument('-x', '--exclude', nargs=1, help='a comma separated list of files and directories that should '
                                                          'be excluded from being analyzed by this program')
@@ -164,12 +176,8 @@ def compile_program(args, lines_of_code, cpp, compiler_flags, excluded_paths):
         else:
             score = compile_phase.compile_program_make(program_dir_abs, lines_of_code, compiler_flags, excluded_paths)
     elif args.clang:
-        if command_file:
-            score = compile_phase.compile_program_clang(program_dir_abs, args.clang, lines_of_code, compiler_flags,
-                                                        excluded_paths, cpp, clang_command_file=command_file[0])
-        else:
-            score = compile_phase.compile_program_clang(program_dir_abs, args.clang, lines_of_code, compiler_flags,
-                                                        excluded_paths, cpp)
+        score = compile_phase.compile_program_clang(program_dir_abs, args.clang, lines_of_code, compiler_flags,
+                                                    excluded_paths, cpp)
     else:
         if command_file:
             score = compile_phase.compile_program_cmake(program_dir_abs, lines_of_code, compiler_flags, excluded_paths,
@@ -210,6 +218,10 @@ def compile_and_execute_program_with_sanitizers(args, lines_of_code, program_dir
     :return The compiler + sanitizer score.
     """
     compiler_flags = strings.COMPILER_WARNING_FLAGS if no_exec else strings.COMPILE_FLAGS
+    if args.compileroptionsfile:
+        options = open(args.compileroptionsfile[0], 'r').read().rstrip()
+        compiler_flags += " " + options
+
     weighted_sum_of_compiler_warnings = compile_program(args, lines_of_code, cpp, compiler_flags, excluded_paths)
     if not no_exec:
         execute_file = args.executefile[0] if args.executefile else None

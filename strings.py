@@ -132,14 +132,12 @@ If you omit the execute file, I will try calling "a.out" or
                                                                                 #
 COMMAND_FILE_HELP = """        --- Command file help ---
 
-The command file (provided via -f option) is a file that contains:
- -for make-based projects: commands that are used to build the program
- -for compiler-based projects: compiler options
-Note that you can also specify a command file for CMake-based programs, if an
+The command file (provided via -f option) is a file for make-based projects that
+contains commands that are used to build the program.
+ Note that you can also specify a command file for CMake-based programs, if an
 additional argument needs to be given to the "make" call for correctly
 compiling your program.
 
-    ==== Make-based projects ====
 The command file contains all commands that must be executed to correctly build
 the project. The commands must be written into the file line by line.
  Example command file 1 (1 line):
@@ -153,17 +151,19 @@ make install
 quotation marks!
  If no command file is given for a make-based project, it will be assumed that
 one simple call of "make" works for compilation.
+"""
+                                                                                #
+COMPILER_OPTIONS_FILE_HELP = """        --- Compiler options file help ---
 
-    ==== Compiler-based projects ====
-The command file contains all options that must be passed to the compiler to
-correctly build the project. The file should only contain one line.
- Note that these are just the options; targets (i.e. the files that should be
-compiled) should be specified via the -l option. This is done so that the user
-does not have to use a command file if no particular important options are
-required for compilation.
+The compiler options file contains all options that must be passed to the
+compiler to correctly build the project. The file should contain only one line.
+ Note that these are just the options; when compiling using simply clang,
+targets (i.e. the files that should be compiled) should be specified via the -l
+option. For make-based projects, the compiler options will be added to the
+CFLAGS/CXXFLAGS/CPPFLAGS/LDFLAGS.
  Example command file:
--std=c++14 -save-stats
- If no command file is given for a compiler-based project, it will be assumed
-that simply compiling the targets using clang/clang++ works.
+-std=c++14 -Ifoo
+ If no compiler options file is given, it will be assumed that compilation works
+without any specific options.
 """
                                                                                 #
