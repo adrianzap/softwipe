@@ -45,7 +45,8 @@ def parse_arguments():
     parser = argparse.ArgumentParser(description='Check the software quality of a C/C++ program\n\n'
                                                  'Important arguments you probably want to use:\n'
                                                  '  -c/-C to tell me whether your program is C or C++\n'
-                                                 '  -M/-m/-l to tell me how to build your program\n'
+                                                 '  -M/-m/-l to tell me how to build your program (cmake, make, '
+                                                 'raw clang)\n'
                                                  '  -e to specify a file that tells me how to execute your program\n'
                                                  'Example command line for a CMake-based C++ program:\n'
                                                  './softwipe.py -CM path/to/program -e path/to/executefile\n',
@@ -62,7 +63,7 @@ def parse_arguments():
                                                                  'option')
     mode.add_argument('-m', '--make', action='store_true', help='compile the program using make. Note that this '
                                                                 'option requires a "standard" style makefile that '
-                                                                'uses common variables like ${CC}, ${CFLAGS}, '
+                                                                'uses common variable names like ${CC}, ${CFLAGS}, '
                                                                 '${LDFLAGS} etc. to work properly')
     mode.add_argument('-l', '--clang', nargs='+', metavar='target', help='compile the program using the clang/clang++ '
                                                                          'compiler. This option takes as arguments the'
@@ -75,20 +76,22 @@ def parse_arguments():
 
     parser.add_argument('-f', '--commandfile', nargs=1, help='path to a "command file" which can be used to provide '
                                                              'commands that should be executed for building a '
-                                                             'make-based project or to provide compiler options for '
-                                                             'building a simple compiler-based project')
+                                                             'make-based project')
     parser.add_argument('--commandfilehelp', action='store_true', help='print detailed information about how the '
                                                                        'command file works and exit')
 
     parser.add_argument('-o', '--compileroptionsfile', nargs=1, help='path to a "compiler options file" which '
                                                                      'contains one line with options that must be '
-                                                                     'passed to the compiler')
+                                                                     'passed to the compiler for correct compilation '
+                                                                     'of your program')
     parser.add_argument('--compileroptionsfilehelp', action='store_true', help='print detailed information about how '
                                                                                'the compiler options file works and '
                                                                                'exit')
 
     parser.add_argument('-x', '--exclude', nargs=1, help='a comma separated list of files and directories that should '
-                                                         'be excluded from being analyzed by this program')
+                                                         'be excluded from being analyzed by this program. If you '
+                                                         'specify relative paths, they should be relative to the '
+                                                         'directory you are running softwipe from')
 
     parser.add_argument('-p', '--path', nargs=1, help='a comma separated list of paths that should be added to the '
                                                       'PATH environment variable. Use this if you have a dependency '

@@ -116,21 +116,28 @@ EXECUTION_FILE_NOT_FOUND = 'I could not find the executable "{}".\n' \
                            'executefile, please make sure it is correct.'
 
                                                                                 #
-EXECUTE_FILE_HELP = """        --- Execute file help ---
+EXECUTE_FILE_HELP = """        === Execute file help ===
 
 The execute file (provided via -e option) is a file that contains a command line
 that executes your program. It should only contain one single line containing
 exactly the command line you would use for executing it.
-For example, if your program compiles the executable "foobar" and requires two
+ For example, if your program compiles the executable "foobar" and requires two
 arguments "-x" and "-y", your file should contain a line like this:
   foobar -x baz -y qux
-If your file contains more than one line, any line beyond the first will be
+ If the executable "foobar" gets saved into a directory (e.g., "build"), the
+execute file should look like this:
+  build/foobar -x baz -y qux
+ The path to the executable should thus always be relative to the programdir you
+give to softwipe.
+ If your file contains more than one line, any line beyond the first will be
 ignored.
-If you omit the execute file, I will try calling "a.out" or
+ If you omit the execute file, I will try calling "a.out" or
 \"""" + SOFTWIPE_COMPILED_EXE_NAME + """\" (which will most likely not work :))
+ The path to the execute file (as given to the -e option) should be relative to
+the directory you are running softwipe from.
 """
                                                                                 #
-COMMAND_FILE_HELP = """        --- Command file help ---
+COMMAND_FILE_HELP = """        === Command file help ===
 
 The command file (provided via -f option) is a file for make-based projects that
 contains commands that are used to build the program.
@@ -151,12 +158,15 @@ make install
 quotation marks!
  If no command file is given for a make-based project, it will be assumed that
 one simple call of "make" works for compilation.
+ The path to the command file (as given to the -f option) should be relative to
+the directory you are running softwipe from.
 """
                                                                                 #
-COMPILER_OPTIONS_FILE_HELP = """        --- Compiler options file help ---
+COMPILER_OPTIONS_FILE_HELP = """        === Compiler options file help ===
 
-The compiler options file contains all options that must be passed to the
-compiler to correctly build the project. The file should contain only one line.
+The compiler options file (provided via -o option) contains all options that
+must be passed to the compiler to correctly build the project. The file should
+contain only one line.
  Note that these are just the options; when compiling using simply clang,
 targets (i.e. the files that should be compiled) should be specified via the -l
 option. For make-based projects, the compiler options will be added to the
@@ -165,5 +175,7 @@ CFLAGS/CXXFLAGS/CPPFLAGS/LDFLAGS.
 -std=c++14 -Ifoo
  If no compiler options file is given, it will be assumed that compilation works
 without any specific options.
+ The path to the compiler options file (as given to the -o option) should be
+relative to the directory you are running softwipe from.
 """
                                                                                 #
