@@ -105,9 +105,9 @@ WARNING_PROGRAM_EXECUTION_SKIPPED = 'Warning: Program execution was skipped. Thu
                                     'available.'
 
 
-USER_DID_NOT_SPECIFY_EXECUTE_FILE_USING_AOUT_NOW = 'Warning! You did not specify an executefile. I\'m trying to run ' \
-                                                   'your program using "a.out" or "' + SOFTWIPE_COMPILED_EXE_NAME + \
-                                                   '" now. In most cases, this will not ' \
+USER_DID_NOT_SPECIFY_EXECUTE_FILE_USING_AOUT_NOW = 'Warning! You did not specify an executefile, or I could not find ' \
+                                                   'it. I\'m trying to run your program using "a.out" or "' + \
+                                                   SOFTWIPE_COMPILED_EXE_NAME + '" now. In most cases, this will not ' \
                                                    'work properly, and you should specify an executefile.\n' \
                                                    'For more information, please run: softwipe.py --executefilehelp'
 
