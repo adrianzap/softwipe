@@ -4,7 +4,6 @@ This module contains all functions related to executing the program and analyzin
 
 import subprocess
 import os
-import sys
 import re
 
 import strings
