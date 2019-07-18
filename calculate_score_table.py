@@ -18,7 +18,7 @@ import scoring
 FOLDERS = ['dawg', 'mrbayes', 'raxml-ng', 'sf', 'hyperphylo', 'kahypar', 'ms', 'repeatscounter', 'tcoffee', 'bpp',
            'indelible', 'mafft', 'prank', 'seq-gen', 'genesis', 'athena', 'gadget', 'iqtree', 'clustal', 'phyml',
            'minimap', 'samtools', 'vsearch', 'swarm']
-SOFTWIPE_OUTPUT_FILE_NAME = 'softwipe_output_with_score.txt'
+SOFTWIPE_OUTPUT_FILE_NAME = 'softwipe_output.txt'
 
 
 def parse_arguments():
