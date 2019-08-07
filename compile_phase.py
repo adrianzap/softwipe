@@ -71,7 +71,7 @@ def run_cmake(program_dir_abs, build_path, compiler_flags):
 
 
 def line_is_warning_line(line):
-    regex = r'.+\.(c|cc|cpp|cxx|h|hpp):[0-9]+:[0-9]+:\ warning:.+\[.+\]'  # Matches e.g. 'foo.cpp:x:y: ...' or
+    regex = r'.+\.(c|cc|cpp|cxx|h|hpp|cu|cuh):[0-9]+:[0-9]+:\ warning:.+\[.+\]'  # Matches e.g. 'foo.cpp:x:y: ...' or
     # '/path/to/bar.c:x:y: ...' because warning lines start with the file (foo or bar here), then the line (x) and
     # column (y) which caused the warning
     return re.match(regex, line)
@@ -114,6 +114,7 @@ def print_compilation_results(warning_lines, lines_of_code, append_to_file):
     could_be_fixed_warning_lines = []
 
     weighted_sum_of_warnings = 0
+    number_of_warnings_in_level = [0] * 3
 
     cur_warning_level = 0
     for line in warning_lines:
@@ -127,6 +128,7 @@ def print_compilation_results(warning_lines, lines_of_code, append_to_file):
                 cur_warning_level = classifications.COMPILER_WARNINGS[warning_name]
 
             weighted_sum_of_warnings += cur_warning_level
+            number_of_warnings_in_level[cur_warning_level - 1] += 1
 
         if cur_warning_level == 1:
             could_be_fixed_warning_lines.append(line)
@@ -139,6 +141,11 @@ def print_compilation_results(warning_lines, lines_of_code, append_to_file):
 
     print(strings.RESULT_WEIGHTED_COMPILER_WARNING_RATE.format(weighted_warning_rate, weighted_sum_of_warnings,
                                                                lines_of_code))
+    
+    print("Number of warnings must be fixed: ", number_of_warnings_in_level[2])
+    print("Number of warnings should be fixed: ", number_of_warnings_in_level[1])
+    print("Number of warnings could be fixed: ", number_of_warnings_in_level[0])
+    
     util.write_into_file_list(strings.RESULTS_FILENAME_COMPILER_MUST_BE_FIXED, must_be_fixed_warning_lines,
                               append_to_file, True)
     util.write_into_file_list(strings.RESULTS_FILENAME_COMPILER_SHOULD_BE_FIXED, should_be_fixed_warning_lines,
