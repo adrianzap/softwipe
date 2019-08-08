@@ -100,6 +100,11 @@ def parse_arguments():
     parser.add_argument('--no-execution', action='store_true', help='Do not execute your program. This skips the '
                                                                     'clang sanitizer check')
 
+    parser.add_argument('-a', '--custom-assert', nargs=1, help='a comma separated list of custom assertions that '
+                                                               'might be used in the code. Can be used to correct '
+                                                               'your assertion score if you only/mostly use custom '
+                                                               'assertion functions rather than raw C ones')
+
     parser.add_argument('--allow-running-as-root', action='store_true', help='Do not print a warning if the user is '
                                                                              'root')
 
@@ -240,17 +245,18 @@ def compile_and_execute_program_with_sanitizers(args, lines_of_code, program_dir
     return score
 
 
-def static_analysis(source_files, lines_of_code, cpp):
+def static_analysis(source_files, lines_of_code, cpp, custom_asserts=None):
     """
     Run all the static analysis.
     :param source_files: The list of source files to analyze.
     :param lines_of_code: The lines of pure code count for the source_files.
     :param cpp: Whether C++ is used or not. True if C++, False if C.
+    :param custom_asserts: A list of custom assertions to be checked by the assertion check.
     :return: All the static analysis scores: assertion_score, cppcheck_score, clang_tidy_score,
     cyclomatic_complexity_score, warning_score, unique_score, kwstyle_score.
     """
     assertion_score, cppcheck_score, clang_tidy_score, cyclomatic_complexity_score, warning_score, unique_score, \
-    kwstyle_score = static_analysis_phase.run_static_analysis(source_files, lines_of_code, cpp)
+    kwstyle_score = static_analysis_phase.run_static_analysis(source_files, lines_of_code, cpp, custom_asserts)
     return assertion_score, cppcheck_score, clang_tidy_score, cyclomatic_complexity_score, warning_score, \
            unique_score, kwstyle_score
 
@@ -277,6 +283,7 @@ def main():
     program_dir_abs = os.path.abspath(args.programdir)
     exclude = args.exclude[0] if args.exclude else None
     excluded_paths = util.get_excluded_paths(program_dir_abs, exclude)
+    custom_asserts = args.custom_assert[0].split(',') if args.custom_assert else None
 
     source_files = util.find_all_source_files(program_dir_abs, excluded_paths)
     lines_of_code = util.count_lines_of_code(source_files)
@@ -284,7 +291,7 @@ def main():
     compiler_and_sanitizer_score = compile_and_execute_program_with_sanitizers(args, lines_of_code, program_dir_abs,
                                                                                cpp, excluded_paths, args.no_execution)
     assertion_score, cppcheck_score, clang_tidy_score, cyclomatic_complexity_score, warning_score, \
-        unique_score, kwstyle_score = static_analysis(source_files, lines_of_code, cpp)
+        unique_score, kwstyle_score = static_analysis(source_files, lines_of_code, cpp, custom_asserts)
 
     all_scores = [compiler_and_sanitizer_score, assertion_score, cppcheck_score, clang_tidy_score,
                   cyclomatic_complexity_score, warning_score, unique_score, kwstyle_score]

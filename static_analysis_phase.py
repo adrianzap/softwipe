@@ -17,7 +17,7 @@ import classifications
 import scoring
 
 
-def assertion_used_in_code_line(line):
+def assertion_used_in_code_line(line, custom_asserts=None):
     """
     Check whether a line of code contains an assertion. Finds both C assert() calls and C++ static_assert().
     :return: True if there is an assertion, else False.
@@ -27,15 +27,23 @@ def assertion_used_in_code_line(line):
     # mid of a block comment. This is fine though.
     # Breakdown of the regex: The first two negative lookaheads "(?! )" exclude commented assertions. Then,
     # match assert( and static_assert( while allowing for whitespace or code (e.g. ";" or "}") before the call.
-    regex = r'(?!^.*\/\/.*assert\s*\()(?!^.*\/\*.*assert\s*\()^.*(\W|^)(static_)?assert\s*\('
+    # If there are any custom asserts, add them to "custom". The regex will look for (assert|custom_assert).
+    custom = ''
+    if custom_asserts:
+        for custom_assert in custom_asserts:
+            custom += '|' + custom_assert
+
+    regex = r'(?!^.*\/\/.*(assert' + custom + ')\s*\()(?!^.*\/\*.*(assert' + custom + \
+            ')\s*\()^.*(\W|^)((static_)?assert' + custom + ')\s*\('
     return re.match(regex, line)
 
 
-def check_assert_usage(source_files, lines_of_code):
+def check_assert_usage(source_files, lines_of_code, custom_asserts=None):
     """
     Check how many assertions are used in the code.
     :param source_files: The list of files to count assertions in.
     :param lines_of_code: The total lines of code.
+    :param custom_asserts: A list of custom assertions to be checked by the assertion check.
     :return: The assertion score.
     """
     print(strings.RUN_ASSERTION_CHECK_HEADER)
@@ -46,7 +54,7 @@ def check_assert_usage(source_files, lines_of_code):
 
         file_lines = f.readlines()
         for line in file_lines:
-            if assertion_used_in_code_line(line):
+            if assertion_used_in_code_line(line, custom_asserts):
                 assert_count += 1
 
         f.close()
@@ -302,16 +310,17 @@ def run_kwstyle(source_files, lines_of_code):
     return score
 
 
-def run_static_analysis(source_files, lines_of_code, cpp):
+def run_static_analysis(source_files, lines_of_code, cpp, custom_asserts=None):
     """
     Run all the static code analysis.
     :param source_files: The list of source files to analyze.
     :param lines_of_code: The lines of pure code count for the source_files.
     :param cpp: Whether we're using C++ or not. True if C++ is used, False if C is used.
+    :param custom_asserts: A list of custom assertions to be checked by the assertion check.
     :return All the scores: assertion_score, cppcheck_score, clang_tidy_score, cyclomatic_complexity_score,
     warning_score, unique_score, kwstyle_score.
     """
-    assertion_score = check_assert_usage(source_files, lines_of_code)
+    assertion_score = check_assert_usage(source_files, lines_of_code, custom_asserts)
     cppcheck_score = run_cppcheck(source_files, lines_of_code, cpp)
     clang_tidy_score = run_clang_tidy(source_files, lines_of_code, cpp)
     cyclomatic_complexity_score, warning_score, unique_score = run_lizard(source_files)
