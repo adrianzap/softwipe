@@ -80,31 +80,61 @@ def sort_rates(rates):
     return sorted_rates
 
 
+def calculate_median(list):
+    if len(list) % 2 == 0:  # even number of elements
+        median_higher_index = int(len(list) / 2)
+        median_lower_index = median_higher_index - 1
+        median = (list[median_lower_index][1] + list[median_higher_index][1]) / 2
+    else:  # odd number of elements
+        median_index = int(len(list) / 2)
+        median = list[median_index][1]
+    return median
+
+
 def print_average_and_median(list_of_rates, no_average=False, no_median=False):
     if not no_average:
         average = sum(val[1] for val in list_of_rates) / len(list_of_rates)
         print('\t', 'Average:', average)
 
     if not no_median:
-        if len(list_of_rates) % 2 == 0:  # even number of elements
-            median_higher_index = int(len(list_of_rates) / 2)
-            median_lower_index = median_higher_index - 1
-            median = (list_of_rates[median_lower_index][1] + list_of_rates[median_higher_index][1]) / 2
-        else:  # odd number of elements
-            median_index = int(len(list_of_rates) / 2)
-            median = list_of_rates[median_index][1]
+        median = calculate_median(list_of_rates)
         print('\t', 'Median:', median)
 
     if not (no_average and no_median):
         print()
 
 
+def get_turkeys_fences(list):
+    median = calculate_median(list)
+    low_half_of_list = [val for val in list if val[1] <= median]
+    high_half_of_list = [val for val in list if val[1] >= median]
+
+    q1 = calculate_median(low_half_of_list)
+    q3 = calculate_median(high_half_of_list)
+    iqr = q3 - q1
+
+    k = 1.5
+
+    low_fence = q1 - k * iqr
+    high_fence = q3 + k * iqr
+
+    return low_fence, high_fence
+
+
 def print_all_rates(sorted_rates, no_average=False, no_median=False):
     for rate in sorted_rates.keys():
         cur_list = sorted_rates[rate]
+        low_fence, high_fence = get_turkeys_fences(cur_list)
+
         print(rate + ':', '(from best to worst)')
         for val in cur_list:
-            print('\t', val[1], val[0])
+            outlier_string = ''
+            if val[1] < low_fence:
+                outlier_string = 'LOW OUTLIER'
+            elif val[1] > high_fence:
+                outlier_string = 'HIGH OUTLIER'
+
+            print('\t', val[1], val[0], outlier_string)
         print()
         print_average_and_median(cur_list, no_average, no_median)
 
