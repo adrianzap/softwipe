@@ -28,6 +28,10 @@ def parse_arguments():
                                                                 'default option')
     mode.add_argument('-B', '--best-only', action='store_true', help='output only the best and worst rates for each '
                                                                      'category')
+    mode.add_argument('-s', '--softwipe', action='store_true', help='output suggested best & worst values for the '
+                                                                    'scoring in softwipe, using the variable names '
+                                                                    'softwipe uses such that the output can be copied '
+                                                                    'into scoring.py easily')
 
     parser.add_argument('-n', '--no-average', action='store_true', help='do not print the average rate for any score')
     parser.add_argument('-m', '--no-median', action='store_true', help='do not print the median rate for any score')
@@ -139,6 +143,54 @@ def print_all_rates(sorted_rates, no_average=False, no_median=False):
         print_average_and_median(cur_list, no_average, no_median)
 
 
+def print_softwipe_scoring_values(sorted_rates):
+    for rate in sorted_rates.keys():
+        cur_list = sorted_rates[rate]
+        low_fence, high_fence = get_turkeys_fences(cur_list)
+
+        i = 0
+        while cur_list[i][1] < low_fence or cur_list[i][1] > high_fence:  # while the best value is an outlier
+            i += 1
+        best = cur_list[i][1]
+
+        j = -1
+        while cur_list[j][1] < low_fence or cur_list[j][1] > high_fence:  # while the worst value is an outlier
+            j -= 1
+        worst = cur_list[j][1]
+
+        # Ugly string assignment code ahead :(
+        best_string = ''
+        worst_string = ''
+        if rate == 'compiler_and_sanitizer':
+            best_string = 'COMPILER_BEST'
+            worst_string = 'COMPILER_WORST'
+        elif rate == 'assertions':
+            best_string = 'ASSERTIONS_BEST'
+            worst_string = 'ASSERTIONS_WORST'
+        elif rate == 'cppcheck':
+            best_string = 'CPPCHECK_BEST'
+            worst_string = 'CPPCHECK_WORST'
+        elif rate == 'clang_tidy':
+            best_string = 'CLANG_TIDY_BEST'
+            worst_string = 'CLANG_TIDY_WORST'
+        elif rate == 'cyclomatic_complexity':
+            best_string = 'CYCLOMATIC_COMPLEXITY_BEST'
+            worst_string = 'CYCLOMATIC_COMPLEXITY_WORST'
+        elif rate == 'lizard_warnings':
+            best_string = 'LIZARD_WARNINGS_BEST'
+            worst_string = 'LIZARD_WARNINGS_WORST'
+        elif rate == 'unique':
+            best_string = 'UNIQUE_BEST'
+            worst_string = 'UNIQUE_WORST'
+        elif rate == 'kwstyle':
+            best_string = 'KWSTYLE_BEST'
+            worst_string = 'KWSTYLE_WORST'
+
+        print(best_string + ' = ' + str(best))
+        print(worst_string + ' = ' + str(worst))
+        print()
+
+
 def print_best_rates(sorted_rates, no_average=False, no_median=False, only=False):
     for rate in sorted_rates.keys():
         cur_list = sorted_rates[rate]
@@ -165,6 +217,8 @@ def main():
 
     if args.all:
         print_all_rates(sorted_rates, args.no_average, args.no_median)
+    elif args.softwipe:
+        print_softwipe_scoring_values(sorted_rates)
     elif args.best_only:
         print_best_rates_only(sorted_rates, args.no_average, args.no_median)
     else:
