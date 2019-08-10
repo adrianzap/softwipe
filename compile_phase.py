@@ -142,9 +142,12 @@ def print_compilation_results(warning_lines, lines_of_code, append_to_file):
     print(strings.RESULT_WEIGHTED_COMPILER_WARNING_RATE.format(weighted_warning_rate, weighted_sum_of_warnings,
                                                                lines_of_code))
     
-    print("Number of warnings must be fixed: ", number_of_warnings_in_level[2])
-    print("Number of warnings should be fixed: ", number_of_warnings_in_level[1])
-    print("Number of warnings could be fixed: ", number_of_warnings_in_level[0])
+    print("  Number of level 3 warnings (must be fixed):",
+          str(number_of_warnings_in_level[2]) + '/' + str(lines_of_code))
+    print("  Number of level 2 warnings (should be fixed):",
+          str(number_of_warnings_in_level[1]) + '/' + str(lines_of_code))
+    print("  Number of level 1 warnings (could be fixed):",
+          str(number_of_warnings_in_level[0]) + '/' + str(lines_of_code))
     
     util.write_into_file_list(strings.RESULTS_FILENAME_COMPILER_MUST_BE_FIXED, must_be_fixed_warning_lines,
                               append_to_file, True)
