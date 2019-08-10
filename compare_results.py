@@ -24,14 +24,14 @@ def parse_arguments():
     mode.add_argument('-a', '--all', action='store_true', help='output all result rates, for each category, '
                                                                'in a sorted manner')
     mode.add_argument('-b', '--best', action='store_true', help='output only the best, second best, second worst, '
-                                                                'and worst rates for each category. This is the '
-                                                                'default option')
+                                                                'and worst rates for each category')
     mode.add_argument('-B', '--best-only', action='store_true', help='output only the best and worst rates for each '
                                                                      'category')
     mode.add_argument('-s', '--softwipe', action='store_true', help='output suggested best & worst values for the '
                                                                     'scoring in softwipe, using the variable names '
                                                                     'softwipe uses such that the output can be copied '
-                                                                    'into scoring.py easily')
+                                                                    'into scoring.py easily. This is the default '
+                                                                    'option')
 
     parser.add_argument('-n', '--no-average', action='store_true', help='do not print the average rate for any score')
     parser.add_argument('-m', '--no-median', action='store_true', help='do not print the median rate for any score')
@@ -217,12 +217,12 @@ def main():
 
     if args.all:
         print_all_rates(sorted_rates, args.no_average, args.no_median)
-    elif args.softwipe:
-        print_softwipe_scoring_values(sorted_rates)
+    elif args.best:
+        print_best_rates(sorted_rates, args.no_average, args.no_median)
     elif args.best_only:
         print_best_rates_only(sorted_rates, args.no_average, args.no_median)
     else:
-        print_best_rates(sorted_rates, args.no_average, args.no_median)
+        print_softwipe_scoring_values(sorted_rates)
 
 
 if __name__ == "__main__":
