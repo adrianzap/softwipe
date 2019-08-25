@@ -191,25 +191,12 @@ def remove_excluded_paths_from_warning_lines(warning_lines, excluded_paths):
     return new_warning_lines
 
 
-def run_compiledb(build_path, make_command):
-    """
-    Run compiledb (Compilation Database Generator) which creates the JSON compilation database (that is required for
-    most clang tools) for make-based projects.
-    :param build_path: The build path, where the Makefile is located.
-    :param make_command: The make command that must be executed to build the program. Must be given as a list,
-    e.g. ['make', 'mybuildtarget']. Compiledb uses the command to build the compilation database.
-    """
-    compiledb_call = [TOOLS.COMPILEDB.exe_name, '--no-build']
-    compiledb_call.extend(make_command)
-    subprocess.check_output(compiledb_call, cwd=build_path)
-
-
 def running_make_clean(make_flags):
     return make_flags.strip().startswith('clean')
 
 
 def run_make(build_path, lines_of_code, excluded_paths, dont_check_for_warnings=False, make_flags='',
-             make_verbose=False, append_to_file=False):
+             make_verbose=False, append_to_file=False, run_compiledb=False):
     """
     Run the make command and print the warnings that it outputs while compiling.
     :param build_path: The build path, where the Makefile is located.
@@ -222,6 +209,7 @@ def run_make(build_path, lines_of_code, excluded_paths, dont_check_for_warnings=
     :param make_verbose: Whether the make command output should be verbose or not.
     :param append_to_file: If True, append to the softwipe_compilation_results.txt file rather than writing it.
     Useful when running multiple make commands for the compilation to not overwrite previous results.
+    :param run_compiledb: Run compiledb after running make - required for make-based projects.
     :return: The weighted sum of compiler warnings, or None if not checking for warnings.
     """
     if make_flags is None:
@@ -229,6 +217,8 @@ def run_make(build_path, lines_of_code, excluded_paths, dont_check_for_warnings=
     make_call = TOOLS.MAKE.exe_name + ' ' + make_flags
     if make_verbose:
         make_call += ' VERBOSE=1'
+    if run_compiledb and not running_make_clean(make_flags):
+        make_call += ' | ' + TOOLS.COMPILEDB.exe_name
 
     # We must use shell=True here, else setting CFLAGS etc. won't work properly.
     try:
@@ -266,12 +256,10 @@ def parse_make_command_file_and_run_all_commands_in_it(make_command_file, progra
 
             append_to_file = True if have_already_written_into_file else False
             r = run_make(working_directory, lines_of_code, excluded_paths, make_flags=make_flags,
-                         append_to_file=append_to_file)
+                         append_to_file=append_to_file, run_compiledb=True)
             if r:
                 weighted_sum_of_warnings += r
             have_already_written_into_file = True
-
-            run_compiledb(working_directory, command.split())
         else:
             split_command = command.split()
             subprocess.run(split_command, cwd=working_directory, stdout=subprocess.DEVNULL)
@@ -313,8 +301,8 @@ def compile_program_make(program_dir_abs, lines_of_code, compiler_flags, exclude
                                                                                       excluded_paths)
     else:
         weighted_sum_of_warnings = run_make(program_dir_abs, lines_of_code, excluded_paths,
-                                            make_flags=strings.create_make_flags(compiler_flags=compiler_flags))
-        run_compiledb(program_dir_abs, [TOOLS.MAKE.exe_name])
+                                            make_flags=strings.create_make_flags(compiler_flags=compiler_flags),
+                                            run_compiledb=True)
 
     return weighted_sum_of_warnings
 
