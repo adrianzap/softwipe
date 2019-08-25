@@ -158,9 +158,10 @@ def beautify_clang_tidy_warning_lines(warning_lines):
     return beautified_lines
 
 
-def run_clang_tidy(source_files, lines_of_code, cpp):
+def run_clang_tidy(program_dir_abs, source_files, lines_of_code, cpp):
     """
     Runs clang-tidy.
+    :param program_dir_abs: The absolute path to the root directory of the target program.
     :param source_files: The list of source files to analyze.
     :param lines_of_code: The lines of pure code count.
     :param cpp: Whether C++ is used or not. True if C++, false if C.
@@ -173,6 +174,7 @@ def run_clang_tidy(source_files, lines_of_code, cpp):
     # Create checks list
     clang_tidy_checks = strings.CLANG_TIDY_CHECKS_CPP if cpp else strings.CLANG_TIDY_CHECKS_C
     clang_tidy_call.append('-checks=' + clang_tidy_checks)
+    clang_tidy_call.extend(['-p', program_dir_abs])
 
     try:
         output = subprocess.check_output(clang_tidy_call, universal_newlines=True, stderr=subprocess.STDOUT)
@@ -310,9 +312,10 @@ def run_kwstyle(source_files, lines_of_code):
     return score
 
 
-def run_static_analysis(source_files, lines_of_code, cpp, custom_asserts=None):
+def run_static_analysis(program_dir_abs, source_files, lines_of_code, cpp, custom_asserts=None):
     """
     Run all the static code analysis.
+    :param program_dir_abs: The absolute path to the root directory of the target program.
     :param source_files: The list of source files to analyze.
     :param lines_of_code: The lines of pure code count for the source_files.
     :param cpp: Whether we're using C++ or not. True if C++ is used, False if C is used.
@@ -322,7 +325,7 @@ def run_static_analysis(source_files, lines_of_code, cpp, custom_asserts=None):
     """
     assertion_score = check_assert_usage(source_files, lines_of_code, custom_asserts)
     cppcheck_score = run_cppcheck(source_files, lines_of_code, cpp)
-    clang_tidy_score = run_clang_tidy(source_files, lines_of_code, cpp)
+    clang_tidy_score = run_clang_tidy(program_dir_abs, source_files, lines_of_code, cpp)
     cyclomatic_complexity_score, warning_score, unique_score = run_lizard(source_files)
     kwstyle_score = run_kwstyle(source_files, lines_of_code)
 

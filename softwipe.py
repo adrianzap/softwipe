@@ -245,9 +245,10 @@ def compile_and_execute_program_with_sanitizers(args, lines_of_code, program_dir
     return score
 
 
-def static_analysis(source_files, lines_of_code, cpp, custom_asserts=None):
+def static_analysis(program_dir_abs, source_files, lines_of_code, cpp, custom_asserts=None):
     """
     Run all the static analysis.
+    :param program_dir_abs: The absolute path to the root directory of the target program.
     :param source_files: The list of source files to analyze.
     :param lines_of_code: The lines of pure code count for the source_files.
     :param cpp: Whether C++ is used or not. True if C++, False if C.
@@ -256,7 +257,8 @@ def static_analysis(source_files, lines_of_code, cpp, custom_asserts=None):
     cyclomatic_complexity_score, warning_score, unique_score, kwstyle_score.
     """
     assertion_score, cppcheck_score, clang_tidy_score, cyclomatic_complexity_score, warning_score, unique_score, \
-    kwstyle_score = static_analysis_phase.run_static_analysis(source_files, lines_of_code, cpp, custom_asserts)
+        kwstyle_score = static_analysis_phase.run_static_analysis(program_dir_abs, source_files, lines_of_code, cpp,
+                                                              custom_asserts)
     return assertion_score, cppcheck_score, clang_tidy_score, cyclomatic_complexity_score, warning_score, \
            unique_score, kwstyle_score
 
@@ -291,7 +293,7 @@ def main():
     compiler_and_sanitizer_score = compile_and_execute_program_with_sanitizers(args, lines_of_code, program_dir_abs,
                                                                                cpp, excluded_paths, args.no_execution)
     assertion_score, cppcheck_score, clang_tidy_score, cyclomatic_complexity_score, warning_score, \
-        unique_score, kwstyle_score = static_analysis(source_files, lines_of_code, cpp, custom_asserts)
+        unique_score, kwstyle_score = static_analysis(program_dir_abs, source_files, lines_of_code, cpp, custom_asserts)
 
     all_scores = [compiler_and_sanitizer_score, assertion_score, cppcheck_score, clang_tidy_score,
                   cyclomatic_complexity_score, warning_score, unique_score, kwstyle_score]
