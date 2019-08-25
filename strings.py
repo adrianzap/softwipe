@@ -31,7 +31,7 @@ COMPILATION_CRASHED = 'Compilation crashed with error code {}!\n{}'
 
 
 CLANG_TIDY_CHECKS_C = '-*,bugprone-*,clang-analyzer-*,misc-*,modernize-*,mpi-*,performance-*,readability-*,' \
-                      '-readability-non-const-parameter'
+                      '-readability-non-const-parameter,-clang-analyzer-cp*,-clang-analyzer-unix.MismatchedDeallocator'
 CLANG_TIDY_CHECKS_CPP = CLANG_TIDY_CHECKS_C + ',boost-*,cppcoreguidelines-*'
 
 
