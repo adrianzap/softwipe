@@ -93,7 +93,8 @@ def run_cppcheck(source_files, lines_of_code, cpp):
     """
     print(strings.RUN_CPPCHECK_HEADER)
     language = 'c++' if cpp else 'c'
-    cppcheck_call = [TOOLS.CPPCHECK.exe_name, '--enable=all', '--force', '--language=' + language]
+    cppcheck_call = [TOOLS.CPPCHECK.exe_name, '--enable=all', '--force', '--language=' + language,
+                     '--template=cppcheck1']
     cppcheck_call.extend(source_files)
 
     output = subprocess.check_output(cppcheck_call, universal_newlines=True, stderr=subprocess.STDOUT)
