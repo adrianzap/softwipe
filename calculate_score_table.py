@@ -17,7 +17,7 @@ import scoring
 ###########################################################
 FOLDERS = ['dawg', 'mrbayes', 'raxml-ng', 'sf', 'hyperphylo', 'kahypar', 'ms', 'repeatscounter', 'tcoffee', 'bpp',
            'indelible', 'mafft', 'prank', 'seq-gen', 'genesis', 'athena', 'gadget', 'iqtree', 'clustal', 'phyml',
-           'minimap', 'samtools', 'vsearch', 'swarm', 'cellcoal']
+           'minimap', 'samtools', 'vsearch', 'swarm', 'cellcoal', 'treerecs']
 SOFTWIPE_OUTPUT_FILE_NAME = 'softwipe_output.txt'
 
 
