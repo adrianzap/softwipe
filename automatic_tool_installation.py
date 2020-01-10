@@ -68,6 +68,15 @@ def handle_kwstyle_download():
     print('Done!')
     print()
 
+def handle_infer_download():
+    #TODO: properly select newest version
+    version =  '0.17.0'
+    url = "https://github.com/facebook/infer/releases/download/v{}/infer-linux64-v{}.tar.xz".format(version, version)
+    ps = subprocess.Popen(('curl', '-sSL', url), stdout=subprocess.PIPE)
+    output = subprocess.Popen(('sudo', 'tar', "-C", "/opt", "-xJ"), stdin=ps.stdout)
+    output.wait()
+    ps = subprocess.Popen(("sudo", "ln", "-s", "/opt/infer-linux64-v{}/bin/infer".format(version), "/usr/local/bin/infer"))
+    ps.wait()
 
 def handle_tool_download(tool_name):
     """
@@ -76,6 +85,8 @@ def handle_tool_download(tool_name):
     """
     if tool_name == 'KWStyle':
         handle_kwstyle_download()
+    elif tool_name == 'infer':
+        handle_infer_download()
 
 
 def handle_clang_tidy_installation(package_install_command):

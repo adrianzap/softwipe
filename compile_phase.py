@@ -222,6 +222,8 @@ def run_make(build_path, lines_of_code, excluded_paths, dont_check_for_warnings=
 
     # We must use shell=True here, else setting CFLAGS etc. won't work properly.
     try:
+        print(make_call)
+        #make_call = 'make CC="clang" CXX="clang++" CFLAGS="-Weverything -Wno-padded -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-c99-compat -Wno-c++11-extensions -Wno-newline-eof -Wno-source-uses-openmp" CXXFLAGS="-Weverything -Wno-padded -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-c99-compat -Wno-c++11-extensions -Wno-newline-eof -Wno-source-uses-openmp -fopenmp" CPPFLAGS="-Weverything -Wno-padded -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-c99-compat -Wno-c++11-extensions -Wno-newline-eof -Wno-source-uses-openmp" LDFLAGS="-Weverything -Wno-padded -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-c99-compat -Wno-c++11-extensions -Wno-newline-eof -Wno-source-uses-openmp" | compiledb'
         output = subprocess.check_output(make_call, cwd=build_path, universal_newlines=True, stderr=subprocess.STDOUT,
                                          shell=True)
     except subprocess.CalledProcessError as e:
@@ -373,3 +375,42 @@ def compile_program_clang(program_dir_abs, targets, lines_of_code, compiler_flag
 
     weighted_sum_of_warnings = print_compilation_results(warning_lines, lines_of_code, False)
     return weighted_sum_of_warnings
+
+
+def compile_program_infer_cmake(program_dir_abs, excluded_paths):   #TODO: exclude paths!
+    build_path = create_build_directory(program_dir_abs, build_dir_name="infer_build")
+    clear_directory(build_path)
+
+    infer_call_compile = ["infer", "compile", "--", "cmake", ".."]
+    infer_call_capture = ["infer", "capture", "--", "make"]
+
+    '''if excluded_paths:
+        print("Excluded: ", end="")
+        print(excluded_paths)
+        infer_call_capture = ["infer","--skip-analysis-in-path"]
+        infer_call_capture.extend(excluded_paths)
+        infer_call_capture.extend(["--", "make"])'''
+
+    try:
+        output = subprocess.check_output(infer_call_compile, cwd=build_path, universal_newlines=True, stderr=subprocess.STDOUT)
+        output += subprocess.check_output(infer_call_capture, cwd=build_path, universal_newlines=True, stderr=subprocess.STDOUT)
+    except subprocess.CalledProcessError as e:
+        print(strings.COMPILATION_CRASHED.format(e.returncode, e.output))
+        print("Infer compilation was not successful!")      #TODO: string constant....
+        return False
+
+    return True
+
+def compile_program_infer_make(program_dir_abs, excluded_paths):
+    infer_call = ["infer", "capture", "--", "make"]
+    make_clean_call = ["make", "clean"]
+
+    try:
+        output = subprocess.check_output(make_clean_call, cwd=program_dir_abs, universal_newlines=True, stderr=subprocess.STDOUT)
+        output += subprocess.check_output(infer_call, cwd=program_dir_abs, universal_newlines=True, stderr=subprocess.STDOUT)
+    except subprocess.CalledProcessError as e:
+        print(strings.COMPILATION_CRASHED.format(e.returncode, e.output))
+        print("Infer compilation was not successful!")      #TODO: string constant....
+        return False
+
+    return True

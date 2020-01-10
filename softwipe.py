@@ -14,6 +14,7 @@ import execution_phase
 import util
 import automatic_tool_installation
 import scoring
+import re
 
 
 def parse_arguments():
@@ -108,6 +109,8 @@ def parse_arguments():
     parser.add_argument('--allow-running-as-root', action='store_true', help='Do not print a warning if the user is '
                                                                              'root')
 
+    parser.add_argument('--add-badge', nargs=1)
+
     args = parser.parse_args()
     return args
 
@@ -195,6 +198,16 @@ def compile_program(args, lines_of_code, cpp, compiler_flags, excluded_paths):
 
     return score
 
+def compile_program_with_infer(args, excluded_paths):
+    program_dir_abs = os.path.abspath(args.programdir)
+
+    if args.cmake:
+        compile_phase.compile_program_infer_cmake(program_dir_abs, excluded_paths)
+    elif args.make:
+        compile_phase.compile_program_infer_make(program_dir_abs, excluded_paths)
+    else:
+        print("Only make/cmake supported to analyze the program with Infer right now!")
+
 
 def execute_program(program_dir_abs, executefile, cmake, lines_of_code):
     """
@@ -231,6 +244,8 @@ def compile_and_execute_program_with_sanitizers(args, lines_of_code, program_dir
         compiler_flags += " " + options
 
     weighted_sum_of_compiler_warnings = compile_program(args, lines_of_code, cpp, compiler_flags, excluded_paths)
+    #TODO: Experimental Infer stuff
+
     if not no_exec:
         execute_file = args.executefile[0] if args.executefile else None
         weighted_sum_of_sanitizer_warnings = execute_program(program_dir_abs, execute_file, args.cmake, lines_of_code)
@@ -242,10 +257,13 @@ def compile_and_execute_program_with_sanitizers(args, lines_of_code, program_dir
     score = scoring.calculate_compiler_and_sanitizer_score(weighted_warning_rate)
     scoring.print_score(score, 'Compiler + Sanitizer')
 
+    #TODO: Experimental Infer stuff
+    compile_program_with_infer(args, excluded_paths)
+
     return score
 
 
-def static_analysis(program_dir_abs, source_files, lines_of_code, cpp, custom_asserts=None):
+def static_analysis(program_dir_abs, source_files, lines_of_code, cpp, custom_asserts=None, cmake=False):
     """
     Run all the static analysis.
     :param program_dir_abs: The absolute path to the root directory of the target program.
@@ -257,10 +275,10 @@ def static_analysis(program_dir_abs, source_files, lines_of_code, cpp, custom_as
     cyclomatic_complexity_score, warning_score, unique_score, kwstyle_score.
     """
     assertion_score, cppcheck_score, clang_tidy_score, cyclomatic_complexity_score, warning_score, unique_score, \
-        kwstyle_score = static_analysis_phase.run_static_analysis(program_dir_abs, source_files, lines_of_code, cpp,
-                                                              custom_asserts)
+        kwstyle_score, infer_score = static_analysis_phase.run_static_analysis(program_dir_abs, source_files, lines_of_code, cpp,
+                                                              custom_asserts, cmake=cmake)
     return assertion_score, cppcheck_score, clang_tidy_score, cyclomatic_complexity_score, warning_score, \
-           unique_score, kwstyle_score
+           unique_score, kwstyle_score, infer_score
 
 
 def main():
@@ -272,6 +290,8 @@ def main():
 
     args = parse_arguments()
 
+    print(args)
+
     # Normal check for the dependencies
     if len(sys.argv) != 1:
         automatic_tool_installation.check_if_all_required_tools_are_installed()
@@ -282,6 +302,7 @@ def main():
         warn_if_user_is_root()
 
     cpp = True if args.cpp else False
+    cmake = True if args.cmake else False
     program_dir_abs = os.path.abspath(args.programdir)
     exclude = args.exclude[0] if args.exclude else None
     excluded_paths = util.get_excluded_paths(program_dir_abs, exclude)
@@ -293,12 +314,57 @@ def main():
     compiler_and_sanitizer_score = compile_and_execute_program_with_sanitizers(args, lines_of_code, program_dir_abs,
                                                                                cpp, excluded_paths, args.no_execution)
     assertion_score, cppcheck_score, clang_tidy_score, cyclomatic_complexity_score, warning_score, \
-        unique_score, kwstyle_score = static_analysis(program_dir_abs, source_files, lines_of_code, cpp, custom_asserts)
+        unique_score, kwstyle_score, infer_score = static_analysis(program_dir_abs, source_files, lines_of_code, cpp, custom_asserts, cmake=cmake)
 
     all_scores = [compiler_and_sanitizer_score, assertion_score, cppcheck_score, clang_tidy_score,
-                  cyclomatic_complexity_score, warning_score, unique_score, kwstyle_score]
+                  cyclomatic_complexity_score, warning_score, unique_score, kwstyle_score]  #TODO: add infer_score to this!
+
     overall_score = scoring.average_score(all_scores)
-    scoring.print_score(overall_score, 'Overall program')
+
+    scoring.print_score(overall_score, 'Overall program absolute')
+
+    if args.add_badge:
+        fname = args.add_badge[0]
+        badge_string = "[![Softwipe Score](https://img.shields.io/badge/softwipe-{}-blue)]".format(round(overall_score, 1))
+
+        file = open(fname, 'r')
+
+        softwipe_badge_found = False
+        badge_found = False
+
+        for line in file:
+            if "[![Softwipe Score]" in line:
+                softwipe_badge_found = True
+            if "[![" in line:
+                badge_found = True
+
+        file.close()                      # just close and reopen the file to reset the reading pointer
+        file = open(fname, 'r')
+
+        output = ""
+        badge_set = False
+
+        if badge_found == False and softwipe_badge_found == False:      # if there are no badges at all, just add the softwipe badge in the second line
+            for line in file:
+                output += line
+                if badge_set == False:
+                    badge_set = True
+                    output += badge_string + "\n"
+        elif badge_found == True and softwipe_badge_found == False:     # if there are badges, add the softwipe badge in the same line
+            for line in file:
+                if "[![" in line and badge_set == False:
+                    badge_set = True
+                    line += badge_string
+                output += line
+        elif softwipe_badge_found == True:                              # if there is a softwipe badge already, replace it with a new one
+            for line in file:
+                if "[![Softwipe Score]" in line:
+                    line = re.sub(r'\[!\[Softwipe Score\]\(([^\)\]]+)\)\]', badge_string, line.rstrip()) + "\n"
+
+                output += line
+
+        with open(fname, 'w') as modified: modified.write(output)
+        print("Added badge to file {}".format(args.add_badge[0]))
 
 
 if __name__ == "__main__":

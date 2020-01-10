@@ -18,7 +18,12 @@ import scoring
 FOLDERS = ['dawg', 'mrbayes', 'raxml-ng', 'sf', 'hyperphylo', 'kahypar', 'ms', 'repeatscounter', 'tcoffee', 'bpp',
            'indelible', 'mafft', 'prank', 'seq-gen', 'genesis', 'athena', 'gadget', 'iqtree', 'clustal', 'phyml',
            'minimap', 'samtools', 'vsearch', 'swarm', 'cellcoal', 'treerecs']
-SOFTWIPE_OUTPUT_FILE_NAME = 'softwipe_output.txt'
+#SOFTWIPE_OUTPUT_FILE_NAME = 'softwipe_output.txt'
+SOFTWIPE_OUTPUT_FILE_NAME = "sw_batch.txt"
+
+#For the prototype
+SW_REL_FILE_NAME = "sw_batch.txt"
+SW_ABS_FILE_NAME = "sw_batch.txt"
 
 
 def parse_arguments():
@@ -31,6 +36,10 @@ def parse_arguments():
                                                           '"' + SOFTWIPE_OUTPUT_FILE_NAME + '"')
     parser.add_argument('-A', '--absolute', action='store_true', help='create a table with absolute values rather '
                                                                       'than scores')
+    #parser.add_argument('-o', help='output file to store the scores')
+    parser.add_argument('--only-overall-scores', action='store_true', help='flag only implemented for easier comparison of different '
+                                                      'scoring techniques')
+
     args = parser.parse_args()
     return args
 
@@ -42,7 +51,9 @@ def get_result_rates(result_directory, folder):
 
     # Init
     compiler_and_sanitizer_rate = 0.0  # Special treatment because we may have to add multiple values for this score
-    assertion_rate = cppcheck_rate = clang_tidy_rate = ccn = lizard_rate = unique_rate = kwstyle_rate = None
+    assertion_rate = cppcheck_rate = clang_tidy_rate = ccn = lizard_rate = unique_rate = kwstyle_rate = infer_rate = None
+
+    infer_rate = -1
 
     # Iterate through the softwipe output
     for line in cur_lines:
@@ -69,9 +80,11 @@ def get_result_rates(result_directory, folder):
             unique_rate = float(split_line[3])
         elif line.startswith('KWStyle warning rate:'):
             kwstyle_rate = float(split_line[3])
+        elif line.startswith('Weighted Infer warning rate:'):
+            infer_rate = float(split_line[4])
 
     return compiler_and_sanitizer_rate, assertion_rate, cppcheck_rate, clang_tidy_rate, ccn, lizard_rate, \
-        unique_rate, kwstyle_rate
+        unique_rate, kwstyle_rate, infer_rate
 
 
 def get_result_values(result_directory, folder):
@@ -116,6 +129,20 @@ def get_result_values(result_directory, folder):
     return loc, functions, compiler_warnings, sanitizer_warnings, assertions, cppcheck_warnings, clang_tidy_warnings, \
                 ccn, lizard_warnings, unique, kwstyle_warnings
 
+#TODO: this is just a prototype for now
+def find_sw_scores(path):
+    f = []
+    d = []
+    for (_, dirname, filename) in os.walk(path):
+        f.extend(filename)
+        d.extend(dirname)
+        break
+    if SW_REL_FILE_NAME in f:
+        FOLDERS.append(path)
+        return
+
+    for dir in d:
+        find_sw_scores(path + "/" + dir)
 
 def calculate_scores(result_directory, absolute):
     # Init
@@ -143,8 +170,30 @@ def calculate_scores(result_directory, absolute):
             'lizard_warnings': {},
             'unique': {},
             'kwstyle': {},
+            #'infer': {},   #TODO: add this again
             'overall': {}
         }
+
+    #Slightly change the way the tool folders are found
+    print(result_directory)
+    dirs = []
+    FOLDERS.clear()
+
+    for (_, dirname, _) in os.walk(result_directory):
+        dirs.extend(dirname)
+        break
+    for dir in dirs:
+        find_sw_scores(result_directory + "/" + dir)
+
+    temp = [e.replace(result_directory + "/", "") for e in FOLDERS]
+    FOLDERS.clear()
+    FOLDERS.extend(temp)
+    #FOLDERS = temp
+    print(FOLDERS)
+
+    FOLDERS.clear()
+    #FOLDERS.extend(['BGSA-1.0/original/BGSA_SSE', 'bindash-1.0', 'copmem-0.2', 'crisflash', 'cryfa-18.06', 'defor', 'dna-nn-0.1', 'dr_sasa_n', 'emeraLD', 'ExpansionHunter', 'fastspar', 'HLA-LA/src', 'lemon', 'naf-1.1.0/ennaf', 'naf-1.1.0/unnaf', 'ngsTools/ngsLD', 'ntEdit-1.2.3', 'PopLDdecay', 'virulign-1.0.1', 'axe-0.3.3', 'prequal', 'IQ-TREE-2.0-rc1']) #TODO: add SPRING
+    FOLDERS.extend(['IQ-TREE-2.0-rc1'])
 
     for score in scores:
         for folder in FOLDERS:
@@ -170,7 +219,9 @@ def calculate_scores(result_directory, absolute):
         else:
             # Get rates
             compiler_and_sanitizer_rate, assertion_rate, cppcheck_rate, clang_tidy_rate, ccn, lizard_rate, \
-                unique_rate, kwstyle_rate = get_result_rates(result_directory, folder)
+                unique_rate, kwstyle_rate, infer_rate = get_result_rates(result_directory, folder)
+
+            print(folder + " infer rate: {}".format(infer_rate))
 
             # Get scores
             scores['compiler_and_sanitizer'][folder] = scoring.calculate_compiler_and_sanitizer_score(
@@ -182,6 +233,7 @@ def calculate_scores(result_directory, absolute):
             scores['lizard_warnings'][folder] = scoring.calculate_lizard_warning_score(lizard_rate)
             scores['unique'][folder] = scoring.calculate_unique_score(unique_rate)
             scores['kwstyle'][folder] = scoring.calculate_kwstyle_score(kwstyle_rate)
+            #scores['infer'][folder] = scoring.calculate_infer_score(infer_rate)    #TODO: add this again
 
             # Calculate the overall score
             list_of_scores = [scores[score][folder] for score in scores.keys() if score != 'overall']
@@ -190,7 +242,7 @@ def calculate_scores(result_directory, absolute):
     return scores
 
 
-def print_score_csv(scores, absolute):
+def print_score_csv(scores, absolute, print_only_overall):
     last_column = 'kwstyle' if absolute else 'overall'
 
     print('program', end=',')
@@ -200,20 +252,25 @@ def print_score_csv(scores, absolute):
         else:
             print(score)
     for folder in FOLDERS:
-        print(folder, end=',')
-        for score in scores:
-            if score != last_column:
-                print(scores[score][folder], end=',')
-            else:
-                print(scores[score][folder])
+        if not print_only_overall:
+            print(folder, end=',')
+            for score in scores:
+                if score != last_column:
+                    print(scores[score][folder], end=',')
+                else:
+                    print(scores[score][folder])
+        else:
+            #print(folder, end=" ")
+            print(round(scores['overall'][folder], 1))
 
 
 def main():
     args = parse_arguments()
     result_directory = os.path.abspath(args.result_directory[0])
     absolute = True if args.absolute else False
+    print_only_overall = True if args.only_overall_scores else False
     scores = calculate_scores(result_directory, absolute)
-    print_score_csv(scores, absolute)
+    print_score_csv(scores, absolute, print_only_overall)
 
 
 if __name__ == "__main__":

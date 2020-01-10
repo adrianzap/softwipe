@@ -13,9 +13,9 @@ def write_into_file_string(file_name, content, append=False, no_extra_newline=Fa
     file = open(file_name, write_mode)
     file.write(content)
     file.close()
-    print(strings.DETAILLED_RESULTS_WRITTEN_INTO.format(file_name))
-    if not no_extra_newline:
-        print()
+    #print(strings.DETAILLED_RESULTS_WRITTEN_INTO.format(file_name))    #TODO: remove unnecessary prints
+    #if not no_extra_newline:
+    #    print()
 
 
 def write_into_file_list(file_name, content, append=False, no_extra_newline=False):

@@ -1,7 +1,9 @@
 """
 Functions for calculating the scores for each category that is checked by softwipe.
 """
-
+import math
+from scipy.optimize import curve_fit
+import numpy as np
 
 def print_score(score, score_name=None):
     """
@@ -9,8 +11,12 @@ def print_score(score, score_name=None):
     :param score: The score to print.
     :param score_name: Give the score a name which will be printed as well.
     """
-    print(score_name, 'Score: {0:.1f}/10'.format(round(score, 1)))
+    #print(score_name, 'Score: {0:.1f}/10'.format(round(score, 1)))
+    print(get_score_string(score, score_name))
     print()
+
+def get_score_string(score, score_name=""):
+    return score_name + ' Score: {0:.1f}/10'.format(round(score, 1))
 
 
 def average_score(list_of_scores):
@@ -24,6 +30,72 @@ def average_score(list_of_scores):
 
 
 def _calculate_score_generic(rate, best, worst):
+    # This is needed temporarily because of the way the tool folders are walked in the 'calculate_score_table.py'.
+    # There can be incomplete reports which would lead to a termination of softwipe.
+    #if not rate: return 0;
+
+    # for testing purposes:
+    d = best-worst
+    #return calculate_score_absolute(rate, best, worst)
+    '''steps = 100
+    sum_abs = 0
+    sum_rel = 0
+    sum_err = 0
+
+    mean_abs = 0
+    mean_rel = 0
+
+    counter = 0
+
+    range1 = -0.5
+    range2 = 1.5
+
+    for i in range(int(range1*steps), int(range2*steps)):
+        abs = calculate_score_absolute(i/steps*d + worst, best, worst)
+        rel = (10 * i/steps*d) / (best - worst)
+
+        if rel > 10: rel = 10
+        elif rel < 0: rel = 0
+
+        mean_abs += abs
+        mean_rel += rel
+
+        counter = counter + 1
+
+    mean_abs = mean_abs/counter
+    mean_rel = mean_rel/counter
+
+    rel_str = ""
+    abs_str = ""
+
+    for i in range(int(range1*steps), int(range2*steps)):
+        #print('d: {} - {}'.format(i, i/steps*d))
+        #print('i: {}'.format(i))
+        abs = calculate_score_absolute(i/steps*d + worst, best, worst)
+        rel = (10 * i/steps*d) / (best - worst)
+
+        if rel > 10: rel = 10
+        elif rel < 0: rel = 0
+
+        abs_str += str(abs) + " " + str(rel) + "\n"
+        rel_str += str(rel) + " " + str(abs) + "\n"
+
+        sum_abs += (abs - mean_rel)**2
+        sum_err += (rel - abs)**2
+        sum_rel += (rel - mean_rel)**2
+
+        #print(rel)
+        #print("abs: {} - rel: {}".format(abs, rel))
+
+    print(abs_str)
+    print("----")
+    print(rel_str)
+
+    print("------")
+    print("r2?: {}".format(1 - sum_err/sum_rel))
+    print("------")
+    #return calculate_score_absolute(rate, best, worst);'''
+
     """
     Calculates a score from 0 to 10 from a rate, given the best and worst rates. This is a generic function that
     should be called by all other functions. If best > worst, it is assumed that higher is better, else it is assumed
@@ -40,11 +112,83 @@ def _calculate_score_generic(rate, best, worst):
     # The linear function produces scores < 0 and > 10 if rate is worse than worst or better than best, respectively.
     # Thus, the score value needs to be corrected.
     if score > 10:
+        #print("score > 10")
         score = 10
     elif score < 0:
+        #print("score < 0")
         score = 0
 
+    score_abs = calculate_score_absolute(rate, best, worst)
+
+    #print("Absolute score: ")
+    #print(score_abs)
+    #print("Relative score: ")
+    #print(score)
+    #print("")
+    #return score_abs
     return score
+
+def calculate_score_absolute(rate, best, worst):
+    d = best-worst;
+    precision = 100
+    thresh = 1
+    x = (rate - worst)
+
+    if x/d < 0:
+        #x0 = np.log(1 / (thresh/100) - 1) + 0.05*d
+        k = (np.log(1/0.01 - 1) - np.log(1/0.05 - 1)) / d
+        x0 = np.log(1/0.05 - 1) / k
+
+        #print("sigmoid1 ", end='')
+        return 10 * sigmoid(x, x0, k)
+    elif x/d > 1:
+        #x0 = np.log(1 / (1 - thresh/100) - 1) + 0.95*d
+        k = (np.log(1/0.95 - 1) - np.log(1/0.99 - 1)) / d
+        x0 = np.log(1/0.95 - 1) / k + d
+
+       # print("sigmoid2 ", end='')
+        return 10 * sigmoid(x, x0, k)
+    else:
+        #print("linear ", end='')
+        #return (10 * rate) / (best - worst) - (10 * worst) / (best - worst)      # defined from 0 to d
+        a = 0.9 / d
+        b = 0.05
+        return 10 * (a * x + b)
+
+
+    xdata = np.array([0])
+    ydata = np.array([thresh/100])
+    for i in range(thresh + int(100/precision), 100 - thresh, int(100/precision)):
+        xdata = np.append(xdata, i/100*d)
+        ydata = np.append(ydata, i/100)
+    xdata = np.append(xdata, d)
+    ydata = np.append(ydata, 1 - thresh/100)
+
+    #print(xdata)
+    #print(ydata)
+
+    #xdata = np.array([0, 0.1*d, 0.2*d, 0.3*d, 0.4*d, 0.5*d, 0.6*d, 0.7*d, 0.8*d, 0.9*d, d])
+    #ydata = np.array([0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95])
+
+    #xdata = np.array([0, 0.5*d, d])
+    #ydata = np.array([thresh/100, 0.5, 1-thresh/100])
+
+    popt, pcov = curve_fit(sigmoid, xdata, ydata)
+    #print(popt)
+    ret = sigmoid(rate-worst, *popt)
+
+    return 10*ret;
+
+
+def sigmoid(x, x0, k):
+    #print("x0")
+    #print(x0)
+    y = 1 / (1 + np.exp(-k * (x - x0)))
+
+    #y = 1 / (1 + np.exp( -k * (-(x - x0) - np.power((x - x0), 3) / 12 )))
+
+    #y = 1 / (1 + np.exp( -k * (-(x - x0) - np.power((x - x0), 3) / 12 - np.power((x - x0), 5) / 80 - np.power((x - x0), 7) / 448)))
+    return y
 
 
 # CONSTANTS TO BE USED BY THE CALCULATION FUNCTIONS
@@ -72,6 +216,9 @@ UNIQUE_WORST = 0.8147
 
 KWSTYLE_BEST = 0.0
 KWSTYLE_WORST = 0.05577889447236181
+
+INFER_BEST = 0.0
+INFER_WORST = 0.016       #TODO: recalculate this value!
 
 
 # FUNCTIONS THAT CALCULATE THE SCORES
@@ -106,3 +253,7 @@ def calculate_unique_score(rate):
 
 def calculate_kwstyle_score(rate):
     return _calculate_score_generic(rate, KWSTYLE_BEST, KWSTYLE_WORST)
+
+
+def calculate_infer_score(rate):
+    return _calculate_score_generic(rate, INFER_BEST, INFER_WORST)

@@ -52,29 +52,36 @@ class CppcheckOutput:
             self.total_weighted_count += warning_level
 
     def print_information(self, lines_of_code):
+        total_cppcheck_rate, log = self.get_information(lines_of_code)
+        print(log)
+        return total_cppcheck_rate
+
+    def get_information(self, lines_of_code):
+        log = ""
+
         if self.error_count > 0:
             error_rate = self.error_count / lines_of_code
-            print('Error rate:', strings.RATE_COUNT_TOTAL.format(error_rate, self.error_count, lines_of_code))
+            log += 'Error rate: ' + strings.RATE_COUNT_TOTAL.format(error_rate, self.error_count, lines_of_code) + "\n"
         if self.warning_count > 0:
             warning_rate = self.warning_count / lines_of_code
-            print('Warning rate:', strings.RATE_COUNT_TOTAL.format(warning_rate, self.warning_count, lines_of_code))
+            log += 'Warning rate: ' + strings.RATE_COUNT_TOTAL.format(warning_rate, self.warning_count, lines_of_code) + "\n"
         if self.style_count > 0:
             style_rate = self.style_count / lines_of_code
-            print('Style warning rate:', strings.RATE_COUNT_TOTAL.format(style_rate, self.style_count, lines_of_code))
+            log += 'Style warning rate: ' + strings.RATE_COUNT_TOTAL.format(style_rate, self.style_count, lines_of_code) + "\n"
         if self.portability_count > 0:
             portability_rate = self.portability_count / lines_of_code
-            print('Portability issue rate:', strings.RATE_COUNT_TOTAL.format(portability_rate, self.portability_count,
-                                                                             lines_of_code))
+            log += 'Portability issue rate: ' + strings.RATE_COUNT_TOTAL.format(portability_rate, self.portability_count,
+                                                                             lines_of_code) + "\n"
         if self.performance_count > 0:
             performance_rate = self.performance_count / lines_of_code
-            print('Performance issue rate:', strings.RATE_COUNT_TOTAL.format(performance_rate, self.performance_count,
-                                                                             lines_of_code))
+            log += 'Performance issue rate: ' + strings.RATE_COUNT_TOTAL.format(performance_rate, self.performance_count,
+                                                                             lines_of_code) + "\n"
         # Information count is omitted because it is not considered interesting
 
         total_cppcheck_rate = self.total_weighted_count / lines_of_code
-        print(strings.RESULT_WEIGHTED_CPPCHECK_WARNING_RATE.format(total_cppcheck_rate, self.total_weighted_count,
-                                                                   lines_of_code))
-        return total_cppcheck_rate
+        log += strings.RESULT_WEIGHTED_CPPCHECK_WARNING_RATE.format(total_cppcheck_rate, self.total_weighted_count,
+                                                                   lines_of_code) + "\n"
+        return total_cppcheck_rate, log
 
 
 class LizardOutput:
@@ -95,18 +102,25 @@ class LizardOutput:
         self.function_count = function_count
 
     def print_information_and_return_scores(self):
-        print('Average cyclomatic complexity:', self.average_cyclomatic_complexity)
+        cyclomatic_complexity_score, warning_score, unique_score, log = self.get_information()
+        print(log)
+        return cyclomatic_complexity_score, warning_score, unique_score
+
+    def get_information(self):
+        log = ""
+
+        log += 'Average cyclomatic complexity: {}'.format(self.average_cyclomatic_complexity) + "\n"
         cyclomatic_complexity_score = scoring.calculate_cyclomatic_complexity_score(self.average_cyclomatic_complexity)
-        scoring.print_score(cyclomatic_complexity_score, 'Cyclomatic complexity')
+        log += scoring.get_score_string(cyclomatic_complexity_score, 'Cyclomatic complexity') + "\n"
 
         warning_rate = self.warning_count / self.function_count
-        print('Lizard warning rate (~= rate of functions that are too complex):', strings.RATE_COUNT_TOTAL.format(
-            warning_rate, self.warning_count, self.function_count))
+        log += 'Lizard warning rate (~= rate of functions that are too complex): ' + strings.RATE_COUNT_TOTAL.format(
+            warning_rate, self.warning_count, self.function_count) + "\n"
         warning_score = scoring.calculate_lizard_warning_score(warning_rate)
-        scoring.print_score(warning_score, 'Lizard warning')
+        log += scoring.get_score_string(warning_score, 'Lizard warning') + "\n"
 
-        print('Unique code rate:', self.unique_rate)
+        log += 'Unique code rate: {}'.format(self.unique_rate) + "\n"
         unique_score = scoring.calculate_unique_score(self.unique_rate)
-        scoring.print_score(unique_score, 'Unique (code duplication)')
+        log += scoring.get_score_string(unique_score, 'Unique (code duplication)')  + "\n"
 
-        return cyclomatic_complexity_score, warning_score, unique_score
+        return cyclomatic_complexity_score, warning_score, unique_score, log

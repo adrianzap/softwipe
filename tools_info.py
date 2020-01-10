@@ -21,6 +21,7 @@ class TOOLS:
     CLANG_TIDY = Tool('clang-tidy', 'llvm', Via.PACKAGE_MANAGER)
     LIZARD = Tool('lizard', 'lizard', Via.PIP)
     KWSTYLE = Tool('KWStyle', 'KWStyle', Via.DOWNLOAD)
+    INFER = Tool('infer', 'infer', Via.DOWNLOAD)
     # NOTINSTALLED0 = Tool('jshgjhsdhg', 'jshjlgbkjvjkshg', Via.PACKAGE_MANAGER)
     # NOTINSTALLED1 = Tool('hsdhjkhsjdhgjk', 'ahdjfhjkhdjkfhs', Via.PACKAGE_MANAGER)
     # NOTINSTALLED2 = Tool('hshjkgh', 'ksjhkjghjlsdg', Via.PIP)
