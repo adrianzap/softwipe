@@ -83,7 +83,7 @@ def check_assert_usage(source_files, lines_of_code, custom_asserts=None):
     log += strings.DETAILLED_RESULTS_WRITTEN_INTO.format(strings.RESULTS_FILENAME_ASSERTION_CHECK) + "\n"
     log += scoring.get_score_string(score, 'Assertion') + "\n"
 
-    return score, log
+    return score, log, True     #TODO: well that's awkward... but there should be no errors from out own code anyways, so..
 
 
 def get_cppcheck_warning_lines_from_cppcheck_output(output):
@@ -110,9 +110,7 @@ def run_cppcheck(source_files, lines_of_code, cpp):
     cppcheck_call = [TOOLS.CPPCHECK.exe_name, '--enable=all', '--force', '--language=' + language,
                       "-v"] #TODO: find out the purpose of the --template=cppcheck1' which broke the output
     cppcheck_call.extend(source_files)
-    #print(cppcheck_call)
-    #print("Source: ", end="")
-    #print(source_files)
+
     try:
         output = subprocess.check_output(cppcheck_call, universal_newlines=True, stderr=subprocess.STDOUT)
         warning_lines = get_cppcheck_warning_lines_from_cppcheck_output(output)
@@ -120,22 +118,21 @@ def run_cppcheck(source_files, lines_of_code, cpp):
     except subprocess.CalledProcessError as e:
         print("cppcheck failed!")
         print(strings.COMPILATION_CRASHED.format(e.returncode, e.output))
-        cppcheck_working = False
         if not skip_on_failure:
             sys.exit()
+        return 0, "", False
 
     weighted_cppcheck_rate, temp = cppcheck_output.get_information(lines_of_code)
     util.write_into_file_list(strings.RESULTS_FILENAME_CPPCHECK, warning_lines)
 
     score = scoring.calculate_cppcheck_score(weighted_cppcheck_rate)
-    #scoring.print_score(score, 'Cppcheck')
 
     log = strings.RUN_CPPCHECK_HEADER + "\n"
     log += temp
     log += strings.DETAILLED_RESULTS_WRITTEN_INTO.format(strings.RESULTS_FILENAME_CPPCHECK) + "\n"
     log += scoring.get_score_string(score, 'Cppcheck') + "\n"
 
-    return score, log
+    return score, log, True
 
 
 def get_clang_tidy_warning_lines_from_clang_tidy_output(output):
@@ -228,7 +225,7 @@ def run_clang_tidy(program_dir_abs, source_files, lines_of_code, cpp):
     log += strings.DETAILLED_RESULTS_WRITTEN_INTO.format(strings.RESULTS_FILENAME_CLANG_TIDY) + "\n"
     log += scoring.get_score_string(score, 'Clang-tidy') + "\n"
 
-    return score, log
+    return score, log, True
 
 
 def get_actual_rate_from_lizard_duplicate_rate_line(line):
@@ -292,7 +289,8 @@ def run_lizard(source_files):
         output = subprocess.check_output(lizard_call, universal_newlines=True, stderr=subprocess.STDOUT)
     except subprocess.CalledProcessError as e:  # If warnings are generated, Lizard exits with exit code 1
         output = e.output  # Basically, this catches the exception and ignores it such that this tool doesn't crash
-        # while still keeping the output of the command
+                           # while still keeping the output of the command
+
 
     lizard_output = get_lizard_output_object_from_lizard_printed_output(output)
     cyclomatic_complexity_score, warning_score, unique_score, temp = \
@@ -303,7 +301,7 @@ def run_lizard(source_files):
     log += strings.DETAILLED_RESULTS_WRITTEN_INTO.format(strings.RESULTS_FILENAME_LIZARD) + "\n"
     log += temp
 
-    return cyclomatic_complexity_score, warning_score, unique_score, log
+    return cyclomatic_complexity_score, warning_score, unique_score, log, True
 
 
 def get_kwstyle_warning_count_from_kwstyle_output(output):
@@ -324,7 +322,6 @@ def run_kwstyle(source_files, lines_of_code):
     :param lines_of_code: The lines of pure code count.
     :return: The KWStyle score.
     """
-    #print(strings.RUN_KWSTYLE_HEADER)
 
     softwipe_directory = os.path.dirname(os.path.realpath(__file__))
     kwstyle_xml = os.path.join(softwipe_directory, 'KWStyle.xml')
@@ -339,7 +336,7 @@ def run_kwstyle(source_files, lines_of_code):
         try:
             output += subprocess.check_output(cur_kwstyle_call, universal_newlines=True, stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError as e:  # Same as with the lizard call. KWStyle exits with status 1 by
-            output += e.output  # default. So catch that, ignore the exception, and keep the output of the command
+            output += e.output                      # default. So catch that, ignore the exception, and keep the output of the command
         
     warning_count = get_kwstyle_warning_count_from_kwstyle_output(output)
     warning_rate = warning_count / lines_of_code
@@ -348,14 +345,13 @@ def run_kwstyle(source_files, lines_of_code):
     util.write_into_file_string(strings.RESULTS_FILENAME_KWSTYLE, output)
 
     score = scoring.calculate_kwstyle_score(warning_rate)
-    #scoring.print_score(score, 'KWStyle')
 
     log = strings.RUN_KWSTYLE_HEADER + "\n"
     log += strings.RESULT_KWSTYLE_WARNING_RATE.format(warning_rate, warning_count, lines_of_code) + "\n"
     log += strings.DETAILLED_RESULTS_WRITTEN_INTO.format(strings.RESULTS_FILENAME_KWSTYLE) + "\n"
     log += scoring.get_score_string(score, 'KWStyle') + "\n"
 
-    return score, log
+    return score, log, True
 
 def run_infer_analysis(program_dir_abs, lines_of_code, cmake):
     if cmake: program_dir_abs += "/infer_build/"  #TODO: make this with string constant
@@ -372,20 +368,22 @@ def run_infer_analysis(program_dir_abs, lines_of_code, cmake):
                                       stderr=subprocess.STDOUT)
     except subprocess.CalledProcessError as e:
         print(strings.COMPILATION_CRASHED.format(e.returncode, e.output))   #TODO: fix this
-        infer_working = False
         template = "An exception of type {0} occurred. Arguments:\n{1!r}"
         message = template.format(type(e).__name__, e.args)
         print(message)
-
-        if not skip_on_failure: sys.exit(1)
+        if not skip_on_failure:
+            sys.exit(1)
+        else:
+            return 0, "", False
 
     infer_out_path = find_file(program_dir_abs, "bugs.txt", directory="infer-out")
     print("bugs.txt path: " + infer_out_path)
     if infer_out_path == "":
         print("Could not find bugs.txt")
-        infer_working = False
-        if not skip_on_failure: sys.exit(1)     #TODO: fix this?
-        return -1, "Could not find bugs.txt"
+        if not skip_on_failure:
+            sys.exit(1)     #TODO: fix this?
+        else:
+            return 0, "Could not find bugs.txt", False
 
     infer_warnings = 0
 
@@ -405,19 +403,16 @@ def run_infer_analysis(program_dir_abs, lines_of_code, cmake):
             if "Summary of the reports" in line:
                 record = True
             #TODO: the "no issues" case
-    #print(out)
-    #print("Weighted Infer warnings: {}".format(infer_warnings))
 
     infer_warning_rate = infer_warnings / lines_of_code
     score = scoring.calculate_infer_score(infer_warning_rate)
-    #scoring.print_score(score, 'Infer')
 
     log = strings.RUN_INFER_ANALYSIS_HEADER + "\n"
     log += out + "\n"
     log += "Weighted Infer warning rate: {} ({}/{})".format(infer_warnings / lines_of_code, infer_warnings, lines_of_code) + "\n"      #TODO: make and print filename to user
     log += scoring.get_score_string(score, 'Infer')
 
-    return score, log
+    return score, log, True
 
 def find_file(path, file_name, directory=""):
     dirs = []
@@ -454,7 +449,7 @@ def run_static_analysis(program_dir_abs, source_files, lines_of_code, cpp, custo
     cyclomatic_complexity_score, warning_score, unique_score = run_lizard(source_files)
     kwstyle_score = run_kwstyle(source_files, lines_of_code)'''
 
-    thread_pool = ThreadPool(processes = 7)
+    thread_pool = ThreadPool(processes = 1)
     global skip_on_failure
     skip_on_failure = skip_on_failure_flag
 
@@ -463,23 +458,31 @@ def run_static_analysis(program_dir_abs, source_files, lines_of_code, cpp, custo
     clang_tidy_score_calc = thread_pool.apply_async(run_clang_tidy, (program_dir_abs, source_files, lines_of_code, cpp))
     lizard_score_calc = thread_pool.apply_async(run_lizard, (source_files, ))
     kwstyle_score_calc = thread_pool.apply_async(run_kwstyle, (source_files, lines_of_code))
-    infer_score_calc = thread_pool.apply_async(run_infer_analysis, (program_dir_abs, lines_of_code, cmake))
+   # infer_score_calc = thread_pool.apply_async(run_infer_analysis, (program_dir_abs, lines_of_code, cmake))
 
-    assertion_score, assertion_log = assertion_score_calc.get()
-    cppcheck_score, cppcheck_log = cppcheck_score_calc.get()
-    clang_tidy_score, clang_tidy_log = clang_tidy_score_calc.get()
-    cyclomatic_complexity_score, warning_score, unique_score, lizard_log = lizard_score_calc.get()
-    kwstyle_score, kwstyle_log = kwstyle_score_calc.get()
-    infer_score, infer_log = infer_score_calc.get()
+    assertion_score, assertion_log, assertion_successful = assertion_score_calc.get()
+    cppcheck_score, cppcheck_log, cppcheck_successful = cppcheck_score_calc.get()
+    clang_tidy_score, clang_tidy_log, clang_successful = clang_tidy_score_calc.get()
+    cyclomatic_complexity_score, warning_score, unique_score, lizard_log, lizard_successful = lizard_score_calc.get()
+    kwstyle_score, kwstyle_log, kwstyle_successful = kwstyle_score_calc.get()
+   # infer_score, infer_log, infer_successful = infer_score_calc.get()"""
+
+    """assertion_score, assertion_log, assertion_successful = check_assert_usage(source_files, lines_of_code, custom_asserts)
+    cppcheck_score, cppcheck_log, cppcheck_successful = run_cppcheck(source_files, lines_of_code, cpp)
+    clang_tidy_score, clang_tidy_log, clang_successful = run_clang_tidy(program_dir_abs, source_files, lines_of_code, cpp)
+    cyclomatic_complexity_score, warning_score, unique_score, lizard_log, lizard_successful = run_lizard(source_files)
+    kwstyle_score, kwstyle_log, kwstyle_successful = run_kwstyle(source_files, lines_of_code)
+    # infer_score, infer_log, infer_successful = infer_score_calc.get()"""
 
     print(assertion_log)
     print(cppcheck_log)
     print(clang_tidy_log)
     print(lizard_log)
     print(kwstyle_log)
-    print(infer_log)
+    #print(infer_log)
     print("")
 
-    return assertion_score, cppcheck_score, clang_tidy_score, cyclomatic_complexity_score, warning_score, \
-           unique_score, kwstyle_score, infer_score
+    #TODO: think of a nice way to return tool output with a failure flag
+    return [("assertions", assertion_score, assertion_log, assertion_successful), ("cppcheck", cppcheck_score, cppcheck_log, cppcheck_successful), ("clang tidy", clang_tidy_score, clang_tidy_log, clang_successful), ("lizard cyclomatic complexity", cyclomatic_complexity_score, "", lizard_successful), ("lizard warnings", warning_score, "", lizard_successful), \
+            ("lizard unique code", unique_score, lizard_log, lizard_successful), ("kwstyle", kwstyle_score, kwstyle_log, kwstyle_successful), ("infer", 10, "", False)] #TODO: infer_score
     #return assertion_score, cppcheck_score,0,0,0,0,0

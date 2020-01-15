@@ -46,6 +46,10 @@ def build_command(program_dir_abs, executefile, cmake):
     if command2 is not None:
         full_executable_path2 = os.path.join(executable_dir, command2[0])
         command2[0] = full_executable_path2
+        command2.append("-redo")
+
+    command.append("-redo")
+
 
     return command, command2
 

@@ -258,7 +258,7 @@ def compile_and_execute_program_with_sanitizers(args, lines_of_code, program_dir
     scoring.print_score(score, 'Compiler + Sanitizer')
 
     #TODO: Experimental Infer stuff
-    compile_program_with_infer(args, excluded_paths)
+    #compile_program_with_infer(args, excluded_paths)
 
     return score
 
@@ -274,11 +274,25 @@ def static_analysis(program_dir_abs, source_files, lines_of_code, cpp, custom_as
     :return: All the static analysis scores: assertion_score, cppcheck_score, clang_tidy_score,
     cyclomatic_complexity_score, warning_score, unique_score, kwstyle_score.
     """
-    assertion_score, cppcheck_score, clang_tidy_score, cyclomatic_complexity_score, warning_score, unique_score, \
-        kwstyle_score, infer_score = static_analysis_phase.run_static_analysis(program_dir_abs, source_files, lines_of_code, cpp,
-                                                              custom_asserts, cmake=cmake)
-    return assertion_score, cppcheck_score, clang_tidy_score, cyclomatic_complexity_score, warning_score, \
-           unique_score, kwstyle_score, infer_score
+    #assertion_score, cppcheck_score, clang_tidy_score, cyclomatic_complexity_score, warning_score, unique_score, \
+    #    kwstyle_score, infer_score = static_analysis_phase.run_static_analysis(program_dir_abs, source_files, lines_of_code, cpp,
+    #                                                          custom_asserts, cmake=cmake)
+    #return assertion_score, cppcheck_score, clang_tidy_score, cyclomatic_complexity_score, warning_score, \
+    #       unique_score, kwstyle_score, infer_score
+
+    output = static_analysis_phase.run_static_analysis(program_dir_abs, source_files, lines_of_code, cpp, custom_asserts, cmake=cmake)
+    scores = []
+
+    #check for failed tool execution and exclude the tools which failed
+    for (name, score, log, stat) in output:
+        if log:
+            print(log)
+        if stat:
+            scores.append(score)
+        else:
+            print("{} failed".format(name))     #TODO: add string constant
+
+    return scores
 
 
 def main():
@@ -313,11 +327,14 @@ def main():
 
     compiler_and_sanitizer_score = compile_and_execute_program_with_sanitizers(args, lines_of_code, program_dir_abs,
                                                                                cpp, excluded_paths, args.no_execution)
-    assertion_score, cppcheck_score, clang_tidy_score, cyclomatic_complexity_score, warning_score, \
-        unique_score, kwstyle_score, infer_score = static_analysis(program_dir_abs, source_files, lines_of_code, cpp, custom_asserts, cmake=cmake)
+    #assertion_score, cppcheck_score, clang_tidy_score, cyclomatic_complexity_score, warning_score, \
+    #    unique_score, kwstyle_score, infer_score = static_analysis(program_dir_abs, source_files, lines_of_code, cpp, custom_asserts, cmake=cmake)
 
-    all_scores = [compiler_and_sanitizer_score, assertion_score, cppcheck_score, clang_tidy_score,
-                  cyclomatic_complexity_score, warning_score, unique_score, kwstyle_score]  #TODO: add infer_score to this!
+    #all_scores = [compiler_and_sanitizer_score, assertion_score, cppcheck_score, clang_tidy_score,
+    #              cyclomatic_complexity_score, warning_score, unique_score, kwstyle_score]  # TODO: add infer_score to this!
+
+    all_scores = static_analysis(program_dir_abs, source_files, lines_of_code, cpp, custom_asserts, cmake=cmake)
+
 
     overall_score = scoring.average_score(all_scores)
 
@@ -325,7 +342,7 @@ def main():
 
     if args.add_badge:
         fname = args.add_badge[0]
-        badge_string = "[![Softwipe Score](https://img.shields.io/badge/softwipe-{}-blue)]".format(round(overall_score, 1))
+        badge_string = "[![Softwipe Score](https://img.shields.io/badge/softwipe-{}-blue)]".format(round(overall_score, 1)) #TODO: add string to constants
 
         file = open(fname, 'r')
 

@@ -162,6 +162,7 @@ def calculate_scores(result_directory, absolute):
         }
     else:
         scores = {
+            'overall': {},
             'compiler_and_sanitizer': {},
             'assertions': {},
             'cppcheck': {},
@@ -171,7 +172,6 @@ def calculate_scores(result_directory, absolute):
             'unique': {},
             'kwstyle': {},
             #'infer': {},   #TODO: add this again
-            'overall': {}
         }
 
     #Slightly change the way the tool folders are found
@@ -192,8 +192,8 @@ def calculate_scores(result_directory, absolute):
     print(FOLDERS)
 
     FOLDERS.clear()
-    #FOLDERS.extend(['BGSA-1.0/original/BGSA_SSE', 'bindash-1.0', 'copmem-0.2', 'crisflash', 'cryfa-18.06', 'defor', 'dna-nn-0.1', 'dr_sasa_n', 'emeraLD', 'ExpansionHunter', 'fastspar', 'HLA-LA/src', 'lemon', 'naf-1.1.0/ennaf', 'naf-1.1.0/unnaf', 'ngsTools/ngsLD', 'ntEdit-1.2.3', 'PopLDdecay', 'virulign-1.0.1', 'axe-0.3.3', 'prequal', 'IQ-TREE-2.0-rc1']) #TODO: add SPRING
-    FOLDERS.extend(['IQ-TREE-2.0-rc1'])
+    FOLDERS.extend(['BGSA-1.0/original/BGSA_SSE', 'bindash-1.0', 'copmem-0.2', 'crisflash', 'cryfa-18.06', 'defor', 'dna-nn-0.1', 'dr_sasa_n', 'emeraLD', 'ExpansionHunter', 'fastspar', 'HLA-LA/src', 'lemon', 'naf-1.1.0/ennaf', 'naf-1.1.0/unnaf', 'ngsTools/ngsLD', 'ntEdit-1.2.3', 'PopLDdecay', 'virulign-1.0.1', 'axe-0.3.3', 'prequal', 'IQ-TREE-2.0-rc1']) #TODO: add SPRING
+    #FOLDERS.extend(['IQ-TREE-2.0-rc1'])
 
     for score in scores:
         for folder in FOLDERS:
@@ -243,7 +243,12 @@ def calculate_scores(result_directory, absolute):
 
 
 def print_score_csv(scores, absolute, print_only_overall):
-    last_column = 'kwstyle' if absolute else 'overall'
+    if absolute:
+        last_column = 'kwstyle'
+        space_pattern = [17, 8, 11, 10, 11, 12, 10, 12, 23, 17, 20, 9]
+    else:
+        last_column = 'kwstyle' #TODO: infer!
+        space_pattern = [22, 9, 24, 12, 10, 12, 23, 17, 8, 9]
 
     print('program', end=',')
     for score in scores:
@@ -252,13 +257,23 @@ def print_score_csv(scores, absolute, print_only_overall):
         else:
             print(score)
     for folder in FOLDERS:
-        if not print_only_overall:
+        '''if not print_only_overall:
             print(folder, end=',')
             for score in scores:
                 if score != last_column:
                     print(scores[score][folder], end=',')
                 else:
-                    print(scores[score][folder])
+                    print(scores[score][folder])'''
+        if not print_only_overall:
+            print("| {}".format(folder).ljust(space_pattern[0]), end="|")
+            counter = 1
+            for score in scores:
+                if absolute:
+                    print(" {}".format(round(scores[score][folder], 4)).ljust(space_pattern[counter]), end="|")
+                else:
+                    print(" {0:0.1f}".format(round(scores[score][folder], 1)).ljust(space_pattern[counter]), end="|")
+                counter += 1
+            print("")
         else:
             #print(folder, end=" ")
             print(round(scores['overall'][folder], 1))
