@@ -121,6 +121,11 @@ def run_cppcheck(source_files, lines_of_code, cpp):
         if not skip_on_failure:
             sys.exit()
         return 0, "", False
+    except Exception:   #catch the rest and exclude the analysis tool from the score
+        if not skip_on_failure:
+            raise
+        else:
+            return 0, "", False         #TODO: make a common format for the exclusion?
 
     weighted_cppcheck_rate, temp = cppcheck_output.get_information(lines_of_code)
     util.write_into_file_list(strings.RESULTS_FILENAME_CPPCHECK, warning_lines)
@@ -209,6 +214,12 @@ def run_clang_tidy(program_dir_abs, source_files, lines_of_code, cpp):
         output = e.output
         # clang-tidy can exit with exit code 1 if there is no compilation database, which might be the case when
         # compiling with just clang. Thus, ignore the exception here.
+    except Exception:   #catch the rest and exclude the analysis tool from the score
+        if not skip_on_failure:
+            raise
+        else:
+            return 0, "", False         #TODO: make a common format for the exclusion?
+
     warning_lines = get_clang_tidy_warning_lines_from_clang_tidy_output(output)
     weighted_warning_count = get_weighted_clang_tidy_warning_count_from_clang_tidy_warning_lines(warning_lines)
     warning_rate = weighted_warning_count / lines_of_code
@@ -290,6 +301,11 @@ def run_lizard(source_files):
     except subprocess.CalledProcessError as e:  # If warnings are generated, Lizard exits with exit code 1
         output = e.output  # Basically, this catches the exception and ignores it such that this tool doesn't crash
                            # while still keeping the output of the command
+    except Exception:   #catch the rest and exclude the analysis tool from the score
+        if not skip_on_failure:
+            raise
+        else:
+            return 0, "", False         #TODO: make a common format for the exclusion?
 
 
     lizard_output = get_lizard_output_object_from_lizard_printed_output(output)
@@ -337,6 +353,11 @@ def run_kwstyle(source_files, lines_of_code):
             output += subprocess.check_output(cur_kwstyle_call, universal_newlines=True, stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError as e:  # Same as with the lizard call. KWStyle exits with status 1 by
             output += e.output                      # default. So catch that, ignore the exception, and keep the output of the command
+        except Exception:  # catch the rest and exclude the analysis tool from the score
+            if not skip_on_failure:
+                raise
+            else:
+                return 0, "", False  # TODO: make a common format for the exclusion?
         
     warning_count = get_kwstyle_warning_count_from_kwstyle_output(output)
     warning_rate = warning_count / lines_of_code
@@ -372,9 +393,14 @@ def run_infer_analysis(program_dir_abs, lines_of_code, cmake):
         message = template.format(type(e).__name__, e.args)
         print(message)
         if not skip_on_failure:
-            sys.exit(1)
+            raise
         else:
             return 0, "", False
+    except Exception:   #catch the rest and exclude the analysis tool from the score
+        if not skip_on_failure:
+            raise
+        else:
+            return 0, "", False         #TODO: make a common format for the exclusion?
 
     infer_out_path = find_file(program_dir_abs, "bugs.txt", directory="infer-out")
     print("bugs.txt path: " + infer_out_path)
@@ -432,7 +458,7 @@ def find_file(path, file_name, directory=""):
     return ""
 
 
-def run_static_analysis(program_dir_abs, source_files, lines_of_code, cpp, custom_asserts=None, cmake=False, skip_on_failure_flag=False):
+def run_static_analysis(program_dir_abs, source_files, lines_of_code, cpp, custom_asserts=None, cmake=False, skip_on_failure_flag=True):        #TODO: fix that skip_on_failure_flag and add it to the cmd parser
     """
     Run all the static code analysis.
     :param program_dir_abs: The absolute path to the root directory of the target program.
@@ -449,7 +475,7 @@ def run_static_analysis(program_dir_abs, source_files, lines_of_code, cpp, custo
     cyclomatic_complexity_score, warning_score, unique_score = run_lizard(source_files)
     kwstyle_score = run_kwstyle(source_files, lines_of_code)'''
 
-    thread_pool = ThreadPool(processes = 1)
+    thread_pool = ThreadPool(processes = 6)
     global skip_on_failure
     skip_on_failure = skip_on_failure_flag
 
@@ -474,15 +500,15 @@ def run_static_analysis(program_dir_abs, source_files, lines_of_code, cpp, custo
     kwstyle_score, kwstyle_log, kwstyle_successful = run_kwstyle(source_files, lines_of_code)
     # infer_score, infer_log, infer_successful = infer_score_calc.get()"""
 
-    print(assertion_log)
+    '''print(assertion_log)
     print(cppcheck_log)
     print(clang_tidy_log)
     print(lizard_log)
     print(kwstyle_log)
     #print(infer_log)
-    print("")
+    print("")'''
 
     #TODO: think of a nice way to return tool output with a failure flag
-    return [("assertions", assertion_score, assertion_log, assertion_successful), ("cppcheck", cppcheck_score, cppcheck_log, cppcheck_successful), ("clang tidy", clang_tidy_score, clang_tidy_log, clang_successful), ("lizard cyclomatic complexity", cyclomatic_complexity_score, "", lizard_successful), ("lizard warnings", warning_score, "", lizard_successful), \
-            ("lizard unique code", unique_score, lizard_log, lizard_successful), ("kwstyle", kwstyle_score, kwstyle_log, kwstyle_successful), ("infer", 10, "", False)] #TODO: infer_score
+    return [("assertions", assertion_score, assertion_log, assertion_successful), ("cppcheck", cppcheck_score, cppcheck_log, cppcheck_successful), ("clang_tidy", clang_tidy_score, clang_tidy_log, clang_successful), ("lizard_cyclomatic_complexity", cyclomatic_complexity_score, "", lizard_successful), ("lizard_warnings", warning_score, "", lizard_successful), \
+            ("lizard_unique_code", unique_score, lizard_log, lizard_successful), ("kwstyle", kwstyle_score, kwstyle_log, kwstyle_successful), ("infer", 10, "", False)] #TODO: infer_score
     #return assertion_score, cppcheck_score,0,0,0,0,0

@@ -25,6 +25,21 @@ SOFTWIPE_OUTPUT_FILE_NAME = "sw_batch.txt"
 SW_REL_FILE_NAME = "sw_batch.txt"
 SW_ABS_FILE_NAME = "sw_batch.txt"
 
+loc_key = "loc"
+functions_key = "functions"
+compiler_key = "compiler"
+sanitizer_key = "sanitizer"
+assertions_key = "assertions"
+cppcheck_key = "cppcheck"
+clang_tidy_key = "clang_tidy"
+cyclomatic_complexity_key = "cyclomatic_complexity"
+lizard_warnings_key = "lizard_warnings"
+unique_key = "unique"
+kwstyle_key = "kwstyle"
+infer_key = "infer"
+
+score_keys = [loc_key, functions_key, compiler_key, sanitizer_key, assertions_key, cppcheck_key, clang_tidy_key, cyclomatic_complexity_key, lizard_warnings_key, unique_key, kwstyle_key, infer_key]
+
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Calculate the code quality benchmark (i.e., the scores) and output "
@@ -53,7 +68,10 @@ def get_result_rates(result_directory, folder):
     compiler_and_sanitizer_rate = 0.0  # Special treatment because we may have to add multiple values for this score
     assertion_rate = cppcheck_rate = clang_tidy_rate = ccn = lizard_rate = unique_rate = kwstyle_rate = infer_rate = None
 
-    infer_rate = -1
+    infer_rate = 2
+
+    failed_tools = [infer_key]      #TODO: remove this once infer is fixed!
+
 
     # Iterate through the softwipe output
     for line in cur_lines:
@@ -83,8 +101,12 @@ def get_result_rates(result_directory, folder):
         elif line.startswith('Weighted Infer warning rate:'):
             infer_rate = float(split_line[4])
 
+        for key in score_keys:
+            if key + " failed" in line:                 #TODO: do with string constant
+                failed_tools.append(key)
+
     return compiler_and_sanitizer_rate, assertion_rate, cppcheck_rate, clang_tidy_rate, ccn, lizard_rate, \
-        unique_rate, kwstyle_rate, infer_rate
+        unique_rate, kwstyle_rate, infer_rate, failed_tools
 
 
 def get_result_values(result_directory, folder):
@@ -99,6 +121,8 @@ def get_result_values(result_directory, folder):
     sanitizer_warnings = 0
     loc = functions = compiler_warnings = assertions = cppcheck_warnings = clang_tidy_warnings = \
         ccn = lizard_warnings = unique = kwstyle_warnings = None
+
+    failed_tools = [infer_key]
 
     # Iterate through the softwipe output
     for line in cur_lines:
@@ -126,8 +150,12 @@ def get_result_values(result_directory, folder):
         elif line.startswith('KWStyle warning rate:'):
             kwstyle_warnings = get_absolute_value(split_line[-1])
 
+        for key in score_keys:
+            if key + " failed" in line:                 #TODO: do with string constant
+                failed_tools.append(key)
+
     return loc, functions, compiler_warnings, sanitizer_warnings, assertions, cppcheck_warnings, clang_tidy_warnings, \
-                ccn, lizard_warnings, unique, kwstyle_warnings
+                ccn, lizard_warnings, unique, kwstyle_warnings, failed_tools
 
 #TODO: this is just a prototype for now
 def find_sw_scores(path):
@@ -158,7 +186,8 @@ def calculate_scores(result_directory, absolute):
             'cyclomatic_complexity': {},
             'lizard_warnings': {},
             'unique': {},
-            'kwstyle': {}
+            'kwstyle': {},
+            'infer': {}
         }
     else:
         scores = {
@@ -171,7 +200,7 @@ def calculate_scores(result_directory, absolute):
             'lizard_warnings': {},
             'unique': {},
             'kwstyle': {},
-            #'infer': {},   #TODO: add this again
+            'infer': {},   #TODO: add this again
         }
 
     #Slightly change the way the tool folders are found
@@ -192,8 +221,10 @@ def calculate_scores(result_directory, absolute):
     print(FOLDERS)
 
     FOLDERS.clear()
-    FOLDERS.extend(['BGSA-1.0/original/BGSA_SSE', 'bindash-1.0', 'copmem-0.2', 'crisflash', 'cryfa-18.06', 'defor', 'dna-nn-0.1', 'dr_sasa_n', 'emeraLD', 'ExpansionHunter', 'fastspar', 'HLA-LA/src', 'lemon', 'naf-1.1.0/ennaf', 'naf-1.1.0/unnaf', 'ngsTools/ngsLD', 'ntEdit-1.2.3', 'PopLDdecay', 'virulign-1.0.1', 'axe-0.3.3', 'prequal', 'IQ-TREE-2.0-rc1']) #TODO: add SPRING
-    #FOLDERS.extend(['IQ-TREE-2.0-rc1'])
+    #FOLDERS.extend(['BGSA-1.0/original/BGSA_SSE', 'bindash-1.0', 'copmem-0.2', 'crisflash', 'cryfa-18.06', 'defor', 'dna-nn-0.1', 'dr_sasa_n', 'emeraLD', 'ExpansionHunter', 'fastspar', 'HLA-LA/src', 'lemon', 'naf-1.1.0/ennaf', 'naf-1.1.0/unnaf', 'ngsTools/ngsLD', 'ntEdit-1.2.3', 'PopLDdecay', 'virulign-1.0.1', 'axe-0.3.3', 'prequal', 'IQ-TREE-2.0-rc1', 'candy-kingdom', 'glucose-3-drup']) #TODO: add SPRING
+    FOLDERS.extend(['glucose-3-drup'])
+
+    failed_tools_dict = {}
 
     for score in scores:
         for folder in FOLDERS:
@@ -201,10 +232,13 @@ def calculate_scores(result_directory, absolute):
 
     # Get all the scores
     for folder in FOLDERS:
+        failed_tools = []
+
         if absolute:
             # Get values
             loc, functions, compiler_warnings, sanitizer_warnings, assertions, cppcheck_warnings, clang_tidy_warnings, \
-                ccn, lizard_warnings, unique, kwstyle_warnings = get_result_values(result_directory, folder)
+                ccn, lizard_warnings, unique, kwstyle_warnings, failed_tools = get_result_values(result_directory, folder)
+
             scores['loc'][folder] = loc
             scores['functions'][folder] = functions
             scores['compiler'][folder] = compiler_warnings
@@ -216,39 +250,43 @@ def calculate_scores(result_directory, absolute):
             scores['lizard_warnings'][folder] = lizard_warnings
             scores['unique'][folder] = unique
             scores['kwstyle'][folder] = kwstyle_warnings
+
+
         else:
             # Get rates
             compiler_and_sanitizer_rate, assertion_rate, cppcheck_rate, clang_tidy_rate, ccn, lizard_rate, \
-                unique_rate, kwstyle_rate, infer_rate = get_result_rates(result_directory, folder)
+                unique_rate, kwstyle_rate, infer_rate, failed_tools = get_result_rates(result_directory, folder)
 
             print(folder + " infer rate: {}".format(infer_rate))
 
             # Get scores
-            scores['compiler_and_sanitizer'][folder] = scoring.calculate_compiler_and_sanitizer_score(
+            if compiler_key not in failed_tools: scores['compiler_and_sanitizer'][folder] = scoring.calculate_compiler_and_sanitizer_score(         #TODO: fix this somehow......
                 compiler_and_sanitizer_rate)
-            scores['assertions'][folder] = scoring.calculate_assertion_score(assertion_rate)
-            scores['cppcheck'][folder] = scoring.calculate_cppcheck_score(cppcheck_rate)
-            scores['clang_tidy'][folder] = scoring.calculate_clang_tidy_score(clang_tidy_rate)
-            scores['cyclomatic_complexity'][folder] = scoring.calculate_cyclomatic_complexity_score(ccn)
-            scores['lizard_warnings'][folder] = scoring.calculate_lizard_warning_score(lizard_rate)
-            scores['unique'][folder] = scoring.calculate_unique_score(unique_rate)
-            scores['kwstyle'][folder] = scoring.calculate_kwstyle_score(kwstyle_rate)
-            #scores['infer'][folder] = scoring.calculate_infer_score(infer_rate)    #TODO: add this again
+            if assertions_key not in failed_tools: scores['assertions'][folder] = scoring.calculate_assertion_score(assertion_rate)
+            if cppcheck_key not in failed_tools: scores['cppcheck'][folder] = scoring.calculate_cppcheck_score(cppcheck_rate)
+            if clang_tidy_key not in failed_tools: scores['clang_tidy'][folder] = scoring.calculate_clang_tidy_score(clang_tidy_rate)
+            if cyclomatic_complexity_key not in failed_tools: scores['cyclomatic_complexity'][folder] = scoring.calculate_cyclomatic_complexity_score(ccn)
+            if lizard_warnings_key not in failed_tools: scores['lizard_warnings'][folder] = scoring.calculate_lizard_warning_score(lizard_rate)
+            if unique_key not in failed_tools: scores['unique'][folder] = scoring.calculate_unique_score(unique_rate)
+            if kwstyle_key not in failed_tools: scores['kwstyle'][folder] = scoring.calculate_kwstyle_score(kwstyle_rate)
+            if infer_key not in failed_tools: scores['infer'][folder] = scoring.calculate_infer_score(infer_rate)    #TODO: add this again
 
             # Calculate the overall score
-            list_of_scores = [scores[score][folder] for score in scores.keys() if score != 'overall']
+            list_of_scores = [scores[score][folder] for score in scores.keys() if score != 'overall' and score not in failed_tools]
             scores['overall'][folder] = scoring.average_score(list_of_scores)
 
-    return scores
+        failed_tools_dict[folder] = failed_tools
+
+    return scores, failed_tools_dict
 
 
-def print_score_csv(scores, absolute, print_only_overall):
+def print_score_csv(scores, absolute, failed_tools, print_only_overall=False):
     if absolute:
-        last_column = 'kwstyle'
-        space_pattern = [17, 8, 11, 10, 11, 12, 10, 12, 23, 17, 20, 9]
+        last_column = 'infer'
+        space_pattern = [17, 8, 11, 10, 11, 12, 10, 12, 23, 17, 20, 9, 7]
     else:
-        last_column = 'kwstyle' #TODO: infer!
-        space_pattern = [22, 9, 24, 12, 10, 12, 23, 17, 8, 9]
+        last_column = 'infer' #TODO: infer!
+        space_pattern = [22, 9, 24, 12, 10, 12, 23, 17, 8, 9, 7]
 
     print('program', end=',')
     for score in scores:
@@ -268,10 +306,16 @@ def print_score_csv(scores, absolute, print_only_overall):
             print("| {}".format(folder).ljust(space_pattern[0]), end="|")
             counter = 1
             for score in scores:
-                if absolute:
-                    print(" {}".format(round(scores[score][folder], 4)).ljust(space_pattern[counter]), end="|")
+                if score in failed_tools[folder]:
+                    value = "N/A"
+                    print(" {}".format(value).ljust(space_pattern[counter]), end="|")
                 else:
-                    print(" {0:0.1f}".format(round(scores[score][folder], 1)).ljust(space_pattern[counter]), end="|")
+                    value = round(scores[score][folder], 4) if absolute else round(scores[score][folder], 1)
+                    if absolute:
+                        print(" {}".format(value).ljust(space_pattern[counter]), end="|")
+                    else:
+                        print(" {0:0.1f}".format(value).ljust(space_pattern[counter]), end="|")
+
                 counter += 1
             print("")
         else:
@@ -284,8 +328,8 @@ def main():
     result_directory = os.path.abspath(args.result_directory[0])
     absolute = True if args.absolute else False
     print_only_overall = True if args.only_overall_scores else False
-    scores = calculate_scores(result_directory, absolute)
-    print_score_csv(scores, absolute, print_only_overall)
+    scores, failed_tools = calculate_scores(result_directory, absolute)
+    print_score_csv(scores, absolute, failed_tools=failed_tools, print_only_overall=print_only_overall)
 
 
 if __name__ == "__main__":

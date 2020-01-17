@@ -333,8 +333,9 @@ def main():
     #all_scores = [compiler_and_sanitizer_score, assertion_score, cppcheck_score, clang_tidy_score,
     #              cyclomatic_complexity_score, warning_score, unique_score, kwstyle_score]  # TODO: add infer_score to this!
 
-    all_scores = static_analysis(program_dir_abs, source_files, lines_of_code, cpp, custom_asserts, cmake=cmake)
-
+    all_scores = [compiler_and_sanitizer_score]
+    all_scores.extend(static_analysis(program_dir_abs, source_files, lines_of_code, cpp, custom_asserts, cmake=cmake))
+    #print(all_scores)
 
     overall_score = scoring.average_score(all_scores)
 

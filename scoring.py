@@ -118,7 +118,7 @@ def _calculate_score_generic(rate, best, worst):
         #print("score < 0")
         score = 0
 
-    score_abs = calculate_score_absolute(rate, best, worst)
+    score_abs = _calculate_score_absolute(rate, best, worst)
 
     #print("Absolute score: ")
     #print(score_abs)
@@ -128,7 +128,7 @@ def _calculate_score_generic(rate, best, worst):
     #return score_abs
     return score
 
-def calculate_score_absolute(rate, best, worst):
+def _calculate_score_absolute(rate, best, worst):
     d = best-worst;
     precision = 100
     thresh = 1
@@ -257,3 +257,41 @@ def calculate_kwstyle_score(rate):
 
 def calculate_infer_score(rate):
     return _calculate_score_generic(rate, INFER_BEST, INFER_WORST)
+
+
+
+
+def calculate_compiler_and_sanitizer_score_absolute(rate):
+    return _calculate_score_absolute(rate, COMPILER_BEST, COMPILER_WORST)
+
+
+def calculate_assertion_score_absolute(rate):
+    return _calculate_score_absolute(rate, ASSERTIONS_BEST, ASSERTIONS_WORST)
+
+
+def calculate_cppcheck_score_absolute(rate):
+    return _calculate_score_absolute(rate, CPPCHECK_BEST, CPPCHECK_WORST)
+
+
+def calculate_clang_tidy_score_absolute(rate):
+    return _calculate_score_absolute(rate, CLANG_TIDY_BEST, CLANG_TIDY_WORST)
+
+
+def calculate_cyclomatic_complexity_score_absolute(ccn):
+    return _calculate_score_absolute(ccn, CYCLOMATIC_COMPLEXITY_BEST, CYCLOMATIC_COMPLEXITY_WORST)
+
+
+def calculate_lizard_warning_score_absolute(rate):
+    return _calculate_score_absolute(rate, LIZARD_WARNINGS_BEST, LIZARD_WARNINGS_WORST)
+
+
+def calculate_unique_score_absolute(rate):
+    return _calculate_score_absolute(rate, UNIQUE_BEST, UNIQUE_WORST)
+
+
+def calculate_kwstyle_score_absolute(rate):
+    return _calculate_score_absolute(rate, KWSTYLE_BEST, KWSTYLE_WORST)
+
+
+def calculate_infer_score_absolute(rate):
+    return _calculate_score_absolute(rate, INFER_BEST, INFER_WORST)
