@@ -11,6 +11,7 @@ from collections import defaultdict
 
 def main():
     file_path = sys.argv[1]
+    space_pattern = [22, 19, 24, 12, 10, 12, 23, 17, 8, 9, 7]   #TODO: space_pattern[1] should be 9
 
     record = False      #need to filter the first few lines in case there is some unnecessary log data there
     data = []
@@ -54,6 +55,9 @@ def main():
 
     d = defaultdict()
     d_absolute = defaultdict()
+
+    rc_d_squared = {}
+
     sorted_list = []
     sorted_list_absolute = []
 
@@ -117,15 +121,43 @@ def main():
             d[folder] = scores['overall'][folder]
             d_absolute[folder] = scores_absolute['overall'][folder]
 
+
+
     sorted_list = sorted(d.items(), key = lambda x: x[1], reverse=True)
-    sorted_list_absolute = sorted(d.items(), key = lambda x: x[1], reverse=True)
+    sorted_list_absolute = sorted(d_absolute.items(), key = lambda x: x[1], reverse=True)
+
+
+
 
     for (name, score) in sorted_list:
         score_absolute = scores_absolute['overall'][name]
-        print("{}: {} - {} ".format(name, round(score, 1), round(score_absolute, 1)), end=" | ")
-        for key in scores.keys():
-            print(scores[key][name], end=" | ")
+        print("| {}".format(name).ljust(space_pattern[0]), end="|")
+        print(" {} - {}".format(round(score, 4), round(score_absolute, 4)).ljust(space_pattern[1]), end="|")
+        counter = 2
+        '''for i in range(0, len(TOOL_KEYS)):
+            key = TOOL_KEYS[i]
+            print(" {0:0.1f}".format(round(scores[key][name], 1)).ljust(space_pattern[counter]), end="|")
+            counter += 1
+        '''
+        for key in scores_absolute.keys():
+            if key == 'overall': continue
+            print(" {0:0.1f}".format(round(scores_absolute[key][name], 1)).ljust(space_pattern[counter]), end="|")
+            counter += 1
         print()
+
+
+    counter = 0
+    rc_d_squared_sum = 0
+    for (name, _) in sorted_list:
+        counter2 = 0
+        for (name2, _) in sorted_list_absolute:
+            if name == name2:
+                rc_d_squared_sum += (counter - counter2) * (counter - counter2)
+            counter2 += 1
+        counter += 1
+    n = counter
+    rc = 1 - (6 * rc_d_squared_sum / (n * (n*n - 1)))
+    print("Rank correlation: {}".format(rc))
 
     #print("{}: {}".format(folder, scores["overall"][folder]))
 

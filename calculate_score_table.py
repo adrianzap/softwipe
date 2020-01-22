@@ -70,7 +70,9 @@ def get_result_rates(result_directory, folder):
 
     infer_rate = 2
 
-    failed_tools = [infer_key]      #TODO: remove this once infer is fixed!
+    #fill the failed_tools list with all the available analysis tools and remove the ones that are not available in the report
+    #this allows accepting half finished reports without provoking reading or calculation errors on the according scores
+    failed_tools = [compiler_key, sanitizer_key, infer_key, assertions_key, cppcheck_key, clang_tidy_key, cyclomatic_complexity_key, lizard_warnings_key, unique_key]      #TODO: remove this once infer is fixed!
 
 
     # Iterate through the softwipe output
@@ -80,26 +82,37 @@ def get_result_rates(result_directory, folder):
         # Compiler and sanitizer rate treatment
         if line.startswith('Weighted compiler warning rate:'):
             compiler_and_sanitizer_rate += float(split_line[4])
+            if compiler_key in failed_tools: failed_tools.remove(compiler_key)
         elif line.startswith(('AddressSanitizer error rate:', 'UndefinedBehaviorSanitizer error rate:')):
             compiler_and_sanitizer_rate += float(split_line[3])
+            if sanitizer_key in failed_tools: failed_tools.remove(sanitizer_key)
 
         # All other rates
         elif line.startswith('Assertion rate:'):
             assertion_rate = float(split_line[2])
+            print("removed assertions key")
+            if assertions_key in failed_tools: failed_tools.remove(assertions_key)
         elif line.startswith('Total weighted Cppcheck warning rate:'):
             cppcheck_rate = float(split_line[5])
+            if cppcheck_key in failed_tools: failed_tools.remove(cppcheck_key)
         elif line.startswith('Weighted Clang-tidy warning rate:'):
             clang_tidy_rate = float(split_line[4])
+            if clang_tidy_key in failed_tools: failed_tools.remove(clang_tidy_key)
         elif line.startswith('Average cyclomatic complexity:'):
             ccn = float(split_line[3])
+            if cyclomatic_complexity_key in failed_tools: failed_tools.remove(cyclomatic_complexity_key)
         elif line.startswith('Lizard warning rate (~= rate of functions that are too complex):'):
             lizard_rate = float(split_line[11])
+            if lizard_warnings_key in failed_tools: failed_tools.remove(lizard_warnings_key)
         elif line.startswith('Unique code rate:'):
             unique_rate = float(split_line[3])
+            if unique_key in failed_tools: failed_tools.remove(unique_key)
         elif line.startswith('KWStyle warning rate:'):
             kwstyle_rate = float(split_line[3])
+            if kwstyle_key in failed_tools: failed_tools.remove(kwstyle_key)
         elif line.startswith('Weighted Infer warning rate:'):
             infer_rate = float(split_line[4])
+            if infer_key in failed_tools: failed_tools.remove(infer_key)
 
         for key in score_keys:
             if key + " failed" in line:                 #TODO: do with string constant
@@ -122,7 +135,7 @@ def get_result_values(result_directory, folder):
     loc = functions = compiler_warnings = assertions = cppcheck_warnings = clang_tidy_warnings = \
         ccn = lizard_warnings = unique = kwstyle_warnings = None
 
-    failed_tools = [infer_key]
+    failed_tools = [compiler_key, sanitizer_key, infer_key, assertions_key, cppcheck_key, clang_tidy_key, cyclomatic_complexity_key, lizard_warnings_key, unique_key]
 
     # Iterate through the softwipe output
     for line in cur_lines:
@@ -132,23 +145,32 @@ def get_result_values(result_directory, folder):
             loc = int(split_line[-1])
         elif line.startswith('Weighted compiler warning rate:'):
             compiler_warnings = get_absolute_value(split_line[-1])
+            if compiler_key in failed_tools: failed_tools.remove(compiler_key)
         elif line.startswith(('AddressSanitizer error rate:', 'UndefinedBehaviorSanitizer error rate:')):
             sanitizer_warnings += get_absolute_value(split_line[-1])
+            if sanitizer_key in failed_tools: failed_tools.remove(sanitizer_key)
         elif line.startswith('Assertion rate:'):
             assertions = get_absolute_value(split_line[-1])
+            if assertions_key in failed_tools: failed_tools.remove(assertions_key)
         elif line.startswith('Total weighted Cppcheck warning rate:'):
             cppcheck_warnings = get_absolute_value(split_line[-1])
+            if cppcheck_key in failed_tools: failed_tools.remove(cppcheck_key)
         elif line.startswith('Weighted Clang-tidy warning rate:'):
             clang_tidy_warnings = get_absolute_value(split_line[-1])
+            if clang_tidy_key in failed_tools: failed_tools.remove(clang_tidy_key)
         elif line.startswith('Average cyclomatic complexity:'):
             ccn = float(split_line[-1])
+            if compiler_key in failed_tools: failed_tools.remove(cyclomatic_complexity_key)
         elif line.startswith('Lizard warning rate (~= rate of functions that are too complex):'):
             functions = int(split_line[-1].split('/')[1][:-1])
             lizard_warnings = get_absolute_value(split_line[-1])
+            if lizard_warnings_key in failed_tools: failed_tools.remove(lizard_warnings_key)
         elif line.startswith('Unique code rate:'):
             unique = float(split_line[-1])
+            if unique_key in failed_tools: failed_tools.remove(unique_key)
         elif line.startswith('KWStyle warning rate:'):
             kwstyle_warnings = get_absolute_value(split_line[-1])
+            if kwstyle_key in failed_tools: failed_tools.remove(kwstyle_key)
 
         for key in score_keys:
             if key + " failed" in line:                 #TODO: do with string constant
@@ -221,8 +243,8 @@ def calculate_scores(result_directory, absolute):
     print(FOLDERS)
 
     FOLDERS.clear()
-    #FOLDERS.extend(['BGSA-1.0/original/BGSA_SSE', 'bindash-1.0', 'copmem-0.2', 'crisflash', 'cryfa-18.06', 'defor', 'dna-nn-0.1', 'dr_sasa_n', 'emeraLD', 'ExpansionHunter', 'fastspar', 'HLA-LA/src', 'lemon', 'naf-1.1.0/ennaf', 'naf-1.1.0/unnaf', 'ngsTools/ngsLD', 'ntEdit-1.2.3', 'PopLDdecay', 'virulign-1.0.1', 'axe-0.3.3', 'prequal', 'IQ-TREE-2.0-rc1', 'candy-kingdom', 'glucose-3-drup']) #TODO: add SPRING
-    FOLDERS.extend(['glucose-3-drup'])
+    FOLDERS.extend(['BGSA-1.0/original/BGSA_SSE', 'bindash-1.0', 'copmem-0.2', 'crisflash', 'cryfa-18.06', 'defor', 'dna-nn-0.1', 'dr_sasa_n', 'emeraLD', 'ExpansionHunter', 'fastspar', 'HLA-LA/src', 'lemon', 'naf-1.1.0/ennaf', 'naf-1.1.0/unnaf', 'ngsTools/ngsLD', 'ntEdit-1.2.3', 'PopLDdecay', 'virulign-1.0.1', 'axe-0.3.3', 'prequal', 'IQ-TREE-2.0-rc1', 'candy-kingdom', 'glucose-3-drup']) #TODO: add SPRING
+    #FOLDERS.extend(['glucose-3-drup'])
 
     failed_tools_dict = {}
 

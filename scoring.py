@@ -128,33 +128,46 @@ def _calculate_score_generic(rate, best, worst):
     #return score_abs
     return score
 
-def _calculate_score_absolute(rate, best, worst):
+'''
+The cases cover different possibilities to assemble the evaluation function
+case 0: sigmoid  - linear - sigmoid
+case 1: sigmoid  - linear - constant
+case 2: constant - linear - sigmoid
+'''
+def _calculate_score_absolute(rate, best, worst, case=0):
     d = best-worst;
-    precision = 100
-    thresh = 1
     x = (rate - worst)
 
-    if x/d < 0:
-        #x0 = np.log(1 / (thresh/100) - 1) + 0.05*d
-        k = (np.log(1/0.01 - 1) - np.log(1/0.05 - 1)) / d
-        x0 = np.log(1/0.05 - 1) / k
-
-        #print("sigmoid1 ", end='')
-        return 10 * sigmoid(x, x0, k)
-    elif x/d > 1:
-        #x0 = np.log(1 / (1 - thresh/100) - 1) + 0.95*d
-        k = (np.log(1/0.95 - 1) - np.log(1/0.99 - 1)) / d
-        x0 = np.log(1/0.95 - 1) / k + d
-
-       # print("sigmoid2 ", end='')
-        return 10 * sigmoid(x, x0, k)
+    if x/d <= 0:
+        if case != 2:
+            k = (np.log(1/0.01 - 1) - np.log(1/0.05 - 1)) / d
+            x0 = np.log(1/0.05 - 1) / k
+            return 10 * sigmoid(x, x0, k)
+        else:
+            return 0
+    elif x/d >= 1:
+        if case != 1:
+            k = (np.log(1/0.95 - 1) - np.log(1/0.99 - 1)) / d
+            x0 = np.log(1/0.95 - 1) / k + d
+            return 10 * sigmoid(x, x0, k)
+        else:
+            return 10
     else:
-        #print("linear ", end='')
-        #return (10 * rate) / (best - worst) - (10 * worst) / (best - worst)      # defined from 0 to d
-        a = 0.9 / d
-        b = 0.05
+        if case == 0:
+            a = 0.9 / d
+            b = 0.05
+        elif case == 1:
+            a = 0.95 / d
+            b = 0.05
+        else:
+            a = 0.95 / d
+            b = 0
         return 10 * (a * x + b)
 
+
+    #TODO: Remove the experimental stuff!
+    precision = 100
+    thresh = 1
 
     xdata = np.array([0])
     ydata = np.array([thresh/100])
@@ -262,11 +275,11 @@ def calculate_infer_score(rate):
 
 
 def calculate_compiler_and_sanitizer_score_absolute(rate):
-    return _calculate_score_absolute(rate, COMPILER_BEST, COMPILER_WORST)
+    return _calculate_score_absolute(rate, COMPILER_BEST, COMPILER_WORST, case=1)
 
 
 def calculate_assertion_score_absolute(rate):
-    return _calculate_score_absolute(rate, ASSERTIONS_BEST, ASSERTIONS_WORST)
+    return _calculate_score_absolute(rate, ASSERTIONS_BEST, ASSERTIONS_WORST, case=2)
 
 
 def calculate_cppcheck_score_absolute(rate):
@@ -282,7 +295,7 @@ def calculate_cyclomatic_complexity_score_absolute(ccn):
 
 
 def calculate_lizard_warning_score_absolute(rate):
-    return _calculate_score_absolute(rate, LIZARD_WARNINGS_BEST, LIZARD_WARNINGS_WORST)
+    return _calculate_score_absolute(rate, LIZARD_WARNINGS_BEST, LIZARD_WARNINGS_WORST, case=1)
 
 
 def calculate_unique_score_absolute(rate):
@@ -290,8 +303,8 @@ def calculate_unique_score_absolute(rate):
 
 
 def calculate_kwstyle_score_absolute(rate):
-    return _calculate_score_absolute(rate, KWSTYLE_BEST, KWSTYLE_WORST)
+    return _calculate_score_absolute(rate, KWSTYLE_BEST, KWSTYLE_WORST, case=1)
 
 
 def calculate_infer_score_absolute(rate):
-    return _calculate_score_absolute(rate, INFER_BEST, INFER_WORST)
+    return _calculate_score_absolute(rate, INFER_BEST, INFER_WORST, case=1)

@@ -304,7 +304,9 @@ def main():
 
     args = parse_arguments()
 
-    print(args)
+    for argument in sys.argv:
+        print(argument, end=" ")
+    print()
 
     # Normal check for the dependencies
     if len(sys.argv) != 1:
