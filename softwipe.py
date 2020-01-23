@@ -7,6 +7,8 @@ import argparse
 import sys
 import os
 
+import numpy
+
 import strings
 import compile_phase
 import static_analysis_phase
@@ -202,11 +204,13 @@ def compile_program_with_infer(args, excluded_paths):
     program_dir_abs = os.path.abspath(args.programdir)
 
     if args.cmake:
-        compile_phase.compile_program_infer_cmake(program_dir_abs, excluded_paths)
+        infer_compilation_status = compile_phase.compile_program_infer_cmake(program_dir_abs, excluded_paths)
     elif args.make:
-        compile_phase.compile_program_infer_make(program_dir_abs, excluded_paths)
+        infer_compilation_status = compile_phase.compile_program_infer_make(program_dir_abs, excluded_paths)
     else:
         print("Only make/cmake supported to analyze the program with Infer right now!")
+
+    return infer_compilation_status
 
 
 def execute_program(program_dir_abs, executefile, cmake, lines_of_code):
@@ -258,12 +262,12 @@ def compile_and_execute_program_with_sanitizers(args, lines_of_code, program_dir
     scoring.print_score(score, 'Compiler + Sanitizer')
 
     #TODO: Experimental Infer stuff
-    #compile_program_with_infer(args, excluded_paths)
+    infer_compilation_status = compile_program_with_infer(args, excluded_paths)
 
-    return score
+    return score, infer_compilation_status
 
 
-def static_analysis(program_dir_abs, source_files, lines_of_code, cpp, custom_asserts=None, cmake=False):
+def static_analysis(program_dir_abs, source_files, lines_of_code, cpp, custom_asserts=None, cmake=False, excluded_tools=[]):       #TODO: add documentation
     """
     Run all the static analysis.
     :param program_dir_abs: The absolute path to the root directory of the target program.
@@ -285,9 +289,9 @@ def static_analysis(program_dir_abs, source_files, lines_of_code, cpp, custom_as
 
     #check for failed tool execution and exclude the tools which failed
     for (name, score, log, stat) in output:
-        if log:
+        if log and name not in excluded_tools:
             print(log)
-        if stat:
+        if stat and name not in excluded_tools:
             scores.append(score)
         else:
             print("{} failed".format(name))     #TODO: add string constant
@@ -327,8 +331,11 @@ def main():
     source_files = util.find_all_source_files(program_dir_abs, excluded_paths)
     lines_of_code = util.count_lines_of_code(source_files)
 
-    compiler_and_sanitizer_score = compile_and_execute_program_with_sanitizers(args, lines_of_code, program_dir_abs,
+    compiler_and_sanitizer_score, infer_compilation_status = compile_and_execute_program_with_sanitizers(args, lines_of_code, program_dir_abs,
                                                                                cpp, excluded_paths, args.no_execution)
+    excluded_tools = []
+    if not infer_compilation_status: excluded_tools.append('infer')
+
     #assertion_score, cppcheck_score, clang_tidy_score, cyclomatic_complexity_score, warning_score, \
     #    unique_score, kwstyle_score, infer_score = static_analysis(program_dir_abs, source_files, lines_of_code, cpp, custom_asserts, cmake=cmake)
 
@@ -336,16 +343,17 @@ def main():
     #              cyclomatic_complexity_score, warning_score, unique_score, kwstyle_score]  # TODO: add infer_score to this!
 
     all_scores = [compiler_and_sanitizer_score]
-    all_scores.extend(static_analysis(program_dir_abs, source_files, lines_of_code, cpp, custom_asserts, cmake=cmake))
+    all_scores.extend(static_analysis(program_dir_abs, source_files, lines_of_code, cpp, custom_asserts, cmake=cmake, excluded_tools=excluded_tools))
     #print(all_scores)
 
     overall_score = scoring.average_score(all_scores)
 
+    print()
     scoring.print_score(overall_score, 'Overall program absolute')
 
     if args.add_badge:
         fname = args.add_badge[0]
-        badge_string = "[![Softwipe Score](https://img.shields.io/badge/softwipe-{}-blue)]".format(round(overall_score, 1)) #TODO: add string to constants
+        badge_string = "[![Softwipe Score](https://img.shields.io/badge/softwipe-e{}-blue)](https://github.com/adrianzap/softwipe/wiki/Code-Quality-Benchmark)".format(round(overall_score, 1)) #TODO: add string to constants, fix the experimental 'e'
 
         file = open(fname, 'r')
 

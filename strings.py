@@ -28,6 +28,7 @@ NO_MAKE_CLEAN_TARGET_FOUND = 'Seems like there is no "make clean" target :( Plea
 
 
 COMPILATION_CRASHED = 'Compilation crashed with error code {}!\n{}'
+INFER_COMPILATION_CRASHED = 'Infer compilation crashed with error code {}!\n{}'
 
 
 CLANG_TIDY_CHECKS_C = '-*,bugprone-*,clang-analyzer-*,misc-*,modernize-*,mpi-*,performance-*,readability-*,' \
@@ -65,6 +66,9 @@ _softwipe = 'softwipe_'
 SOFTWIPE_BUILD_DIR_NAME = _softwipe + 'build'
 SOFTWIPE_COMPILED_EXE_NAME = _softwipe + 'compiled_exe.out'
 
+ERROR_FILENAME_INFER_COMPILATION = _softwipe + 'error_infer_compilation.txt'
+ERROR_LOG_WRITTEN_INTO = 'The error log has been written into {}.'
+
 RESULTS_FILENAME_COMPILER_MUST_BE_FIXED = _softwipe + 'compilation_warnings_must_be_fixed.txt'
 RESULTS_FILENAME_COMPILER_SHOULD_BE_FIXED = _softwipe + 'compilation_warnings_should_be_fixed.txt'
 RESULTS_FILENAME_COMPILER_COULD_BE_FIXED = _softwipe + 'compilation_warnings_could_be_fixed.txt'
@@ -74,6 +78,7 @@ RESULTS_FILENAME_CPPCHECK = _softwipe + 'cppcheck_results.txt'
 RESULTS_FILENAME_CLANG_TIDY = _softwipe + 'clang_tidy_results.txt'
 RESULTS_FILENAME_LIZARD = _softwipe + 'lizard_results.txt'
 RESULTS_FILENAME_KWSTYLE = _softwipe + 'kwstyle_results.txt'
+RESULTS_FILENAME_INFER = _softwipe + 'infer_results.txt'
 
 RATE_COUNT_TOTAL = '{} ({}/{})'
 

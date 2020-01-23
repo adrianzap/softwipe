@@ -377,40 +377,54 @@ def compile_program_clang(program_dir_abs, targets, lines_of_code, compiler_flag
     return weighted_sum_of_warnings
 
 
+def get_infer_exclude_command(program_dir_abs, excluded_paths):
+    exclude_command = []
+    for path in excluded_paths:
+        if program_dir_abs[-1] != '/': program_dir_abs += '/'
+        path = path.replace(program_dir_abs, "")
+        exclude_command.extend(["--skip-analysis-in-path", path])
+    return exclude_command
+
 def compile_program_infer_cmake(program_dir_abs, excluded_paths):   #TODO: exclude paths!
     build_path = create_build_directory(program_dir_abs, build_dir_name="infer_build")
     clear_directory(build_path)
 
     infer_call_compile = ["infer", "compile", "--", "cmake", ".."]
-    infer_call_capture = ["infer", "capture", "--", "make"]
-
-    '''if excluded_paths:
-        print("Excluded: ", end="")
-        print(excluded_paths)
-        infer_call_capture = ["infer","--skip-analysis-in-path"]
-        infer_call_capture.extend(excluded_paths)
-        infer_call_capture.extend(["--", "make"])'''
+    infer_call_capture = ["infer", "capture"]
+    infer_call_capture.extend(get_infer_exclude_command(program_dir_abs, excluded_paths))
+    infer_call_capture.extend(["--", "make"])
 
     try:
         output = subprocess.check_output(infer_call_compile, cwd=build_path, universal_newlines=True, stderr=subprocess.STDOUT)
         output += subprocess.check_output(infer_call_capture, cwd=build_path, universal_newlines=True, stderr=subprocess.STDOUT)
     except subprocess.CalledProcessError as e:
-        print(strings.COMPILATION_CRASHED.format(e.returncode, e.output))
-        print("Infer compilation was not successful!")      #TODO: string constant....
+        util.write_into_file_string(strings.ERROR_FILENAME_INFER_COMPILATION, strings.INFER_COMPILATION_CRASHED.format(e.returncode, e.output))
+        print(strings.INFER_COMPILATION_CRASHED.format(e.returncode, strings.ERROR_LOG_WRITTEN_INTO.format(strings.ERROR_FILENAME_INFER_COMPILATION)))
         return False
 
     return True
 
 def compile_program_infer_make(program_dir_abs, excluded_paths):
-    infer_call = ["infer", "capture", "--", "make"]
+    exclude_command = get_infer_exclude_command(program_dir_abs, excluded_paths)
+    #print(strings.INFER_COMPILATION_CRASHED.format(11, strings.ERROR_LOG_WRITTEN_INTO.format(
+    #    strings.ERROR_FILENAME_INFER_COMPILATION))) #TODO: remove this
+    infer_call = ["infer", "capture"]
+    infer_call.extend(exclude_command)
+    infer_call.extend(["--", "make"])
     make_clean_call = ["make", "clean"]
 
     try:
-        output = subprocess.check_output(make_clean_call, cwd=program_dir_abs, universal_newlines=True, stderr=subprocess.STDOUT)
-        output += subprocess.check_output(infer_call, cwd=program_dir_abs, universal_newlines=True, stderr=subprocess.STDOUT)
+        output = subprocess.check_output(make_clean_call, cwd=program_dir_abs, universal_newlines=True,
+                                         stderr=subprocess.STDOUT)
+    except subprocess.CalledProcessError as e:      #not all makefiles have a clean option, pass if it doesn't exist
+        pass
+
+    try:
+        output = subprocess.check_output(infer_call, cwd=program_dir_abs, universal_newlines=True, stderr=subprocess.STDOUT)
     except subprocess.CalledProcessError as e:
-        print(strings.COMPILATION_CRASHED.format(e.returncode, e.output))
-        print("Infer compilation was not successful!")      #TODO: string constant....
+        util.write_into_file_string(strings.ERROR_FILENAME_INFER_COMPILATION, strings.INFER_COMPILATION_CRASHED.format(e.returncode, e.output))
+        print(strings.INFER_COMPILATION_CRASHED.format(e.returncode, strings.ERROR_LOG_WRITTEN_INTO.format(
+            strings.ERROR_FILENAME_INFER_COMPILATION)))
         return False
 
     return True

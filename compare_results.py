@@ -50,13 +50,14 @@ def get_all_rates(result_directory):
         'cyclomatic_complexity': [],
         'lizard_warnings': [],
         'unique': [],
-        'kwstyle': []
+        'kwstyle': [],
+        'infer': []
     }
 
     # Get all the rates
     for folder in FOLDERS:
         compiler_and_sanitizer_rate, assertion_rate, cppcheck_rate, clang_tidy_rate, ccn, lizard_rate, unique_rate, \
-            kwstyle_rate = calculate_score_table.get_result_rates(result_directory, folder)
+            kwstyle_rate, infer_rate, failed_tools = calculate_score_table.get_result_rates(result_directory, folder)
 
         rates['compiler_and_sanitizer'].append((folder, compiler_and_sanitizer_rate))
         rates['assertions'].append((folder, assertion_rate))
@@ -66,6 +67,7 @@ def get_all_rates(result_directory):
         rates['lizard_warnings'].append((folder, lizard_rate))
         rates['unique'].append((folder, unique_rate))
         rates['kwstyle'].append((folder, kwstyle_rate))
+        rates['infer'].append((folder, infer_rate))
 
     return rates
 
@@ -185,6 +187,9 @@ def print_softwipe_scoring_values(sorted_rates):
         elif rate == 'kwstyle':
             best_string = 'KWSTYLE_BEST'
             worst_string = 'KWSTYLE_WORST'
+        elif rate == 'infer':
+            best_string = 'INFER_BEST'
+            worst_string = 'INFER_WORST'
 
         print(best_string + ' = ' + str(best))
         print(worst_string + ' = ' + str(worst))

@@ -15,9 +15,14 @@ import scoring
 # If you add a new program to the benchmark, add the name #
 # of its folder in the results directory to this list!    #
 ###########################################################
-FOLDERS = ['dawg', 'mrbayes', 'raxml-ng', 'sf', 'hyperphylo', 'kahypar', 'ms', 'repeatscounter', 'tcoffee', 'bpp',
-           'indelible', 'mafft', 'prank', 'seq-gen', 'genesis', 'athena', 'gadget', 'iqtree', 'clustal', 'phyml',
-           'minimap', 'samtools', 'vsearch', 'swarm', 'cellcoal', 'treerecs']
+#FOLDERS = ['dawg', 'mrbayes', 'raxml-ng', 'sf', 'hyperphylo', 'kahypar', 'ms', 'repeatscounter', 'tcoffee', 'bpp',
+#           'indelible', 'mafft', 'prank', 'seq-gen', 'genesis', 'athena', 'gadget', 'iqtree', 'clustal', 'phyml',
+#           'minimap', 'samtools', 'vsearch', 'swarm', 'cellcoal', 'treerecs']
+FOLDERS = ['BGSA-1.0/original/BGSA_SSE', 'bindash-1.0', 'copmem-0.2', 'crisflash', 'cryfa-18.06', 'defor', 'dna-nn-0.1',
+     'dr_sasa_n', 'emeraLD', 'ExpansionHunter', 'fastspar', 'HLA-LA/src', 'lemon', 'naf-1.1.0/ennaf', 'naf-1.1.0/unnaf',
+     'ngsTools/ngsLD', 'ntEdit-1.2.3', 'PopLDdecay', 'virulign-1.0.1', 'axe-0.3.3', 'prequal', 'IQ-TREE-2.0-rc1',
+     'candy-kingdom', 'glucose-3-drup']  # TODO: add SPRING
+
 #SOFTWIPE_OUTPUT_FILE_NAME = 'softwipe_output.txt'
 SOFTWIPE_OUTPUT_FILE_NAME = "sw_batch.txt"
 
@@ -90,7 +95,6 @@ def get_result_rates(result_directory, folder):
         # All other rates
         elif line.startswith('Assertion rate:'):
             assertion_rate = float(split_line[2])
-            print("removed assertions key")
             if assertions_key in failed_tools: failed_tools.remove(assertions_key)
         elif line.startswith('Total weighted Cppcheck warning rate:'):
             cppcheck_rate = float(split_line[5])
