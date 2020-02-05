@@ -4,26 +4,22 @@ This module contains utility functions.
 
 
 import os
-
 import strings
 
 
-def write_into_file_string(file_name, content, append=False, no_extra_newline=False):
+def write_into_file_string(file_name, content, append=False):
     write_mode = 'a' if append else 'w'
     file = open(file_name, write_mode)
     file.write(content)
     file.close()
-    #print(strings.DETAILLED_RESULTS_WRITTEN_INTO.format(file_name))    #TODO: remove unnecessary prints
-    #if not no_extra_newline:
-    #    print()
 
 
-def write_into_file_list(file_name, content, append=False, no_extra_newline=False):
+def write_into_file_list(file_name, content, append=False):
     content_as_string = ''
     for line in content:
         content_as_string += line
         content_as_string += '\n'
-    write_into_file_string(file_name, content_as_string, append, no_extra_newline)
+    write_into_file_string(file_name, content_as_string, append)
 
 
 def print_lines(lines):

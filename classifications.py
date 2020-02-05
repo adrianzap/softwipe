@@ -148,11 +148,13 @@ CLANG_TIDY_WARNINGS = {
  'cppcoreguidelines': 1
 }
 
-INFER_WARNINGS = {
- 'IMMUTABLE_CAST': 1,
+INFER_WARNINGS = {   #TODO: fill this up a bit
  'DEADLOCK': 2,
  'DEAD_STORE': 1,
- 'MEMORY_LEAK': 3,
  'EMPTY_VECTOR_ACCESS': 2,
- 'Fields should be nullable': 1
+ 'IMMUTABLE_CAST': 1,
+ 'NULL_DEREFERENCE': 1,
+ 'MEMORY_LEAK': 3,
+ 'RESOURCE_LEAK': 2,
+ 'UNINITIALIZED_VALUE': 1
 }

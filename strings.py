@@ -3,6 +3,8 @@ This module contains string constants.
 """
 
 
+BADGE_LINK = '[![Softwipe Score](https://img.shields.io/badge/softwipe-{}-blue)](https://github.com/adrianzap/softwipe/wiki/Code-Quality-Benchmark)'
+
 COMPILER_WARNING_FLAGS = '-Weverything -Wno-padded -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-c99-compat ' \
                          '-Wno-c++11-extensions -Wno-newline-eof -Wno-source-uses-openmp'
 COMPILER_SANITIZER_FLAGS = '-g -fno-omit-frame-pointer -fsanitize=address -fsanitize-recover=address ' \
@@ -48,6 +50,7 @@ RUN_LIZARD_HEADER = _header.format('LIZARD')
 RUN_KWSTYLE_HEADER = _header.format('KWSTYLE')
 RUN_INFER_COMPILATION_HEADER = _header.format('INFER COMPILATION')
 RUN_INFER_ANALYSIS_HEADER = _header.format('INFER ANALYSIS')
+RUN_STATIC_ANALYSIS_HEADER = _header.format('STATIC ANALYSIS')
 
 
 OS_MACOS = 'Darwin'
@@ -64,6 +67,9 @@ OS_RHEL = 'Red Hat Enterprise Linux Server'
 _softwipe = 'softwipe_'
 
 SOFTWIPE_BUILD_DIR_NAME = _softwipe + 'build'
+INFER_BUILD_DIR_NAME = 'infer_build'
+INFER_OUTPUT_DIR_NAME = 'infer-out'
+INFER_OUTPUT_FILE_NAME = 'bugs.txt'
 SOFTWIPE_COMPILED_EXE_NAME = _softwipe + 'compiled_exe.out'
 
 ERROR_FILENAME_INFER_COMPILATION = _softwipe + 'error_infer_compilation.txt'

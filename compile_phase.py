@@ -8,8 +8,8 @@ import os
 import shutil
 import re
 import sys
-
 import strings
+
 from tools_info import TOOLS
 import util
 import classifications
@@ -64,7 +64,7 @@ def run_cmake(program_dir_abs, build_path, compiler_flags):
     """
     cmake_call = build_cmake_call(program_dir_abs, compiler_flags)
     try:
-        output = subprocess.check_output(cmake_call, cwd=build_path, universal_newlines=True, stderr=subprocess.STDOUT)
+        subprocess.check_output(cmake_call, cwd=build_path, universal_newlines=True, stderr=subprocess.STDOUT)
     except subprocess.CalledProcessError as e:
         print(strings.COMPILATION_CRASHED.format(e.returncode, e.output))
         sys.exit(e.returncode)
@@ -150,11 +150,11 @@ def print_compilation_results(warning_lines, lines_of_code, append_to_file):
           str(number_of_warnings_in_level[0]) + '/' + str(lines_of_code))
     
     util.write_into_file_list(strings.RESULTS_FILENAME_COMPILER_MUST_BE_FIXED, must_be_fixed_warning_lines,
-                              append_to_file, True)
+                              append_to_file)
     util.write_into_file_list(strings.RESULTS_FILENAME_COMPILER_SHOULD_BE_FIXED, should_be_fixed_warning_lines,
-                              append_to_file, True)
+                              append_to_file)
     util.write_into_file_list(strings.RESULTS_FILENAME_COMPILER_COULD_BE_FIXED, could_be_fixed_warning_lines,
-                              append_to_file, False)
+                              append_to_file)
 
     return weighted_sum_of_warnings
 
@@ -201,7 +201,7 @@ def run_make(build_path, lines_of_code, excluded_paths, dont_check_for_warnings=
     Run the make command and print the warnings that it outputs while compiling.
     :param build_path: The build path, where the Makefile is located.
     :param lines_of_code: The lines of pure code count.
-    :param excluded_paths: A tupel containing the paths to be excluded.
+    :param excluded_paths: A list containing the paths to be excluded.
     :param dont_check_for_warnings: Do not check for warnings. Useful for automatically building a dependency,
     in which case you don't want warnings to be extracted from the compilation.
     :param make_flags: A string containing arguments passed to the make command. E.g., if make_flags='-foo BAR',
@@ -223,7 +223,6 @@ def run_make(build_path, lines_of_code, excluded_paths, dont_check_for_warnings=
     # We must use shell=True here, else setting CFLAGS etc. won't work properly.
     try:
         print(make_call)
-        #make_call = 'make CC="clang" CXX="clang++" CFLAGS="-Weverything -Wno-padded -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-c99-compat -Wno-c++11-extensions -Wno-newline-eof -Wno-source-uses-openmp" CXXFLAGS="-Weverything -Wno-padded -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-c99-compat -Wno-c++11-extensions -Wno-newline-eof -Wno-source-uses-openmp -fopenmp" CPPFLAGS="-Weverything -Wno-padded -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-c99-compat -Wno-c++11-extensions -Wno-newline-eof -Wno-source-uses-openmp" LDFLAGS="-Weverything -Wno-padded -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-c99-compat -Wno-c++11-extensions -Wno-newline-eof -Wno-source-uses-openmp" | compiledb'
         output = subprocess.check_output(make_call, cwd=build_path, universal_newlines=True, stderr=subprocess.STDOUT,
                                          shell=True)
     except subprocess.CalledProcessError as e:
@@ -284,7 +283,7 @@ def compile_program_make(program_dir_abs, lines_of_code, compiler_flags, exclude
     :param lines_of_code: The lines of pure code count.
     :param compiler_flags: The flags to be used for compilation. Typically, these should be strings.COMPILE_FLAGS or,
     if no_execution, strings.COMPILER_WARNING_FLAGS.
-    :param excluded_paths: A tupel containing the paths to be excluded.
+    :param excluded_paths: A list containing the paths to be excluded.
     :param make_command_file: The path to a file containing the commands used to successfully compile the program
     using make.
     :return The weighted sum of compiler warnings.
@@ -318,7 +317,7 @@ def compile_program_cmake(program_dir_abs, lines_of_code, compiler_flags, exclud
     :param lines_of_code: The lines of pure code count.
     :param compiler_flags: The flags to be used for compilation. Typically, these should be strings.COMPILE_FLAGS or,
     if no_execution, strings.COMPILER_WARNING_FLAGS.
-    :param excluded_paths: A tupel containing the paths to be excluded.
+    :param excluded_paths: A list containing the paths to be excluded.
     :param dont_check_for_warnings: Do not check for warnings. Useful for automatically building a dependency,
     in which case you don't want warnings to be extracted from the compilation.
     :param make_command_file: The path to a file containing the commands used to successfully compile the program
@@ -348,7 +347,7 @@ def compile_program_clang(program_dir_abs, targets, lines_of_code, compiler_flag
     :param lines_of_code: The lines of pure code count.
     :param compiler_flags: The flags to be used for compilation. Typically, these should be strings.COMPILE_FLAGS or,
     if no_execution, strings.COMPILER_WARNING_FLAGS.
-    :param excluded_paths: A tupel containing the paths to be excluded.
+    :param excluded_paths: A list containing the paths to be excluded.
     :param cpp: Whether we're doing C++ or not. True if C++ (so clang++ will be used), False if C (so clang will be
     used).
     :return The weighted sum of compiler warnings.
@@ -377,7 +376,13 @@ def compile_program_clang(program_dir_abs, targets, lines_of_code, compiler_flag
     return weighted_sum_of_warnings
 
 
-def get_infer_exclude_command(program_dir_abs, excluded_paths):
+def get_infer_exclude_arguments(program_dir_abs, excluded_paths):
+    """
+    Prepares the arguments to add to the 'infer capture' call to exclude certain files from the analysis.
+    :param program_dir_abs: The absolute path to the root directory of the target program.
+    :param excluded_paths: A list containing absolute paths to files to be excluded.
+    :return: arguments used to exclude files for the 'infer capture' call
+    """
     exclude_command = []
     for path in excluded_paths:
         if program_dir_abs[-1] != '/': program_dir_abs += '/'
@@ -385,46 +390,65 @@ def get_infer_exclude_command(program_dir_abs, excluded_paths):
         exclude_command.extend(["--skip-analysis-in-path", path])
     return exclude_command
 
-def compile_program_infer_cmake(program_dir_abs, excluded_paths):   #TODO: exclude paths!
+
+def compile_program_infer_cmake(program_dir_abs, excluded_paths):
+    """
+    Compile the program with infer using cmake to allow infer to analyze it later.
+    :param program_dir_abs: The absolute path to the root directory of the target program.
+    :param excluded_paths: A list containing files to be excluded.
+    :return: True if the compilation was successful
+             False if the compilation was not successful
+    """
     build_path = create_build_directory(program_dir_abs, build_dir_name="infer_build")
     clear_directory(build_path)
 
     infer_call_compile = ["infer", "compile", "--", "cmake", ".."]
     infer_call_capture = ["infer", "capture"]
-    infer_call_capture.extend(get_infer_exclude_command(program_dir_abs, excluded_paths))
+    infer_call_capture.extend(get_infer_exclude_arguments(program_dir_abs, excluded_paths))
     infer_call_capture.extend(["--", "make"])
 
     try:
-        output = subprocess.check_output(infer_call_compile, cwd=build_path, universal_newlines=True, stderr=subprocess.STDOUT)
-        output += subprocess.check_output(infer_call_capture, cwd=build_path, universal_newlines=True, stderr=subprocess.STDOUT)
+        subprocess.check_output(infer_call_compile, cwd=build_path, universal_newlines=True, stderr=subprocess.STDOUT)
+        subprocess.check_output(infer_call_capture, cwd=build_path, universal_newlines=True, stderr=subprocess.STDOUT)
     except subprocess.CalledProcessError as e:
-        util.write_into_file_string(strings.ERROR_FILENAME_INFER_COMPILATION, strings.INFER_COMPILATION_CRASHED.format(e.returncode, e.output))
-        print(strings.INFER_COMPILATION_CRASHED.format(e.returncode, strings.ERROR_LOG_WRITTEN_INTO.format(strings.ERROR_FILENAME_INFER_COMPILATION)))
+        util.write_into_file_string(strings.ERROR_FILENAME_INFER_COMPILATION,
+                                    strings.INFER_COMPILATION_CRASHED.format(e.returncode, e.output))
+        print(strings.INFER_COMPILATION_CRASHED.format(e.returncode, strings.ERROR_LOG_WRITTEN_INTO.format(
+            strings.ERROR_FILENAME_INFER_COMPILATION)))
+        print()
         return False
 
     return True
 
+
 def compile_program_infer_make(program_dir_abs, excluded_paths):
-    exclude_command = get_infer_exclude_command(program_dir_abs, excluded_paths)
-    #print(strings.INFER_COMPILATION_CRASHED.format(11, strings.ERROR_LOG_WRITTEN_INTO.format(
-    #    strings.ERROR_FILENAME_INFER_COMPILATION))) #TODO: remove this
+    """
+    Compile the program with infer using make to allow infer to analyze it later.
+    :param program_dir_abs: The absolute path to the root directory of the target program.
+    :param excluded_paths: A list containing files to be excluded.
+    :return: True if the compilation was successful
+             False if the compilation was not successful
+    """
+    exclude_command = get_infer_exclude_arguments(program_dir_abs, excluded_paths)
     infer_call = ["infer", "capture"]
     infer_call.extend(exclude_command)
     infer_call.extend(["--", "make"])
     make_clean_call = ["make", "clean"]
 
     try:
-        output = subprocess.check_output(make_clean_call, cwd=program_dir_abs, universal_newlines=True,
+        subprocess.check_output(make_clean_call, cwd=program_dir_abs, universal_newlines=True,
                                          stderr=subprocess.STDOUT)
-    except subprocess.CalledProcessError as e:      #not all makefiles have a clean option, pass if it doesn't exist
+    except subprocess.CalledProcessError:      #not all makefiles have a clean option, pass if it doesn't exist
         pass
 
     try:
-        output = subprocess.check_output(infer_call, cwd=program_dir_abs, universal_newlines=True, stderr=subprocess.STDOUT)
+        subprocess.check_output(infer_call, cwd=program_dir_abs, universal_newlines=True, stderr=subprocess.STDOUT)
     except subprocess.CalledProcessError as e:
-        util.write_into_file_string(strings.ERROR_FILENAME_INFER_COMPILATION, strings.INFER_COMPILATION_CRASHED.format(e.returncode, e.output))
+        util.write_into_file_string(strings.ERROR_FILENAME_INFER_COMPILATION,
+                                    strings.INFER_COMPILATION_CRASHED.format(e.returncode, e.output))
         print(strings.INFER_COMPILATION_CRASHED.format(e.returncode, strings.ERROR_LOG_WRITTEN_INTO.format(
             strings.ERROR_FILENAME_INFER_COMPILATION)))
+        print()
         return False
 
     return True

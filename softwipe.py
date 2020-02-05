@@ -6,9 +6,6 @@ The main module of softwipe. Here, command line arguments get parsed and the pip
 import argparse
 import sys
 import os
-
-import numpy
-
 import strings
 import compile_phase
 import static_analysis_phase
@@ -209,6 +206,7 @@ def compile_program_with_infer(args, excluded_paths):
         infer_compilation_status = compile_phase.compile_program_infer_make(program_dir_abs, excluded_paths)
     else:
         print("Only make/cmake supported to analyze the program with Infer right now!")
+        infer_compilation_status = False
 
     return infer_compilation_status
 
@@ -224,7 +222,7 @@ def execute_program(program_dir_abs, executefile, cmake, lines_of_code):
     """
     try:
         weighted_error_count = execution_phase.run_execution(program_dir_abs, executefile, cmake, lines_of_code)
-    except execution_phase.ExecutionFailedException as e:
+    except execution_phase.ExecutionFailedException:
         print(strings.WARNING_PROGRAM_EXECUTION_SKIPPED)
         weighted_error_count = 0
     return weighted_error_count
@@ -248,7 +246,6 @@ def compile_and_execute_program_with_sanitizers(args, lines_of_code, program_dir
         compiler_flags += " " + options
 
     weighted_sum_of_compiler_warnings = compile_program(args, lines_of_code, cpp, compiler_flags, excluded_paths)
-    #TODO: Experimental Infer stuff
 
     if not no_exec:
         execute_file = args.executefile[0] if args.executefile else None
@@ -261,7 +258,6 @@ def compile_and_execute_program_with_sanitizers(args, lines_of_code, program_dir
     score = scoring.calculate_compiler_and_sanitizer_score(weighted_warning_rate)
     scoring.print_score(score, 'Compiler + Sanitizer')
 
-    #TODO: Experimental Infer stuff
     infer_compilation_status = compile_program_with_infer(args, excluded_paths)
 
     return score, infer_compilation_status
@@ -275,28 +271,71 @@ def static_analysis(program_dir_abs, source_files, lines_of_code, cpp, custom_as
     :param lines_of_code: The lines of pure code count for the source_files.
     :param cpp: Whether C++ is used or not. True if C++, False if C.
     :param custom_asserts: A list of custom assertions to be checked by the assertion check.
+    :param cmake: Tells whether cmake is used or not (needed for infer)
+    :param excluded_tools: Excludes the tools in the list from the overall score
     :return: All the static analysis scores: assertion_score, cppcheck_score, clang_tidy_score,
     cyclomatic_complexity_score, warning_score, unique_score, kwstyle_score.
     """
-    #assertion_score, cppcheck_score, clang_tidy_score, cyclomatic_complexity_score, warning_score, unique_score, \
-    #    kwstyle_score, infer_score = static_analysis_phase.run_static_analysis(program_dir_abs, source_files, lines_of_code, cpp,
-    #                                                          custom_asserts, cmake=cmake)
-    #return assertion_score, cppcheck_score, clang_tidy_score, cyclomatic_complexity_score, warning_score, \
-    #       unique_score, kwstyle_score, infer_score
+
+    print(strings.RUN_STATIC_ANALYSIS_HEADER)
+    print()
 
     output = static_analysis_phase.run_static_analysis(program_dir_abs, source_files, lines_of_code, cpp, custom_asserts, cmake=cmake)
     scores = []
 
     #check for failed tool execution and exclude the tools which failed
     for (name, score, log, stat) in output:
-        if log and name not in excluded_tools:
+        if log and name not in excluded_tools:      #TODO: fix that excluded tools thing
             print(log)
         if stat and name not in excluded_tools:
             scores.append(score)
         else:
-            print("{} failed".format(name))     #TODO: add string constant
+            print("{} failed".format(name))         #TODO: add string constant
 
     return scores
+
+
+def add_badge_to_file(path, overall_score):
+    badge_string = strings.BADGE_LINK.format(round(overall_score, 1))
+
+    file = open(path, 'r')
+
+    softwipe_badge_found = False
+    badge_found = False
+
+    for line in file:
+        if "[![Softwipe Score]" in line:
+            softwipe_badge_found = True
+        if "[![" in line:
+            badge_found = True
+
+    file.close()  # just close and reopen the file to reset the reading pointer
+    file = open(path, 'r')
+
+    output = ""
+    badge_set = False
+
+    if badge_found == False and softwipe_badge_found == False:  # if there are no badges at all, just add the softwipe badge in the second line
+        for line in file:
+            output += line
+            if not badge_set:
+                badge_set = True
+                output += badge_string + "\n"
+    elif badge_found == True and softwipe_badge_found == False:  # if there are badges, add the softwipe badge in the same line
+        for line in file:
+            if "[![" in line and badge_set == False:
+                badge_set = True
+                line += badge_string
+            output += line
+    elif softwipe_badge_found:  # if there is a softwipe badge already, replace it with a new one
+        for line in file:
+            if "[![Softwipe Score]" in line:
+                line = re.sub(r'\[!\[Softwipe Score\]\(([^\)\]]+)\)\]\(([^\)\]]+)\)', badge_string, line.rstrip()) + "\n"
+            output += line
+    file.close()
+
+    with open(path, 'w') as modified:
+        modified.write(output)
 
 
 def main():
@@ -331,20 +370,15 @@ def main():
     source_files = util.find_all_source_files(program_dir_abs, excluded_paths)
     lines_of_code = util.count_lines_of_code(source_files)
 
-    compiler_and_sanitizer_score, infer_compilation_status = compile_and_execute_program_with_sanitizers(args, lines_of_code, program_dir_abs,
-                                                                               cpp, excluded_paths, args.no_execution)
+    compiler_and_sanitizer_score, infer_compilation_status = compile_and_execute_program_with_sanitizers(
+        args, lines_of_code, program_dir_abs,cpp, excluded_paths, args.no_execution)
     excluded_tools = []
     if not infer_compilation_status: excluded_tools.append('infer')
 
-    #assertion_score, cppcheck_score, clang_tidy_score, cyclomatic_complexity_score, warning_score, \
-    #    unique_score, kwstyle_score, infer_score = static_analysis(program_dir_abs, source_files, lines_of_code, cpp, custom_asserts, cmake=cmake)
-
-    #all_scores = [compiler_and_sanitizer_score, assertion_score, cppcheck_score, clang_tidy_score,
-    #              cyclomatic_complexity_score, warning_score, unique_score, kwstyle_score]  # TODO: add infer_score to this!
 
     all_scores = [compiler_and_sanitizer_score]
-    all_scores.extend(static_analysis(program_dir_abs, source_files, lines_of_code, cpp, custom_asserts, cmake=cmake, excluded_tools=excluded_tools))
-    #print(all_scores)
+    all_scores.extend(static_analysis(program_dir_abs, source_files, lines_of_code, cpp, custom_asserts,
+                                      cmake=cmake, excluded_tools=excluded_tools))
 
     overall_score = scoring.average_score(all_scores)
 
@@ -352,46 +386,7 @@ def main():
     scoring.print_score(overall_score, 'Overall program absolute')
 
     if args.add_badge:
-        fname = args.add_badge[0]
-        badge_string = "[![Softwipe Score](https://img.shields.io/badge/softwipe-e{}-blue)](https://github.com/adrianzap/softwipe/wiki/Code-Quality-Benchmark)".format(round(overall_score, 1)) #TODO: add string to constants, fix the experimental 'e'
-
-        file = open(fname, 'r')
-
-        softwipe_badge_found = False
-        badge_found = False
-
-        for line in file:
-            if "[![Softwipe Score]" in line:
-                softwipe_badge_found = True
-            if "[![" in line:
-                badge_found = True
-
-        file.close()                      # just close and reopen the file to reset the reading pointer
-        file = open(fname, 'r')
-
-        output = ""
-        badge_set = False
-
-        if badge_found == False and softwipe_badge_found == False:      # if there are no badges at all, just add the softwipe badge in the second line
-            for line in file:
-                output += line
-                if badge_set == False:
-                    badge_set = True
-                    output += badge_string + "\n"
-        elif badge_found == True and softwipe_badge_found == False:     # if there are badges, add the softwipe badge in the same line
-            for line in file:
-                if "[![" in line and badge_set == False:
-                    badge_set = True
-                    line += badge_string
-                output += line
-        elif softwipe_badge_found == True:                              # if there is a softwipe badge already, replace it with a new one
-            for line in file:
-                if "[![Softwipe Score]" in line:
-                    line = re.sub(r'\[!\[Softwipe Score\]\(([^\)\]]+)\)\]', badge_string, line.rstrip()) + "\n"
-
-                output += line
-
-        with open(fname, 'w') as modified: modified.write(output)
+        add_badge_to_file(args.add_badge[0], overall_score)
         print("Added badge to file {}".format(args.add_badge[0]))
 
 
