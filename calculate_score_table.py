@@ -8,44 +8,44 @@ all scores.
 
 import argparse
 import os
-import scoring
 
+import scoring
 
 ###########################################################
 # If you add a new program to the benchmark, add the name #
 # of its folder in the results directory to this list!    #
 ###########################################################
-#FOLDERS = ['dawg', 'mrbayes', 'raxml-ng', 'sf', 'hyperphylo', 'kahypar', 'ms', 'repeatscounter', 'tcoffee', 'bpp',
+# FOLDERS = ['dawg', 'mrbayes', 'raxml-ng', 'sf', 'hyperphylo', 'kahypar', 'ms', 'repeatscounter', 'tcoffee', 'bpp',
 #           'indelible', 'mafft', 'prank', 'seq-gen', 'genesis', 'athena', 'gadget', 'iqtree', 'clustal', 'phyml',
 #           'minimap', 'samtools', 'vsearch', 'swarm', 'cellcoal', 'treerecs']
 FOLDERS = ['BGSA-1.0/original/BGSA_CPU', 'bindash-1.0', 'copmem-0.2', 'crisflash', 'cryfa-18.06', 'defor', 'dna-nn-0.1',
-     'dr_sasa_n', 'emeraLD', 'ExpansionHunter', 'fastspar', 'HLA-LA/src', 'lemon', 'naf-1.1.0/ennaf', 'naf-1.1.0/unnaf',
-     'ngsTools/ngsLD', 'ntEdit-1.2.3', 'PopLDdecay', 'virulign-1.0.1', 'axe-0.3.3', 'prequal', 'IQ-TREE-2.0-rc1',
-     'candy-kingdom', 'glucose-3-drup']         #TODO: add SPRING
+           'dr_sasa_n', 'emeraLD', 'ExpansionHunter', 'fastspar', 'HLA-LA/src', 'lemon', 'naf-1.1.0/ennaf',
+           'naf-1.1.0/unnaf', 'ngsTools/ngsLD', 'ntEdit-1.2.3', 'PopLDdecay', 'virulign-1.0.1', 'axe-0.3.3', 'prequal',
+           'IQ-TREE-2.0-rc1', 'candy-kingdom', 'glucose-3-drup']  # TODO: add SPRING
 
 SOFTWIPE_OUTPUT_FILE_NAME = "sw_batch.txt"
 
-#For the prototype
+# For the prototype
 SW_REL_FILE_NAME = "sw_batch.txt"
 SW_ABS_FILE_NAME = "sw_batch.txt"
 
-loc_key = "loc"
-functions_key = "functions"
-compiler_and_sanitizer_key = "compiler_and_sanitizer"
-compiler_key = "compiler"
-sanitizer_key = "sanitizer"
-assertions_key = "assertions"
-cppcheck_key = "cppcheck"
-clang_tidy_key = "clang_tidy"
-cyclomatic_complexity_key = "cyclomatic_complexity"
-lizard_warnings_key = "lizard_warnings"
-unique_key = "unique"
-kwstyle_key = "kwstyle"
-infer_key = "infer"
+LOC_KEY = "loc"
+FUNCTIONS_KEY = "functions"
+COMPILER_AND_SANITIZER_KEY = "compiler_and_sanitizer"
+COMPILER_KEY = "compiler"
+SANITIZER_KEY = "sanitizer"
+ASSERTIONS_KEY = "assertions"
+CPPCHECK_KEY = "cppcheck"
+CLANG_TIDY_KEY = "clang_tidy"
+CYCLOMATIC_COMPLEXITY_KEY = "cyclomatic_complexity"
+LIZARD_WARNINGS_KEY = "lizard_warnings"
+UNIQUE_KEY = "unique"
+KWSTYLE_KEY = "kwstyle"
+INFER_KEY = "infer"
 
-score_keys = [loc_key, functions_key, compiler_key, sanitizer_key, compiler_and_sanitizer_key, assertions_key,
-              cppcheck_key, clang_tidy_key, cyclomatic_complexity_key, lizard_warnings_key,
-              unique_key, kwstyle_key, infer_key]
+SCORE_KEYS = [LOC_KEY, FUNCTIONS_KEY, COMPILER_KEY, SANITIZER_KEY, COMPILER_AND_SANITIZER_KEY, ASSERTIONS_KEY,
+              CPPCHECK_KEY, CLANG_TIDY_KEY, CYCLOMATIC_COMPLEXITY_KEY, LIZARD_WARNINGS_KEY,
+              UNIQUE_KEY, KWSTYLE_KEY, INFER_KEY]
 
 
 def parse_arguments():
@@ -58,9 +58,10 @@ def parse_arguments():
                                                           '"' + SOFTWIPE_OUTPUT_FILE_NAME + '"')
     parser.add_argument('-A', '--absolute', action='store_true', help='create a table with absolute values rather '
                                                                       'than scores')
-    #parser.add_argument('-o', help='output file to store the scores')
-    parser.add_argument('--only-overall-scores', action='store_true', help='flag only implemented for easier comparison of different '
-                                                      'scoring techniques')
+    # parser.add_argument('-o', help='output file to store the scores')
+    parser.add_argument('--only-overall-scores', action='store_true',
+                        help='flag only implemented for easier comparison of different '
+                             'scoring techniques')
 
     args = parser.parse_args()
     return args
@@ -75,11 +76,10 @@ def get_result_rates(result_directory, folder):
     compiler_and_sanitizer_rate = 0.0  # Special treatment because we may have to add multiple values for this score
     assertion_rate = cppcheck_rate = clang_tidy_rate = ccn = lizard_rate = unique_rate = kwstyle_rate = infer_rate = None
 
-    #fill the failed_tools list with all the available analysis tools and remove the ones that are not available in the report
-    #this allows accepting half-finished reports without provoking reading or calculation errors
-    failed_tools = [compiler_key, sanitizer_key, compiler_and_sanitizer_key, infer_key, assertions_key, cppcheck_key,
-                    clang_tidy_key, cyclomatic_complexity_key, lizard_warnings_key, unique_key, kwstyle_key, None]
-
+    # fill the failed_tools list with all the available analysis tools and remove the ones that are not available in the report
+    # this allows accepting half-finished reports without provoking reading or calculation errors
+    failed_tools = [COMPILER_KEY, SANITIZER_KEY, COMPILER_AND_SANITIZER_KEY, INFER_KEY, ASSERTIONS_KEY, CPPCHECK_KEY,
+                    CLANG_TIDY_KEY, CYCLOMATIC_COMPLEXITY_KEY, LIZARD_WARNINGS_KEY, UNIQUE_KEY, KWSTYLE_KEY, None]
 
     # Iterate through the softwipe output
     for line in cur_lines:
@@ -88,45 +88,42 @@ def get_result_rates(result_directory, folder):
         # Compiler and sanitizer rate treatment
         if line.startswith('Weighted compiler warning rate:'):
             compiler_and_sanitizer_rate += float(split_line[4])
-            if compiler_key in failed_tools: failed_tools.remove(compiler_key)
-            if compiler_and_sanitizer_key in failed_tools: failed_tools.remove(compiler_and_sanitizer_key)
+            if COMPILER_KEY in failed_tools: failed_tools.remove(COMPILER_KEY)
+            if COMPILER_AND_SANITIZER_KEY in failed_tools: failed_tools.remove(COMPILER_AND_SANITIZER_KEY)
         elif line.startswith(('AddressSanitizer error rate:', 'UndefinedBehaviorSanitizer error rate:')):
             compiler_and_sanitizer_rate += float(split_line[3])
-            if sanitizer_key in failed_tools: failed_tools.remove(sanitizer_key)
+            if SANITIZER_KEY in failed_tools: failed_tools.remove(SANITIZER_KEY)
 
         # All other rates
         elif line.startswith('Assertion rate:'):
             assertion_rate = float(split_line[2])
-            if assertions_key in failed_tools: failed_tools.remove(assertions_key)
-            if compiler_and_sanitizer_key in failed_tools: failed_tools.remove(compiler_and_sanitizer_key)
+            if ASSERTIONS_KEY in failed_tools: failed_tools.remove(ASSERTIONS_KEY)
+            if COMPILER_AND_SANITIZER_KEY in failed_tools: failed_tools.remove(COMPILER_AND_SANITIZER_KEY)
         elif line.startswith('Total weighted Cppcheck warning rate:'):
             cppcheck_rate = float(split_line[5])
-            if cppcheck_key in failed_tools: failed_tools.remove(cppcheck_key)
+            if CPPCHECK_KEY in failed_tools: failed_tools.remove(CPPCHECK_KEY)
         elif line.startswith('Weighted Clang-tidy warning rate:'):
             clang_tidy_rate = float(split_line[4])
-            if clang_tidy_key in failed_tools: failed_tools.remove(clang_tidy_key)
+            if CLANG_TIDY_KEY in failed_tools: failed_tools.remove(CLANG_TIDY_KEY)
         elif line.startswith('Average cyclomatic complexity:'):
             ccn = float(split_line[3])
-            if cyclomatic_complexity_key in failed_tools: failed_tools.remove(cyclomatic_complexity_key)
+            if CYCLOMATIC_COMPLEXITY_KEY in failed_tools: failed_tools.remove(CYCLOMATIC_COMPLEXITY_KEY)
         elif line.startswith('Lizard warning rate (~= rate of functions that are too complex):'):
             lizard_rate = float(split_line[11])
-            if lizard_warnings_key in failed_tools: failed_tools.remove(lizard_warnings_key)
+            if LIZARD_WARNINGS_KEY in failed_tools: failed_tools.remove(LIZARD_WARNINGS_KEY)
         elif line.startswith('Unique code rate:'):
             unique_rate = float(split_line[3])
-            if unique_key in failed_tools: failed_tools.remove(unique_key)
+            if UNIQUE_KEY in failed_tools: failed_tools.remove(UNIQUE_KEY)
         elif line.startswith('KWStyle warning rate:'):
             kwstyle_rate = float(split_line[3])
-            if kwstyle_key in failed_tools: failed_tools.remove(kwstyle_key)
+            if KWSTYLE_KEY in failed_tools: failed_tools.remove(KWSTYLE_KEY)
         elif line.startswith('Weighted Infer warning rate:'):
             infer_rate = float(split_line[4])
-            if infer_key in failed_tools: failed_tools.remove(infer_key)
+            if INFER_KEY in failed_tools: failed_tools.remove(INFER_KEY)
 
-        #for key in score_keys:
-        #    if key + " failed" in line:                 #TODO: do with string constant
-        #        failed_tools.append(key)
 
     return compiler_and_sanitizer_rate, assertion_rate, cppcheck_rate, clang_tidy_rate, ccn, lizard_rate, \
-        unique_rate, kwstyle_rate, infer_rate, failed_tools
+           unique_rate, kwstyle_rate, infer_rate, failed_tools
 
 
 def get_result_values(result_directory, folder):
@@ -142,8 +139,8 @@ def get_result_values(result_directory, folder):
     loc = functions = compiler_warnings = assertions = cppcheck_warnings = clang_tidy_warnings = \
         ccn = lizard_warnings = unique = kwstyle_warnings = infer_warnings = None
 
-    failed_tools = [compiler_key, sanitizer_key, infer_key, assertions_key, cppcheck_key, compiler_and_sanitizer_key,
-                    clang_tidy_key, cyclomatic_complexity_key, lizard_warnings_key, unique_key, kwstyle_key, None]
+    failed_tools = [COMPILER_KEY, SANITIZER_KEY, INFER_KEY, ASSERTIONS_KEY, CPPCHECK_KEY, COMPILER_AND_SANITIZER_KEY,
+                    CLANG_TIDY_KEY, CYCLOMATIC_COMPLEXITY_KEY, LIZARD_WARNINGS_KEY, UNIQUE_KEY, KWSTYLE_KEY, None]
 
     # Iterate through the softwipe output
     for line in cur_lines:
@@ -153,44 +150,40 @@ def get_result_values(result_directory, folder):
             loc = int(split_line[-1])
         elif line.startswith('Weighted compiler warning rate:'):
             compiler_warnings = get_absolute_value(split_line[-1])
-            if compiler_key in failed_tools: failed_tools.remove(compiler_key)
-            if compiler_and_sanitizer_key in failed_tools: failed_tools.remove(compiler_and_sanitizer_key)
+            if COMPILER_KEY in failed_tools: failed_tools.remove(COMPILER_KEY)
+            if COMPILER_AND_SANITIZER_KEY in failed_tools: failed_tools.remove(COMPILER_AND_SANITIZER_KEY)
         elif line.startswith(('AddressSanitizer error rate:', 'UndefinedBehaviorSanitizer error rate:')):
             sanitizer_warnings += get_absolute_value(split_line[-1])
-            if sanitizer_key in failed_tools: failed_tools.remove(sanitizer_key)
-            if compiler_and_sanitizer_key in failed_tools: failed_tools.remove(compiler_and_sanitizer_key)
+            if SANITIZER_KEY in failed_tools: failed_tools.remove(SANITIZER_KEY)
+            if COMPILER_AND_SANITIZER_KEY in failed_tools: failed_tools.remove(COMPILER_AND_SANITIZER_KEY)
         elif line.startswith('Assertion rate:'):
             assertions = get_absolute_value(split_line[-1])
-            if assertions_key in failed_tools: failed_tools.remove(assertions_key)
+            if ASSERTIONS_KEY in failed_tools: failed_tools.remove(ASSERTIONS_KEY)
         elif line.startswith('Total weighted Cppcheck warning rate:'):
             cppcheck_warnings = get_absolute_value(split_line[-1])
-            if cppcheck_key in failed_tools: failed_tools.remove(cppcheck_key)
+            if CPPCHECK_KEY in failed_tools: failed_tools.remove(CPPCHECK_KEY)
         elif line.startswith('Weighted Clang-tidy warning rate:'):
             clang_tidy_warnings = get_absolute_value(split_line[-1])
-            if clang_tidy_key in failed_tools: failed_tools.remove(clang_tidy_key)
+            if CLANG_TIDY_KEY in failed_tools: failed_tools.remove(CLANG_TIDY_KEY)
         elif line.startswith('Average cyclomatic complexity:'):
             ccn = float(split_line[-1])
-            if cyclomatic_complexity_key in failed_tools: failed_tools.remove(cyclomatic_complexity_key)
+            if CYCLOMATIC_COMPLEXITY_KEY in failed_tools: failed_tools.remove(CYCLOMATIC_COMPLEXITY_KEY)
         elif line.startswith('Lizard warning rate (~= rate of functions that are too complex):'):
             functions = int(split_line[-1].split('/')[1][:-1])
             lizard_warnings = get_absolute_value(split_line[-1])
-            if lizard_warnings_key in failed_tools: failed_tools.remove(lizard_warnings_key)
+            if LIZARD_WARNINGS_KEY in failed_tools: failed_tools.remove(LIZARD_WARNINGS_KEY)
         elif line.startswith('Unique code rate:'):
             unique = float(split_line[-1])
-            if unique_key in failed_tools: failed_tools.remove(unique_key)
+            if UNIQUE_KEY in failed_tools: failed_tools.remove(UNIQUE_KEY)
         elif line.startswith('KWStyle warning rate:'):
             kwstyle_warnings = get_absolute_value(split_line[-1])
-            if kwstyle_key in failed_tools: failed_tools.remove(kwstyle_key)
+            if KWSTYLE_KEY in failed_tools: failed_tools.remove(KWSTYLE_KEY)
         elif line.startswith('Weighted Infer warning rate:'):
             infer_warnings = get_absolute_value(split_line[-1])
-            if infer_key in failed_tools: failed_tools.remove(infer_key)
-
-        #for key in score_keys:
-        #    if key + " failed" in line:                 #TODO: do with string constant
-        #        failed_tools.append(key)
+            if INFER_KEY in failed_tools: failed_tools.remove(INFER_KEY)
 
     return loc, functions, compiler_warnings, sanitizer_warnings, assertions, cppcheck_warnings, clang_tidy_warnings, \
-                ccn, lizard_warnings, unique, kwstyle_warnings, infer_warnings, failed_tools
+           ccn, lizard_warnings, unique, kwstyle_warnings, infer_warnings, failed_tools
 
 
 def calculate_scores(result_directory, absolute):
@@ -236,7 +229,8 @@ def calculate_scores(result_directory, absolute):
         if absolute:
             # Get values
             loc, functions, compiler_warnings, sanitizer_warnings, assertions, cppcheck_warnings, clang_tidy_warnings, \
-                ccn, lizard_warnings, unique, kwstyle_warnings, infer_warnings, failed_tools = get_result_values(result_directory, folder)
+            ccn, lizard_warnings, unique, kwstyle_warnings, infer_warnings, failed_tools = get_result_values(
+                result_directory, folder)
 
             scores['loc'][folder] = loc
             scores['functions'][folder] = functions
@@ -254,21 +248,18 @@ def calculate_scores(result_directory, absolute):
         else:
             # Get rates
             compiler_and_sanitizer_rate, assertion_rate, cppcheck_rate, clang_tidy_rate, ccn, lizard_rate, \
-                unique_rate, kwstyle_rate, infer_rate, failed_tools = get_result_rates(result_directory, folder)
-
-            #print(folder + " infer rate: {}".format(infer_rate))
+            unique_rate, kwstyle_rate, infer_rate, failed_tools = get_result_rates(result_directory, folder)
 
             # Get scores
-            if compiler_key not in failed_tools: scores['compiler_and_sanitizer'][folder] = scoring.calculate_compiler_and_sanitizer_score_absolute(
-                compiler_and_sanitizer_rate)
-            if assertions_key not in failed_tools: scores['assertions'][folder] = scoring.calculate_assertion_score_absolute(assertion_rate)
-            if cppcheck_key not in failed_tools: scores['cppcheck'][folder] = scoring.calculate_cppcheck_score_absolute(cppcheck_rate)
-            if clang_tidy_key not in failed_tools: scores['clang_tidy'][folder] = scoring.calculate_clang_tidy_score_absolute(clang_tidy_rate)
-            if cyclomatic_complexity_key not in failed_tools: scores['cyclomatic_complexity'][folder] = scoring.calculate_cyclomatic_complexity_score_absolute(ccn)
-            if lizard_warnings_key not in failed_tools: scores['lizard_warnings'][folder] = scoring.calculate_lizard_warning_score_absolute(lizard_rate)
-            if unique_key not in failed_tools: scores['unique'][folder] = scoring.calculate_unique_score_absolute(unique_rate)
-            if kwstyle_key not in failed_tools: scores['kwstyle'][folder] = scoring.calculate_kwstyle_score_absolute(kwstyle_rate)
-            if infer_key not in failed_tools: scores['infer'][folder] = scoring.calculate_infer_score_absolute(infer_rate)
+            if COMPILER_KEY not in failed_tools: scores['compiler_and_sanitizer'][folder] = scoring.calculate_compiler_and_sanitizer_score_absolute(compiler_and_sanitizer_rate)
+            if ASSERTIONS_KEY not in failed_tools: scores['assertions'][folder] = scoring.calculate_assertion_score_absolute(assertion_rate)
+            if CPPCHECK_KEY not in failed_tools: scores['cppcheck'][folder] = scoring.calculate_cppcheck_score_absolute(cppcheck_rate)
+            if CLANG_TIDY_KEY not in failed_tools: scores['clang_tidy'][folder] = scoring.calculate_clang_tidy_score_absolute(clang_tidy_rate)
+            if CYCLOMATIC_COMPLEXITY_KEY not in failed_tools: scores['cyclomatic_complexity'][folder] = scoring.calculate_cyclomatic_complexity_score_absolute(ccn)
+            if LIZARD_WARNINGS_KEY not in failed_tools: scores['lizard_warnings'][folder] = scoring.calculate_lizard_warning_score_absolute(lizard_rate)
+            if UNIQUE_KEY not in failed_tools: scores['unique'][folder] = scoring.calculate_unique_score_absolute(unique_rate)
+            if KWSTYLE_KEY not in failed_tools: scores['kwstyle'][folder] = scoring.calculate_kwstyle_score_absolute(kwstyle_rate)
+            if INFER_KEY not in failed_tools: scores['infer'][folder] = scoring.calculate_infer_score_absolute(infer_rate)
 
             # Calculate the overall score
             list_of_scores = [scores[score][folder] for score in scores.keys()
@@ -305,8 +296,6 @@ def print_score_csv(scores, absolute, failed_tools, print_only_overall=False):
             counter = 1
 
             for score in scores:
-                #print(scores[score][folder])
-
                 if score in failed_tools[folder]:
                     value = "N/A"
                     print(" {}".format(value).ljust(space_pattern[counter]), end="|")

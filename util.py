@@ -2,8 +2,8 @@
 This module contains utility functions.
 """
 
-
 import os
+
 import strings
 
 

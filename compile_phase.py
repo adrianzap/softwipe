@@ -2,17 +2,16 @@
 This module contains all functions related to the automatic compilation phase.
 """
 
-
-import subprocess
 import os
-import shutil
 import re
+import shutil
+import subprocess
 import sys
-import strings
 
-from tools_info import TOOLS
-import util
 import classifications
+import strings
+import util
+from tools_info import TOOLS
 
 
 def create_build_directory(program_dir_abs, build_dir_name=strings.SOFTWIPE_BUILD_DIR_NAME):
@@ -141,14 +140,14 @@ def print_compilation_results(warning_lines, lines_of_code, append_to_file):
 
     print(strings.RESULT_WEIGHTED_COMPILER_WARNING_RATE.format(weighted_warning_rate, weighted_sum_of_warnings,
                                                                lines_of_code))
-    
+
     print("  Number of level 3 warnings (must be fixed):",
           str(number_of_warnings_in_level[2]) + '/' + str(lines_of_code))
     print("  Number of level 2 warnings (should be fixed):",
           str(number_of_warnings_in_level[1]) + '/' + str(lines_of_code))
     print("  Number of level 1 warnings (could be fixed):",
           str(number_of_warnings_in_level[0]) + '/' + str(lines_of_code))
-    
+
     util.write_into_file_list(strings.RESULTS_FILENAME_COMPILER_MUST_BE_FIXED, must_be_fixed_warning_lines,
                               append_to_file)
     util.write_into_file_list(strings.RESULTS_FILENAME_COMPILER_SHOULD_BE_FIXED, should_be_fixed_warning_lines,
@@ -221,6 +220,8 @@ def run_make(build_path, lines_of_code, excluded_paths, dont_check_for_warnings=
         make_call += ' | ' + TOOLS.COMPILEDB.exe_name
 
     # We must use shell=True here, else setting CFLAGS etc. won't work properly.
+    output = ""
+
     try:
         print(make_call)
         output = subprocess.check_output(make_call, cwd=build_path, universal_newlines=True, stderr=subprocess.STDOUT,
@@ -233,7 +234,6 @@ def run_make(build_path, lines_of_code, excluded_paths, dont_check_for_warnings=
     if not (dont_check_for_warnings or running_make_clean(make_flags)):  # Don't look for warnings when running
         # "make clean" :)
         warning_lines = get_warning_lines_from_make_output(output)
-
         warning_lines = remove_excluded_paths_from_warning_lines(warning_lines, excluded_paths)
 
         weighted_sum_of_warnings = print_compilation_results(warning_lines, lines_of_code, append_to_file)
@@ -437,8 +437,8 @@ def compile_program_infer_make(program_dir_abs, excluded_paths):
 
     try:
         subprocess.check_output(make_clean_call, cwd=program_dir_abs, universal_newlines=True,
-                                         stderr=subprocess.STDOUT)
-    except subprocess.CalledProcessError:      #not all makefiles have a clean option, pass if it doesn't exist
+                                stderr=subprocess.STDOUT)
+    except subprocess.CalledProcessError:  # not all makefiles have a clean option, pass if it doesn't exist
         pass
 
     try:

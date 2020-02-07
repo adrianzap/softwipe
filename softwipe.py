@@ -4,16 +4,17 @@ The main module of softwipe. Here, command line arguments get parsed and the pip
 """
 
 import argparse
-import sys
 import os
-import strings
-import compile_phase
-import static_analysis_phase
-import execution_phase
-import util
-import automatic_tool_installation
-import scoring
 import re
+import sys
+
+import automatic_tool_installation
+import compile_phase
+import execution_phase
+import scoring
+import static_analysis_phase
+import strings
+import util
 
 
 def parse_arguments():
@@ -155,10 +156,10 @@ def warn_if_user_is_root():
         print(strings.USER_IS_ROOT_WARNING)
         while True:
             user_in = input('>>> ')
-            if user_in == 'Y' or user_in == 'Yes':
+            if user_in in ('Y', 'Yes'):
                 print("Okay, running as root now!")
                 break
-            elif user_in == 'n' or user_in == 'no':
+            elif user_in in ('n', 'no'):
                 sys.exit(1)
             else:
                 print('Please answer with "Y" (Yes) or "n" (no)!')
@@ -196,6 +197,7 @@ def compile_program(args, lines_of_code, cpp, compiler_flags, excluded_paths):
             score = compile_phase.compile_program_cmake(program_dir_abs, lines_of_code, compiler_flags, excluded_paths)
 
     return score
+
 
 def compile_program_with_infer(args, excluded_paths):
     program_dir_abs = os.path.abspath(args.programdir)
@@ -263,7 +265,8 @@ def compile_and_execute_program_with_sanitizers(args, lines_of_code, program_dir
     return score, infer_compilation_status
 
 
-def static_analysis(program_dir_abs, source_files, lines_of_code, cpp, custom_asserts=None, cmake=False, excluded_tools=[]):       #TODO: add documentation
+def static_analysis(program_dir_abs, source_files, lines_of_code, cpp, custom_asserts=None, cmake=False,
+                    excluded_tools=[]):  # TODO: add documentation
     """
     Run all the static analysis.
     :param program_dir_abs: The absolute path to the root directory of the target program.
@@ -280,17 +283,18 @@ def static_analysis(program_dir_abs, source_files, lines_of_code, cpp, custom_as
     print(strings.RUN_STATIC_ANALYSIS_HEADER)
     print()
 
-    output = static_analysis_phase.run_static_analysis(program_dir_abs, source_files, lines_of_code, cpp, custom_asserts, cmake=cmake)
+    output = static_analysis_phase.run_static_analysis(program_dir_abs, source_files, lines_of_code, cpp,
+                                                       custom_asserts, cmake=cmake)
     scores = []
 
-    #check for failed tool execution and exclude the tools which failed
+    # check for failed tool execution and exclude the tools which failed
     for (name, score, log, stat) in output:
-        if log and name not in excluded_tools:      #TODO: fix that excluded tools thing
+        if log and name not in excluded_tools:  # TODO: fix that excluded tools thing
             print(log)
         if stat and name not in excluded_tools:
             scores.append(score)
         else:
-            print("{} failed".format(name))         #TODO: add string constant
+            print("{} failed".format(name))  # TODO: add string constant
 
     return scores
 
@@ -315,22 +319,23 @@ def add_badge_to_file(path, overall_score):
     output = ""
     badge_set = False
 
-    if badge_found == False and softwipe_badge_found == False:  # if there are no badges at all, just add the softwipe badge in the second line
+    if not badge_found and not softwipe_badge_found:  # if there are no badges at all, just add the softwipe badge in the second line
         for line in file:
             output += line
             if not badge_set:
                 badge_set = True
                 output += badge_string + "\n"
-    elif badge_found == True and softwipe_badge_found == False:  # if there are badges, add the softwipe badge in the same line
+    elif badge_found and not softwipe_badge_found:  # if there are badges, add the softwipe badge in the same line
         for line in file:
-            if "[![" in line and badge_set == False:
+            if "[![" in line and not badge_set:
                 badge_set = True
                 line += badge_string
             output += line
     elif softwipe_badge_found:  # if there is a softwipe badge already, replace it with a new one
         for line in file:
             if "[![Softwipe Score]" in line:
-                line = re.sub(r'\[!\[Softwipe Score\]\(([^\)\]]+)\)\]\(([^\)\]]+)\)', badge_string, line.rstrip()) + "\n"
+                line = re.sub(r'\[!\[Softwipe Score\]\(([^\)\]]+)\)\]\(([^\)\]]+)\)', badge_string,
+                              line.rstrip()) + "\n"
             output += line
     file.close()
 
@@ -371,10 +376,9 @@ def main():
     lines_of_code = util.count_lines_of_code(source_files)
 
     compiler_and_sanitizer_score, infer_compilation_status = compile_and_execute_program_with_sanitizers(
-        args, lines_of_code, program_dir_abs,cpp, excluded_paths, args.no_execution)
+        args, lines_of_code, program_dir_abs, cpp, excluded_paths, args.no_execution)
     excluded_tools = []
     if not infer_compilation_status: excluded_tools.append('infer')
-
 
     all_scores = [compiler_and_sanitizer_score]
     all_scores.extend(static_analysis(program_dir_abs, source_files, lines_of_code, cpp, custom_asserts,

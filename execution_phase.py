@@ -2,9 +2,9 @@
 This module contains all functions related to executing the program and analyzing the output of the clang sanitizers.
 """
 
-import subprocess
 import os
 import re
+import subprocess
 
 import strings
 import util
@@ -42,7 +42,7 @@ def build_command(program_dir_abs, executefile, cmake):
         executable_dir = os.path.join(executable_dir, strings.SOFTWIPE_BUILD_DIR_NAME)
     full_executable_path = os.path.join(executable_dir, command[0])
     command[0] = full_executable_path
-    
+
     if command2 is not None:
         full_executable_path2 = os.path.join(executable_dir, command2[0])
         command2[0] = full_executable_path2

@@ -2,7 +2,6 @@
 This module contains string constants.
 """
 
-
 BADGE_LINK = '[![Softwipe Score](https://img.shields.io/badge/softwipe-{}-blue)](https://github.com/adrianzap/softwipe/wiki/Code-Quality-Benchmark)'
 
 COMPILER_WARNING_FLAGS = '-Weverything -Wno-padded -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-c99-compat ' \
@@ -10,6 +9,7 @@ COMPILER_WARNING_FLAGS = '-Weverything -Wno-padded -Wno-c++98-compat -Wno-c++98-
 COMPILER_SANITIZER_FLAGS = '-g -fno-omit-frame-pointer -fsanitize=address -fsanitize-recover=address ' \
                            '-fsanitize=undefined'
 COMPILE_FLAGS = COMPILER_WARNING_FLAGS + ' ' + COMPILER_SANITIZER_FLAGS
+
 
 def create_make_flags(compiler_flags):
     set_cflags = 'CFLAGS="{}"'.format(compiler_flags)
@@ -28,15 +28,12 @@ NO_MAKE_CLEAN_TARGET_FOUND = 'Seems like there is no "make clean" target :( Plea
                              'If you do have a "make clean" target, please make sure you\'re using "rm -f" to ' \
                              'prevent rm from  crashing if a file doesn\'t exist.'
 
-
 COMPILATION_CRASHED = 'Compilation crashed with error code {}!\n{}'
 INFER_COMPILATION_CRASHED = 'Infer compilation crashed with error code {}!\n{}'
-
 
 CLANG_TIDY_CHECKS_C = '-*,bugprone-*,clang-analyzer-*,misc-*,modernize-*,mpi-*,performance-*,readability-*,' \
                       '-readability-non-const-parameter,-clang-analyzer-cp*,-clang-analyzer-unix.MismatchedDeallocator'
 CLANG_TIDY_CHECKS_CPP = CLANG_TIDY_CHECKS_C + ',boost-*,cppcoreguidelines-*'
-
 
 _dashes = ' --- '
 _running = 'Running: '
@@ -52,17 +49,15 @@ RUN_INFER_COMPILATION_HEADER = _header.format('INFER COMPILATION')
 RUN_INFER_ANALYSIS_HEADER = _header.format('INFER ANALYSIS')
 RUN_STATIC_ANALYSIS_HEADER = _header.format('STATIC ANALYSIS')
 
-
 OS_MACOS = 'Darwin'
 OS_WINDOWS = 'Windows'
 OS_BEGINNING_OF_CYGWIN_NAME = 'CYGWIN_NT'  # The Windows OS number is appended to this name (e.g. for Win7 it is:
-                                           # 'CYGWIN_NT-6.1')
+# 'CYGWIN_NT-6.1')
 OS_LINUX = 'Linux'
 OS_UBUNTU = 'Ubuntu'
 OS_DEBIAN = 'debian'
 OS_FEDORA = 'Fedora'
 OS_RHEL = 'Red Hat Enterprise Linux Server'
-
 
 _softwipe = 'softwipe_'
 
@@ -93,16 +88,14 @@ RESULT_ASAN_ERROR_RATE = 'AddressSanitizer error rate: ' + RATE_COUNT_TOTAL
 RESULT_UBSAN_ERROR_RATE = 'UndefinedBehaviorSanitizer error rate: ' + RATE_COUNT_TOTAL
 RESULT_ASSERTION_RATE = 'Assertion rate: ' + RATE_COUNT_TOTAL
 RESULT_ASSERTION_RATE_DETAILED = 'Found {count} assertions in {loc} lines of pure' \
-                              ' code (i.e. excluding blank lines and comment lines).' + '\n' \
-                              'That\'s an assertion rate of {rate}, or {percentage}%.'
+                                 ' code (i.e. excluding blank lines and comment lines).' + '\n' \
+                                                                                           'That\'s an assertion rate of {rate}, or {percentage}%.'
 RESULT_WEIGHTED_CPPCHECK_WARNING_RATE = 'Total weighted Cppcheck warning rate: ' + RATE_COUNT_TOTAL
 RESULT_WEIGHTED_CLANG_TIDY_WARNING_RATE = 'Weighted Clang-tidy warning rate: ' + RATE_COUNT_TOTAL
 RESULT_KWSTYLE_WARNING_RATE = 'KWStyle warning rate: ' + RATE_COUNT_TOTAL
 
-
 DETAILLED_RESULTS_WRITTEN_INTO = 'Detailled results have been written into {}'
 LINES_OF_PURE_CODE_ARE = 'Lines of pure code (excluding blank and comment lines): {}'
-
 
 FAILED_TO_FIND_TOOLS = 'Failed to find the following tools:'
 MAKE_SURE_TOOLS_ARE_INSTALLED = 'Make sure all tools are installed on your system and accessible. Either put their ' \
@@ -117,18 +110,17 @@ USER_IS_ROOT_WARNING = 'You are running as root! This will cause my output files
 WARNING_PROGRAM_EXECUTION_SKIPPED = 'Warning: Program execution was skipped. Thus, clang sanitizer results are not ' \
                                     'available.'
 
-
 USER_DID_NOT_SPECIFY_EXECUTE_FILE_USING_AOUT_NOW = 'Warning! You did not specify an executefile, or I could not find ' \
                                                    'it. I\'m trying to run your program using "a.out" or "' + \
                                                    SOFTWIPE_COMPILED_EXE_NAME + '" now. In most cases, this will not ' \
-                                                   'work properly, and you should specify an executefile.\n' \
-                                                   'For more information, please run: softwipe.py --executefilehelp'
+                                                                                'work properly, and you should specify an executefile.\n' \
+                                                                                'For more information, please run: softwipe.py --executefilehelp'
 
 EXECUTION_FILE_NOT_FOUND = 'I could not find the executable "{}".\n' \
                            'If you haven\'t specified an executefile, please do so. If you did specify an ' \
                            'executefile, please make sure it is correct.'
 
-                                                                                #
+#
 EXECUTE_FILE_HELP = """        === Execute file help ===
 
 The execute file (provided via -e option) is a file that contains a command line
@@ -149,7 +141,7 @@ ignored.
  The path to the execute file (as given to the -e option) should be relative to
 the directory you are running softwipe from.
 """
-                                                                                #
+#
 COMMAND_FILE_HELP = """        === Command file help ===
 
 The command file (provided via -f option) is a file for make-based projects that
@@ -174,7 +166,7 @@ one simple call of "make" works for compilation.
  The path to the command file (as given to the -f option) should be relative to
 the directory you are running softwipe from.
 """
-                                                                                #
+#
 COMPILER_OPTIONS_FILE_HELP = """        === Compiler options file help ===
 
 The compiler options file (provided via -o option) contains all options that
@@ -191,4 +183,4 @@ without any specific options.
  The path to the compiler options file (as given to the -o option) should be
 relative to the directory you are running softwipe from.
 """
-                                                                                #
+#

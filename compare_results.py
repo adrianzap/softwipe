@@ -7,9 +7,10 @@ code quality benchmark, and sorts them.
 
 import argparse
 import operator
-from calculate_score_table import SOFTWIPE_OUTPUT_FILE_NAME
-from calculate_score_table import FOLDERS
+
 import calculate_score_table
+from calculate_score_table import FOLDERS
+from calculate_score_table import SOFTWIPE_OUTPUT_FILE_NAME
 
 
 def parse_arguments():
@@ -57,7 +58,7 @@ def get_all_rates(result_directory):
     # Get all the rates
     for folder in FOLDERS:
         compiler_and_sanitizer_rate, assertion_rate, cppcheck_rate, clang_tidy_rate, ccn, lizard_rate, unique_rate, \
-            kwstyle_rate, infer_rate, failed_tools = calculate_score_table.get_result_rates(result_directory, folder)
+        kwstyle_rate, infer_rate, failed_tools = calculate_score_table.get_result_rates(result_directory, folder)
 
         rates['compiler_and_sanitizer'].append((folder, compiler_and_sanitizer_rate))
         rates['assertions'].append((folder, assertion_rate))

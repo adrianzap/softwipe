@@ -1,9 +1,9 @@
 """
 Functions for calculating the scores for each category that is checked by softwipe.
 """
-import math
-import numpy as np      #TODO: maybe remove numpy dependency
+import numpy as np
 from scipy.optimize import curve_fit
+
 
 def print_score(score, score_name=None):
     """
@@ -13,6 +13,7 @@ def print_score(score, score_name=None):
     """
     print(get_score_string(score, score_name))
     print()
+
 
 def get_score_string(score, score_name=""):
     return score_name + ' Score: {0:.1f}/10'.format(round(score, 1))
@@ -56,7 +57,6 @@ def _calculate_score_absolute(rate, best, worst, case=0):
     return _calculate_score_curve_fit_combined(rate, best, worst, case=case)
 
 
-
 def _calculate_score_smooth_linear(rate, best, worst, case=0):
     """
     Calculates an absolute score with regard to some best and worst rates but stays within the 0-10 score range if
@@ -79,7 +79,7 @@ def _calculate_score_smooth_linear(rate, best, worst, case=0):
         case 2: constant - linear - sigmoid
     """
 
-    d = best - worst;
+    d = best - worst
     x = (rate - worst)
 
     if x / d <= 0:  # approach the 0 with a sigmoid
@@ -113,8 +113,8 @@ def _calculate_score_curve_fit(rate, best, worst):
     d = best - worst
     x = rate - worst
     thresh = 0.90
-    xval = [(1-thresh) * d, 0.25 * d, 0.5 * d, 0.75 * d, thresh * d]
-    yval = [    (1-thresh),     0.25,     0.5,     0.75,    thresh]
+    xval = [(1 - thresh) * d, 0.25 * d, 0.5 * d, 0.75 * d, thresh * d]
+    yval = [(1 - thresh), 0.25, 0.5, 0.75, thresh]
     popt, pcov = curve_fit(sigmoid, xval, yval)
 
     return 10 * sigmoid(x, *popt)
@@ -126,15 +126,17 @@ def _calculate_score_curve_fit_combined(rate, best, worst, case=0):
     if case == 0:
         return _calculate_score_curve_fit(rate, best, worst)
     if case == 1:
-        if x/d >= 1: return 10
-        if x/d > 0.5:
-            return 10 * (x/d)
+        if x / d >= 1:
+            return 10
+        if x / d > 0.5:
+            return 10 * (x / d)
         else:
             return _calculate_score_curve_fit(rate, best, worst)
     if case == 2:
-        if x/d <= 0: return 0
-        if x/d < 0.5:
-            return 10 * (x/d)
+        if x / d <= 0:
+            return 0
+        if x / d < 0.5:
+            return 10 * (x / d)
         else:
             return _calculate_score_curve_fit(rate, best, worst)
 
@@ -203,7 +205,6 @@ KWSTYLE_WORST = 0.07676685621445979
 INFER_BEST = 0.0
 INFER_WORST = 0.006405693950177936
 
-
 COMPILER_BEST_FIXED = 0.0
 COMPILER_WORST_FIXED = 0.5664638548004538
 
@@ -229,9 +230,7 @@ KWSTYLE_BEST_FIXED = 0.0
 KWSTYLE_WORST_FIXED = 0.07676685621445979
 
 INFER_BEST_FIXED = 0.0
-INFER_WORST_FIXED = 0.006405693950177936
-
-
+INFER_WORST_FIXED = 0.01303453007088955
 
 
 # FUNCTIONS THAT CALCULATE THE SCORES
@@ -270,8 +269,6 @@ def calculate_kwstyle_score(rate):
 
 def calculate_infer_score(rate):
     return _calculate_score_generic(rate, INFER_BEST, INFER_WORST)
-
-
 
 
 def calculate_compiler_and_sanitizer_score_absolute(rate):

@@ -3,10 +3,9 @@ This module contains output classes, that is classes that are used to describe t
 a way that is easy to handle.
 """
 
-
-import strings
 import classifications
 import scoring
+import strings
 
 
 class CppcheckOutput:
@@ -16,6 +15,7 @@ class CppcheckOutput:
     static_analysis_phase.get_cppcheck_warning_lines_from_cppcheck_output() function. From that list of lines,
     it extracts all information it needs.
     """
+
     def __init__(self, warning_lines):
         self.error_count = 0
         self.warning_count = 0
@@ -64,23 +64,27 @@ class CppcheckOutput:
             log += 'Error rate: ' + strings.RATE_COUNT_TOTAL.format(error_rate, self.error_count, lines_of_code) + "\n"
         if self.warning_count > 0:
             warning_rate = self.warning_count / lines_of_code
-            log += 'Warning rate: ' + strings.RATE_COUNT_TOTAL.format(warning_rate, self.warning_count, lines_of_code) + "\n"
+            log += 'Warning rate: ' + strings.RATE_COUNT_TOTAL.format(warning_rate, self.warning_count,
+                                                                      lines_of_code) + "\n"
         if self.style_count > 0:
             style_rate = self.style_count / lines_of_code
-            log += 'Style warning rate: ' + strings.RATE_COUNT_TOTAL.format(style_rate, self.style_count, lines_of_code) + "\n"
+            log += 'Style warning rate: ' + strings.RATE_COUNT_TOTAL.format(style_rate, self.style_count,
+                                                                            lines_of_code) + "\n"
         if self.portability_count > 0:
             portability_rate = self.portability_count / lines_of_code
-            log += 'Portability issue rate: ' + strings.RATE_COUNT_TOTAL.format(portability_rate, self.portability_count,
-                                                                             lines_of_code) + "\n"
+            log += 'Portability issue rate: ' + strings.RATE_COUNT_TOTAL.format(portability_rate,
+                                                                                self.portability_count,
+                                                                                lines_of_code) + "\n"
         if self.performance_count > 0:
             performance_rate = self.performance_count / lines_of_code
-            log += 'Performance issue rate: ' + strings.RATE_COUNT_TOTAL.format(performance_rate, self.performance_count,
-                                                                             lines_of_code) + "\n"
+            log += 'Performance issue rate: ' + strings.RATE_COUNT_TOTAL.format(performance_rate,
+                                                                                self.performance_count,
+                                                                                lines_of_code) + "\n"
         # Information count is omitted because it is not considered interesting
 
         total_cppcheck_rate = self.total_weighted_count / lines_of_code
         log += strings.RESULT_WEIGHTED_CPPCHECK_WARNING_RATE.format(total_cppcheck_rate, self.total_weighted_count,
-                                                                   lines_of_code) + "\n"
+                                                                    lines_of_code) + "\n"
         return total_cppcheck_rate, log
 
 
@@ -95,6 +99,7 @@ class LizardOutput:
         unique_rate: The unique rate
         function_count: The total number of functions
     """
+
     def __init__(self, average_cyclomatic_complexity, warning_count, unique_rate, function_count):
         self.average_cyclomatic_complexity = average_cyclomatic_complexity
         self.warning_count = warning_count
@@ -121,6 +126,6 @@ class LizardOutput:
 
         log += 'Unique code rate: {}'.format(self.unique_rate) + "\n"
         unique_score = scoring.calculate_unique_score(self.unique_rate)
-        log += scoring.get_score_string(unique_score, 'Unique (code duplication)')  + "\n"
+        log += scoring.get_score_string(unique_score, 'Unique (code duplication)') + "\n"
 
         return cyclomatic_complexity_score, warning_score, unique_score, log

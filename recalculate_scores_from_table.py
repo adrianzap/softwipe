@@ -4,16 +4,17 @@ Calculates the code quality benchmark using scoring.py.
 """
 
 import sys
-import scoring
-import compare_results
 from collections import defaultdict
 
+import compare_results
+import scoring
 
 NA_SEQUENCE = "N/A"
 
+
 def main():
     file_path = sys.argv[1]
-    space_pattern = [22, 16, 19, 24, 12, 10, 12, 23, 17, 8, 9, 7]   #TODO: space_pattern[1] should be 9
+    space_pattern = [22, 9, 16, 24, 12, 10, 12, 23, 17, 8, 9, 7]
 
     scores = defaultdict()
     scores["compiler_and_sanitizer"] = {}
@@ -57,8 +58,8 @@ def main():
 
     available_categories = {}
 
-    #| program | overall | relative score | compiler_and_sanitizer | assertions | cppcheck | clang_tidy | cyclomatic_complexity | lizard_warnings | unique | kwstyle |
-    #| program | loc | functions | compiler | sanitizer | assertions | cppcheck | clang_tidy | cyclomatic_complexity | lizard_warnings | unique | kwstyle |
+    # | program | overall | relative score | compiler_and_sanitizer | assertions | cppcheck | clang_tidy | cyclomatic_complexity | lizard_warnings | unique | kwstyle | infer |
+    # | program | loc | functions | compiler | sanitizer | assertions | cppcheck | clang_tidy | cyclomatic_complexity | lizard_warnings | unique | kwstyle | infer |
 
     folder_included = []
 
@@ -68,7 +69,7 @@ def main():
             if len(line) < 14: continue
 
             skip_round = False
-            for i in range (1, 4):         #if we can't even get the loc or function numbers, we just skip the tool
+            for i in range(1, 4):  # if we can't even get the loc or function numbers, we just skip the tool
                 if NA_SEQUENCE in line[i]: skip_round = True
             if skip_round: continue
 
@@ -82,15 +83,14 @@ def main():
                 line.append("")
                 if not line[13]: line[13] = NA_SEQUENCE
             else:
-                if folder in folder_included: folder_included.remove(folder)        #update old value
+                if folder in folder_included: folder_included.remove(folder)  # update old value
 
             if folder in folder_included: continue
             folder_included.append(folder)
 
             available_categories[folder] = []
 
-
-            #TODO: turn this pile of shame into elegant code someday
+            # TODO: turn this pile of shame into elegant code someday
             if NA_SEQUENCE not in line[6]:
                 assertions = int(line[6])
                 assertion_rate = assertions / loc
@@ -157,8 +157,6 @@ def main():
                 available_categories[folder].append('infer')
                 rates['infer'].append((folder, infer_rate))
 
-
-
             compiler_and_sanitizer_rate = (compiler + sanitizer) / loc
             scores['compiler_and_sanitizer'][folder] = scoring.calculate_compiler_and_sanitizer_score(
                 compiler_and_sanitizer_rate)
@@ -167,16 +165,12 @@ def main():
             available_categories[folder].append('compiler_and_sanitizer')
             rates['compiler_and_sanitizer'].append((folder, compiler_and_sanitizer_rate))
 
-
             list_of_scores = [scores[score][folder] for score in scores.keys()
                               if score != 'overall' and score in available_categories[folder]]
             scores['overall'][folder] = scoring.average_score(list_of_scores)
 
             scores_absolute['relative_score'][folder] = scores['overall'][folder]
             available_categories[folder].append('relative_score')
-
-
-
 
             list_of_scores = [scores_absolute[score][folder] for score in scores_absolute.keys()
                               if score != 'overall' and score != 'relative_score'
@@ -186,18 +180,12 @@ def main():
             d[folder] = scores['overall'][folder]
             d_absolute[folder] = scores_absolute['overall'][folder]
 
-
-
-    sorted_list = sorted(d.items(), key = lambda x: x[1], reverse=True)
-    sorted_list_absolute = sorted(d_absolute.items(), key = lambda x: x[1], reverse=True)
-
-
-
+    sorted_list = sorted(d.items(), key=lambda x: x[1], reverse=True)
+    sorted_list_absolute = sorted(d_absolute.items(), key=lambda x: x[1], reverse=True)
 
     for (name, score) in sorted_list_absolute:
         score_absolute = scores_absolute['overall'][name]
         print("| {}".format(name).ljust(space_pattern[0]), end="|")
-        #print(" {} - {}".format(round(score, 4), round(score_absolute, 4)).ljust(space_pattern[1]), end="|")
         print(" {}".format(round(score_absolute, 1)).ljust(space_pattern[1]), end="|")
         counter = 2
 
@@ -211,7 +199,6 @@ def main():
             counter += 1
         print()
 
-
     counter = 0
     rc_d_squared_sum = 0
     for (name, _) in sorted_list:
@@ -222,16 +209,13 @@ def main():
             counter2 += 1
         counter += 1
     n = counter
-    rc = 1 - (6 * rc_d_squared_sum / (n * (n*n - 1)))
+    rc = 1 - (6 * rc_d_squared_sum / (n * (n * n - 1)))
     print("Rank correlation: {}".format(rc))
 
     sorted_rates = compare_results.sort_rates(rates)
     print()
     compare_results.print_best_rates(sorted_rates)
     compare_results.print_softwipe_scoring_values(sorted_rates)
-
-
-    #print("{}: {}".format(folder, scores["overall"][folder]))
 
     return 0
 

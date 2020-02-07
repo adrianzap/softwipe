@@ -2,17 +2,17 @@
 Functions related to the automatic installation of dependencies.
 """
 
-import subprocess
-import shutil
-import os
-import sys
-import platform
 import inspect
+import os
+import platform
+import shutil
+import subprocess
+import sys
 
-import strings
-import util
 import compile_phase
+import strings
 import tools_info
+import util
 
 
 def detect_user_os():
@@ -33,7 +33,7 @@ def get_package_install_command_for_os(user_os):
     command = None
     if user_os == strings.OS_MACOS:
         command = ['brew', 'install']
-    elif user_os == strings.OS_DEBIAN or user_os == strings.OS_UBUNTU:
+    elif user_os in (strings.OS_DEBIAN, strings.OS_UBUNTU):
         command = ['apt-get', 'install']
     return command
 
@@ -47,8 +47,8 @@ def print_missing_tools(missing_tools):
 
 
 def print_and_run_install_command(install_command):
-    for c in install_command:
-        print(c, end=' ')
+    for argument in install_command:
+        print(argument, end=' ')
     print()
     subprocess.run(install_command)
     print()
@@ -68,15 +68,18 @@ def handle_kwstyle_download():
     print('Done!')
     print()
 
+
 def handle_infer_download():
-    #TODO: properly select newest version
-    version =  '0.17.0'
-    url = "https://github.com/facebook/infer/releases/download/v{}/infer-linux64-v{}.tar.xz".format(version, version)
-    ps = subprocess.Popen(('curl', '-sSL', url), stdout=subprocess.PIPE)
-    output = subprocess.Popen(('sudo', 'tar', "-C", "/opt", "-xJ"), stdin=ps.stdout)
+    # TODO: properly select newest version
+    version = '0.17.0'
+    url = "https://github.com/facebook/infer/releases/download/v{v}/infer-linux64-v{v}.tar.xz".format(v=version)
+    process = subprocess.Popen(('curl', '-sSL', url), stdout=subprocess.PIPE)
+    output = subprocess.Popen(('sudo', 'tar', "-C", "/opt", "-xJ"), stdin=process.stdout)
     output.wait()
-    ps = subprocess.Popen(("sudo", "ln", "-s", "/opt/infer-linux64-v{}/bin/infer".format(version), "/usr/local/bin/infer"))
-    ps.wait()
+    process = subprocess.Popen(
+        ("sudo", "ln", "-s", "/opt/infer-linux64-v{}/bin/infer".format(version), "/usr/local/bin/infer"))
+    process.wait()
+
 
 def handle_tool_download(tool_name):
     """
@@ -125,10 +128,10 @@ def auto_install_prompt(missing_tools, package_install_command):
     print('I can automatically install the missing tools for you! Shall I? (Y/n)')
     while True:
         user_in = input('>>> ')
-        if user_in == 'Y' or user_in == 'Yes':
+        if user_in in ('Y', 'Yes'):
             auto_tool_install(missing_tools, package_install_command)
             sys.exit(0)
-        elif user_in == 'n' or user_in == 'no':
+        elif user_in in ('n', 'no'):
             sys.exit(1)
         else:
             print('Please answer with "Y" (Yes) or "n" (no)!')
