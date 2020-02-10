@@ -19,6 +19,7 @@ The following tools must be installed:
 * clang-tidy (part of LLVM tools (<http://llvm.org>); either clang-tidy is available in your package manager as a standalone (e.g. in apt-get it is), or your package manager includes it in LLVM (e.g. in homebrew this is the case))
 * Lizard (<https://github.com/terryyin/lizard>, available in pip)
 * KWStyle (<https://kitware.github.io/KWStyle/>)
+* Infer (<https://github.com/facebook/infer>)
 
 For make-based projects, you also need:
 * compiledb (<https://github.com/nickdiego/compiledb-generator>, available in pip)
