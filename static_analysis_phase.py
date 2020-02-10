@@ -101,8 +101,8 @@ def run_cppcheck(source_files, lines_of_code, cpp):
     :return: The Cppcheck score.
     """
     language = 'c++' if cpp else 'c'
-    cppcheck_call = [TOOLS.CPPCHECK.exe_name, '--enable=all', '--force', '--language=' + language,
-                     "-v"]  # TODO: find out the purpose of the --template=cppcheck1' which broke the output
+    # TODO: find out the purpose of the --template=cppcheck1' which broke the output
+    cppcheck_call = [TOOLS.CPPCHECK.exe_name, '--enable=all', '--force', '--language=' + language, "-v"]
     cppcheck_call.extend(source_files)
 
     try:

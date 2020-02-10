@@ -15,6 +15,7 @@ NA_SEQUENCE = "N/A"
 def main():
     file_path = sys.argv[1]
     space_pattern = [22, 9, 16, 24, 12, 10, 12, 23, 17, 8, 9, 7]
+    space_pattern_constant = [17, 8, 11, 10, 11, 12, 10, 12, 23, 17, 20, 9, 7]
 
     scores = defaultdict()
     scores["compiler_and_sanitizer"] = {}
@@ -55,6 +56,7 @@ def main():
 
     d = defaultdict()
     d_absolute = defaultdict()
+    constants = defaultdict()
 
     available_categories = {}
 
@@ -180,8 +182,22 @@ def main():
             d[folder] = scores['overall'][folder]
             d_absolute[folder] = scores_absolute['overall'][folder]
 
+            constants[folder] = line[1:-1]
+
     sorted_list = sorted(d.items(), key=lambda x: x[1], reverse=True)
     sorted_list_absolute = sorted(d_absolute.items(), key=lambda x: x[1], reverse=True)
+
+    sorted_list_constants = sorted(constants.items(), key=lambda x: int(x[1][1]), reverse=True)
+
+    for (name, score) in sorted_list_constants:
+        print("|", end="")
+        counter = 0
+        for index in constants[name]:
+            print(" {}".format(index).ljust(space_pattern_constant[counter]), end="|")
+            counter += 1
+        print()
+    print()
+
 
     for (name, score) in sorted_list_absolute:
         score_absolute = scores_absolute['overall'][name]
