@@ -21,8 +21,8 @@ def get_score_string(score, score_name=""):
 
 def average_score(list_of_scores):
     """
-    Calculate an average score over a list of scores.
-    :param list_of_scores: A list containing all scores to average over.
+    Calculate an average score over a lst of scores.
+    :param list_of_scores: A lst containing all scores to average over.
     :return: The average score.
     """
     avg = sum(list_of_scores) / float(len(list_of_scores))
@@ -54,6 +54,9 @@ def _calculate_score_generic(rate, best, worst):
 
 
 def _calculate_score_absolute(rate, best, worst, case=0):
+    """
+    Function was used to compare different scoring methods.
+    """
     return _calculate_score_curve_fit_combined(rate, best, worst, case=case)
 
 
@@ -81,21 +84,22 @@ def _calculate_score_smooth_linear(rate, best, worst, case=0):
 
     d = best - worst
     x = (rate - worst)
+    score = 0
 
     if x / d <= 0:  # approach the 0 with a sigmoid
         if case != 2:
             k = (np.log(1 / 0.01 - 1) - np.log(1 / 0.05 - 1)) / d
             x0 = np.log(1 / 0.05 - 1) / k
-            return 10 * sigmoid(x, x0, k)
+            score = 10 * sigmoid(x, x0, k)
         else:
-            return 0
+            score = 0
     elif x / d >= 1:  # approach the 10 with a sigmoid
         if case != 1:
             k = (np.log(1 / 0.95 - 1) - np.log(1 / 0.99 - 1)) / d
             x0 = np.log(1 / 0.95 - 1) / k + d
-            return 10 * sigmoid(x, x0, k)
+            score = 10 * sigmoid(x, x0, k)
         else:
-            return 10
+            score = 10
     else:  # use a linear function for the middle part of the evaluation function
         if case == 0:
             a = 0.9 / d
@@ -106,10 +110,19 @@ def _calculate_score_smooth_linear(rate, best, worst, case=0):
         else:
             a = 0.95 / d
             b = 0
-        return 10 * (a * x + b)
+        score = 10 * (a * x + b)
+    return score
 
 
 def _calculate_score_curve_fit(rate, best, worst):
+    """
+    Makes use of scipy's curve_fit() and scales a sigmoid function to calculate an absolute score
+    based on the [worst, best] rates interval.
+    :param rate: rate to calculate the score for
+    :param best: upper rate boundary
+    :param worst: lower rate boundary
+    :return: score
+    """
     d = best - worst
     x = rate - worst
     thresh = 0.90
@@ -121,27 +134,44 @@ def _calculate_score_curve_fit(rate, best, worst):
 
 
 def _calculate_score_curve_fit_combined(rate, best, worst, case=0):
+    """
+    For tools where a best or worst case can be fixed (e.g. 0 warnings should be best), which means the boundary does
+    not depend on best/worst projects observed, this function splits the scoring function in a sigmoid and a linear part.
+    The linear part calculates for the fixed boundary of the rates.
+    :param rate: rate to calculate the score for
+    :param best: upper rate boundary
+    :param worst: lower rate boundary
+    :param case: case 0: no fix best and worst boundaries
+                 case 1: fixed best boundary
+                 case 2: fixed worst boundary
+    :return: score
+    """
     d = best - worst
     x = rate - worst
+    score = 0
+
     if case == 0:
-        return _calculate_score_curve_fit(rate, best, worst)
+        score = _calculate_score_curve_fit(rate, best, worst)
     if case == 1:
         if x / d >= 1:
-            return 10
-        if x / d > 0.5:
-            return 10 * (x / d)
+            score = 10
+        elif x / d > 0.5:
+            score = 10 * (x / d)
         else:
-            return _calculate_score_curve_fit(rate, best, worst)
+            score = _calculate_score_curve_fit(rate, best, worst)
     if case == 2:
         if x / d <= 0:
-            return 0
-        if x / d < 0.5:
-            return 10 * (x / d)
+            score = 0
+        elif x / d < 0.5:
+            score = 10 * (x / d)
         else:
-            return _calculate_score_curve_fit(rate, best, worst)
-
+            score = _calculate_score_curve_fit(rate, best, worst)
+    return score
 
 def sigmoid(x, x0, k):
+    """
+    Calculates values of the sigmoid function
+    """
     y = 1 / (1 + np.exp(-k * (x - x0)))
     return y
 

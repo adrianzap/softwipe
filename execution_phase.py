@@ -20,9 +20,9 @@ def build_command(program_dir_abs, executefile, cmake):
     :param program_dir_abs: The absolute path to the root directory of the target program.
     :param executefile: The executefile.
     :param cmake: Whether CMake has been used for compilation or not.
-    :return: The full command as a list.
+    :return: The full command as a lst.
     """
-    # Read file and create command as a list
+    # Read file and create command as a lst
     if executefile is not None and os.path.isfile(executefile):
         file = open(executefile, 'r')
         lines = file.readlines()

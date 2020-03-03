@@ -12,7 +12,7 @@ class CppcheckOutput:
     """
     Contains a count for each type of warning that cppcheck has.
     Important note: the constructor takes as argument the warning_lines as obtained by the
-    static_analysis_phase.get_cppcheck_warning_lines_from_cppcheck_output() function. From that list of lines,
+    static_analysis_phase.get_cppcheck_warning_lines_from_cppcheck_output() function. From that lst of lines,
     it extracts all information it needs.
     """
 

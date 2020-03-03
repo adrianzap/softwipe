@@ -148,7 +148,7 @@ CLANG_TIDY_WARNINGS = {
     'cppcoreguidelines': 1
 }
 
-INFER_WARNINGS = {  # TODO: fill this up a bit?
+INFER_WARNINGS = {
     'DEAD_STORE': 1,
     'EMPTY_VECTOR_ACCESS': 3,
     'NULL_DEREFERENCE': 3,

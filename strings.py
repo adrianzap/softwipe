@@ -12,6 +12,11 @@ COMPILE_FLAGS = COMPILER_WARNING_FLAGS + ' ' + COMPILER_SANITIZER_FLAGS
 
 
 def create_make_flags(compiler_flags):
+    """
+    Creates a sting of flags to use on Make-based projects overwriting
+    :param compiler_flags:
+    :return:
+    """
     set_cflags = 'CFLAGS="{}"'.format(compiler_flags)
     set_cxxflags = 'CXXFLAGS="{}"'.format(compiler_flags)
     set_cppflags = 'CPPFLAGS="{}"'.format(compiler_flags)
@@ -35,19 +40,19 @@ CLANG_TIDY_CHECKS_C = '-*,bugprone-*,clang-analyzer-*,misc-*,modernize-*,mpi-*,p
                       '-readability-non-const-parameter,-clang-analyzer-cp*,-clang-analyzer-unix.MismatchedDeallocator'
 CLANG_TIDY_CHECKS_CPP = CLANG_TIDY_CHECKS_C + ',boost-*,cppcoreguidelines-*'
 
-_dashes = ' --- '
-_running = 'Running: '
-_header = _dashes + _running + '{}' + _dashes
-RUN_COMPILER_HEADER = _header.format('COMPILER')
-RUN_EXECUTION_WITH_SANITIZERS_HEADER = _dashes + 'EXECUTING the program with clang sanitizers' + _dashes
-RUN_ASSERTION_CHECK_HEADER = _header.format('ASSERTION CHECK')
-RUN_CPPCHECK_HEADER = _header.format('CPPCHECK')
-RUN_CLANG_TIDY_HEADER = _header.format('CLANG-TIDY')
-RUN_LIZARD_HEADER = _header.format('LIZARD')
-RUN_KWSTYLE_HEADER = _header.format('KWSTYLE')
-RUN_INFER_COMPILATION_HEADER = _header.format('INFER COMPILATION')
-RUN_INFER_ANALYSIS_HEADER = _header.format('INFER ANALYSIS')
-RUN_STATIC_ANALYSIS_HEADER = _header.format('STATIC ANALYSIS')
+_DASHES = ' --- '
+_RUNNING = 'Running: '
+_HEADER = _DASHES + _RUNNING + '{}' + _DASHES
+RUN_COMPILER_HEADER = _HEADER.format('COMPILER')
+RUN_EXECUTION_WITH_SANITIZERS_HEADER = _DASHES + 'EXECUTING the program with clang sanitizers' + _DASHES
+RUN_ASSERTION_CHECK_HEADER = _HEADER.format('ASSERTION CHECK')
+RUN_CPPCHECK_HEADER = _HEADER.format('CPPCHECK')
+RUN_CLANG_TIDY_HEADER = _HEADER.format('CLANG-TIDY')
+RUN_LIZARD_HEADER = _HEADER.format('LIZARD')
+RUN_KWSTYLE_HEADER = _HEADER.format('KWSTYLE')
+RUN_INFER_COMPILATION_HEADER = _HEADER.format('INFER COMPILATION')
+RUN_INFER_ANALYSIS_HEADER = _HEADER.format('INFER ANALYSIS')
+RUN_STATIC_ANALYSIS_HEADER = _HEADER.format('STATIC ANALYSIS')
 
 OS_MACOS = 'Darwin'
 OS_WINDOWS = 'Windows'
@@ -59,27 +64,27 @@ OS_DEBIAN = 'debian'
 OS_FEDORA = 'Fedora'
 OS_RHEL = 'Red Hat Enterprise Linux Server'
 
-_softwipe = 'softwipe_'
+_SOFTWIPE = 'softwipe_'
 
-SOFTWIPE_BUILD_DIR_NAME = _softwipe + 'build'
+SOFTWIPE_BUILD_DIR_NAME = _SOFTWIPE + 'build'
 INFER_BUILD_DIR_NAME = 'infer_build'
 INFER_OUTPUT_DIR_NAME = 'infer-out'
 INFER_OUTPUT_FILE_NAME = 'bugs.txt'
-SOFTWIPE_COMPILED_EXE_NAME = _softwipe + 'compiled_exe.out'
+SOFTWIPE_COMPILED_EXE_NAME = _SOFTWIPE + 'compiled_exe.out'
 
-ERROR_FILENAME_INFER_COMPILATION = _softwipe + 'error_infer_compilation.txt'
+ERROR_FILENAME_INFER_COMPILATION = _SOFTWIPE + 'error_infer_compilation.txt'
 ERROR_LOG_WRITTEN_INTO = 'The error log has been written into {}.'
 
-RESULTS_FILENAME_COMPILER_MUST_BE_FIXED = _softwipe + 'compilation_warnings_must_be_fixed.txt'
-RESULTS_FILENAME_COMPILER_SHOULD_BE_FIXED = _softwipe + 'compilation_warnings_should_be_fixed.txt'
-RESULTS_FILENAME_COMPILER_COULD_BE_FIXED = _softwipe + 'compilation_warnings_could_be_fixed.txt'
-RESULTS_FILENAME_SANITIZERS = _softwipe + 'sanitizer_output.txt'
-RESULTS_FILENAME_ASSERTION_CHECK = _softwipe + 'assertion_check.txt'
-RESULTS_FILENAME_CPPCHECK = _softwipe + 'cppcheck_results.txt'
-RESULTS_FILENAME_CLANG_TIDY = _softwipe + 'clang_tidy_results.txt'
-RESULTS_FILENAME_LIZARD = _softwipe + 'lizard_results.txt'
-RESULTS_FILENAME_KWSTYLE = _softwipe + 'kwstyle_results.txt'
-RESULTS_FILENAME_INFER = _softwipe + 'infer_results.txt'
+RESULTS_FILENAME_COMPILER_MUST_BE_FIXED = _SOFTWIPE + 'compilation_warnings_must_be_fixed.txt'
+RESULTS_FILENAME_COMPILER_SHOULD_BE_FIXED = _SOFTWIPE + 'compilation_warnings_should_be_fixed.txt'
+RESULTS_FILENAME_COMPILER_COULD_BE_FIXED = _SOFTWIPE + 'compilation_warnings_could_be_fixed.txt'
+RESULTS_FILENAME_SANITIZERS = _SOFTWIPE + 'sanitizer_output.txt'
+RESULTS_FILENAME_ASSERTION_CHECK = _SOFTWIPE + 'assertion_check.txt'
+RESULTS_FILENAME_CPPCHECK = _SOFTWIPE + 'cppcheck_results.txt'
+RESULTS_FILENAME_CLANG_TIDY = _SOFTWIPE + 'clang_tidy_results.txt'
+RESULTS_FILENAME_LIZARD = _SOFTWIPE + 'lizard_results.txt'
+RESULTS_FILENAME_KWSTYLE = _SOFTWIPE + 'kwstyle_results.txt'
+RESULTS_FILENAME_INFER = _SOFTWIPE + 'infer_results.txt'
 
 RATE_COUNT_TOTAL = '{} ({}/{})'
 

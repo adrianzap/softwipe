@@ -3,18 +3,28 @@ This module contains utility functions.
 """
 
 import os
-
 import strings
 
 
 def write_into_file_string(file_name, content, append=False):
-    write_mode = 'a' if append else 'w'
-    file = open(file_name, write_mode)
-    file.write(content)
-    file.close()
+    """
+    Writes 'content' string into a file specified by 'file_name'. The file will be created if it does not exist.
+    :param file_name: path of the file to write into
+    :param content: string to write into file
+    :param append: bool telling to overwrite the file or append to file
+    """
+    write_mode = 'a+' if append else 'w+'
+    with open(file_name, write_mode) as file:
+        file.write(content)
 
 
 def write_into_file_list(file_name, content, append=False):
+    """
+    Writes the elements of 'content' into a file specified by 'file_name'. The file will be created if it does not exist.
+    :param file_name: path of the file to write into
+    :param content: lst of elements to write into file. The elements will be used like strings.
+    :param append: bool telling to overwrite the file or append to file
+    """
     content_as_string = ''
     for line in content:
         content_as_string += line
@@ -25,7 +35,7 @@ def write_into_file_list(file_name, content, append=False):
 def print_lines(lines):
     """
     Print all lines in the input to stdout.
-    :param lines: A list of lines to print.
+    :param lines: A lst of lines to print.
     """
     for line in lines:
         print(line)
@@ -35,15 +45,15 @@ def get_excluded_paths(program_dir_abs, exclude):
     """
     Return the paths (files and dirs) that should be excluded from being analyzed by softwipe.
     :param program_dir_abs: The absolute path to the root directory of the program.
-    :param exclude: A comma separated list of files and directories to exclude, as given via command line (-x option).
+    :param exclude: A comma separated lst of files and directories to exclude, as given via command line (-x option).
     :return: A tupel containing all excluded paths.
     """
     excluded_paths = (os.path.join(program_dir_abs, 'build'), os.path.join(program_dir_abs, 'cmake-build-debug'),
                       os.path.join(program_dir_abs, 'compile'), os.path.join(program_dir_abs,
                                                                              strings.SOFTWIPE_BUILD_DIR_NAME))
     if exclude:
-        for x in exclude.split(','):
-            excluded_paths += (os.path.abspath(x),)
+        for path in exclude.split(','):
+            excluded_paths += (os.path.abspath(path),)
 
     return excluded_paths
 
@@ -55,13 +65,12 @@ def find_all_source_files(program_dir_abs, excluded_paths):
     :param program_dir_abs: The absolute path to the root directory of the program.
     :param excluded_paths: A tupel containing the paths to be excluded. The tupel should be obtained via the
     get_excluded_paths() function.
-    :return: A list containing absolute paths to all source files.
+    :return: A lst containing absolute paths to all source files.
     """
     source_files = []
-
     source_file_endings = ('.c', '.cc', '.cpp', '.cxx', '.h', '.hpp')
 
-    for dirpath, dirs, files in os.walk(program_dir_abs):
+    for dirpath, _, files in os.walk(program_dir_abs):
         if dirpath.startswith(excluded_paths):
             continue
 
@@ -80,6 +89,14 @@ def line_is_empty(line):
 
 
 def line_is_comment(line, block_comment_has_started):
+    """
+    Checks whether a line is a comment line. Function is used to read a code file line by line counting the lines of code.
+    :param line: string to check
+    :param block_comment_has_started: was a block comment started before this line?
+    :return: 1. true/false - whether line is a comment or not
+             2. true - if a block comment has started (or is continued)
+                false - if line not part of block comment (or block comment has ended)
+    """
     is_comment = False
 
     # One-line comments ("// comment" or "/* comment */")
@@ -121,7 +138,7 @@ def count_lines_of_code_in_one_file(file):
 def count_lines_of_code(source_files):
     """
     Count the lines of code in source files. Ignores blank and comment lines.
-    :param source_files: The list of files to count lines in.
+    :param source_files: The lst of files to count lines in.
     :return: The count of total non-empty, non-comment code lines in the files.
     """
     lines_of_code = 0

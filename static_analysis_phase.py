@@ -6,7 +6,6 @@ completely written down here.
 import os
 import re
 import subprocess
-from multiprocessing.pool import ThreadPool
 
 import classifications
 import compile_phase
@@ -17,9 +16,6 @@ import util
 from tools_info import TOOLS
 
 skip_on_failure = False
-cppcheck_working = True
-infer_working = True
-
 
 def assertion_used_in_code_line(line, custom_asserts=None):
     """
@@ -32,36 +28,35 @@ def assertion_used_in_code_line(line, custom_asserts=None):
     # Breakdown of the regex: The first two negative lookaheads "(?! )" exclude commented assertions. Then,
     # match assert( and static_assert( while allowing for whitespace or code (e.g. ";" or "}") before the call.
     # If there are any custom asserts, add them to "custom". The regex will look for (assert|custom_assert).
-    custom = ''
+    custom = r''
     if custom_asserts:
         for custom_assert in custom_asserts:
             custom += '|' + custom_assert
 
-    regex = r'(?!^.*\/\/.*(assert' + custom + ')\s*\()(?!^.*\/\*.*(assert' + custom + \
-            ')\s*\()^.*(\W|^)((static_)?assert' + custom + ')\s*\('
+    regex = r'(?!^.*\/\/.*(assert' + custom + r')\s*\()(?!^.*\/\*.*(assert' + custom + \
+            r')\s*\()^.*(\W|^)((static_)?assert' + custom + r')\s*\('
     return re.match(regex, line)
 
 
 def check_assert_usage(source_files, lines_of_code, custom_asserts=None):
     """
     Check how many assertions are used in the code.
-    :param source_files: The list of files to count assertions in.
+    :param source_files: The lst of files to count assertions in.
     :param lines_of_code: The total lines of code.
-    :param custom_asserts: A list of custom assertions to be checked by the assertion check.
+    :param custom_asserts: A lst of custom assertions to be checked by the assertion check.
     :return: The assertion score.
     """
 
     assert_count = 0
 
-    for file in source_files:
-        f = open(file, 'r', encoding='latin-1')
+    for path in source_files:
+        file = open(path, 'r', encoding='latin-1')
 
-        file_lines = f.readlines()
+        file_lines = file.readlines()
         for line in file_lines:
             if assertion_used_in_code_line(line, custom_asserts):
                 assert_count += 1
-
-        f.close()
+        file.close()
 
     assertion_rate = assert_count / lines_of_code
 
@@ -82,6 +77,11 @@ def check_assert_usage(source_files, lines_of_code, custom_asserts=None):
 
 
 def get_cppcheck_warning_lines_from_cppcheck_output(output):
+    """
+    Reads the output log of cppcheck and filters lines which do not contain error/warning messages (the "unimportant" ones).
+    :param output: cppcheck output
+    :return: filtered warning lines
+    """
     warning_lines = []
 
     output_lines = output.split('\n')
@@ -92,10 +92,22 @@ def get_cppcheck_warning_lines_from_cppcheck_output(output):
     return warning_lines
 
 
+
+def split_in_chunks(lst, size):
+    """
+    Splits a list into chunks of 'size'.
+    :param lst: list to split into chunks
+    :param size: chunk size
+    :return: chunk generator
+    """
+    for i in range(0, len(lst), size):
+        yield lst[i:i + size]
+
+
 def run_cppcheck(source_files, lines_of_code, cpp):
     """
     Runs cppcheck.
-    :param source_files: The list of source files to analyze.
+    :param source_files: The lst of source files to analyze.
     :param lines_of_code: The lines of pure code count.
     :param cpp: Whether we're using C++ or not. True if C++ is used, False if C is used.
     :return: The Cppcheck score.
@@ -103,22 +115,28 @@ def run_cppcheck(source_files, lines_of_code, cpp):
     language = 'c++' if cpp else 'c'
     # TODO: find out the purpose of the --template=cppcheck1' which broke the output
     cppcheck_call = [TOOLS.CPPCHECK.exe_name, '--enable=all', '--force', '--language=' + language, "-v"]
-    cppcheck_call.extend(source_files)
+
+    output = ""
+    chunk_size = 1000       #should fix that "OSError: [Errno 7] Argument lst too long: 'cppcheck'" thing
 
     try:
-        output = subprocess.check_output(cppcheck_call, universal_newlines=True, stderr=subprocess.STDOUT)
+        argument_chunks = split_in_chunks(source_files, chunk_size)
+        for chunk in argument_chunks:
+            temp_call = cppcheck_call
+            temp_call.extend(chunk)
+            output += subprocess.check_output(cppcheck_call, universal_newlines=True, stderr=subprocess.STDOUT) + "\n"
         warning_lines = get_cppcheck_warning_lines_from_cppcheck_output(output)
         cppcheck_output = output_classes.CppcheckOutput(warning_lines)
-    except subprocess.CalledProcessError as e:
+    except subprocess.CalledProcessError as error:
         print("cppcheck failed!")
-        print(strings.COMPILATION_CRASHED.format(e.returncode, e.output))
+        print(strings.COMPILATION_CRASHED.format(error.returncode, error.output))
         if not skip_on_failure:
             raise
         return 0, "", False
     except Exception:  # catch the rest and exclude the analysis tool from the score
         if not skip_on_failure:
             raise
-        return 0, "", False  # TODO: make a common format for the exclusion?
+        return 0, "", False
 
     weighted_cppcheck_rate, temp = cppcheck_output.get_information(lines_of_code)
     util.write_into_file_list(strings.RESULTS_FILENAME_CPPCHECK, warning_lines)
@@ -134,6 +152,11 @@ def run_cppcheck(source_files, lines_of_code, cpp):
 
 
 def get_clang_tidy_warning_lines_from_clang_tidy_output(output):
+    """
+    Reads output log of clang-tidy and returns warning lines.
+    :param output: clang-tidy output
+    :return: warning lines
+    """
     warning_lines = []
 
     output_lines = output.split('\n')
@@ -152,6 +175,12 @@ def get_clang_tidy_warning_lines_from_clang_tidy_output(output):
 
 
 def get_weighted_clang_tidy_warning_count_from_clang_tidy_warning_lines(warning_lines):
+    """
+    Counts and weights clang-tidy warnings according to softwipe's warning classifications. The warnings softwipe
+    considers more dangerous have a higher weight than the less dangerous ones.
+    :param warning_lines: filtered clang-tidy warning lines
+    :return: weighted warning count
+    """
     warning_count = 0
 
     for line in warning_lines:
@@ -187,29 +216,31 @@ def run_clang_tidy(program_dir_abs, source_files, lines_of_code, cpp, num_tries=
     """
     Runs clang-tidy.
     :param program_dir_abs: The absolute path to the root directory of the target program.
-    :param source_files: The list of source files to analyze.
+    :param source_files: The lst of source files to analyze.
     :param lines_of_code: The lines of pure code count.
     :param cpp: Whether C++ is used or not. True if C++, false if C.
     :param num_tries: The amount of times clang-tidy should be rerun if it runs into internal problems
-    :return: The clang-tidy score.
+    :return: 1. The clang-tidy score.
+             2. output log
+             3. boolean success
     """
     clang_tidy_call = [TOOLS.CLANG_TIDY.exe_name]
     clang_tidy_call.extend(source_files)
 
-    # Create checks list
+    # Create checks lst
     clang_tidy_checks = strings.CLANG_TIDY_CHECKS_CPP if cpp else strings.CLANG_TIDY_CHECKS_C
     clang_tidy_call.append('-checks=' + clang_tidy_checks)
     clang_tidy_call.extend(['-p', program_dir_abs])
 
     try:
         output = subprocess.check_output(clang_tidy_call, universal_newlines=True, stderr=subprocess.STDOUT)
-    except subprocess.CalledProcessError as e:
-        output = e.output
+    except subprocess.CalledProcessError as error:
+        output = error.output
 
         if num_tries < 0:  # make clang-tidy return a failure status if it has no tries left
             return 0, "", False
 
-        if e.returncode == -11:  # clang-tidy seems to run into segfaults sometimes, so rerun it if that happens
+        if error.returncode == -11:  # clang-tidy seems to run into segfaults sometimes, so rerun it if that happens
             return run_clang_tidy(program_dir_abs, source_files, lines_of_code, cpp, num_tries=num_tries - 1)
         # clang-tidy can exit with exit code 1 if there is no compilation database, which might be the case when
         # compiling with just clang. Thus, ignore the exception here.
@@ -237,12 +268,22 @@ def run_clang_tidy(program_dir_abs, source_files, lines_of_code, cpp, num_tries=
 
 
 def get_actual_rate_from_lizard_duplicate_rate_line(line):
+    """
+    Extracts the duplicated code rate from lizard duplicated rate string"
+    :param line:
+    :return:
+    """
     percentage_string = line.split()[-1]  # Get the percentage
     rate = float(percentage_string[:-1]) / 100  # Remove the "%" character at the end
     return rate
 
 
 def get_lizard_output_object_from_lizard_printed_output(output):
+    """
+    Filters the important (for us) information out of Lizard general output.
+    :param output: Lizard output
+    :return: filtered information string
+    """
     output_lines = output.split('\n')
 
     # Get total number of functions and standard lizard information (CCN & warning count)
@@ -281,7 +322,7 @@ def get_lizard_output_object_from_lizard_printed_output(output):
 def run_lizard(source_files):
     """
     Runs Lizard.
-    :param source_files: The list of source files to analyze.
+    :param source_files: The lst of source files to analyze.
     :return: The cyclomatic complexity score, warning score, and unique score
     """
     # NOTE Although lizard can be used as a python module ("import lizard") it is actually easier to parse its output
@@ -294,8 +335,8 @@ def run_lizard(source_files):
 
     try:
         output = subprocess.check_output(lizard_call, universal_newlines=True, stderr=subprocess.STDOUT)
-    except subprocess.CalledProcessError as e:  # If warnings are generated, Lizard exits with exit code 1
-        output = e.output  # Basically, this catches the exception and ignores it such that this tool doesn't crash
+    except subprocess.CalledProcessError as error:  # If warnings are generated, Lizard exits with exit code 1
+        output = error.output  # Basically, this catches the exception and ignores it such that this tool doesn't crash
         # while still keeping the output of the command
     except Exception:  # catch the rest and exclude the analysis tool from the score
         if not skip_on_failure:
@@ -315,6 +356,11 @@ def run_lizard(source_files):
 
 
 def get_kwstyle_warning_count_from_kwstyle_output(output):
+    """
+    Counts warnings in the kwstyle output.
+    :param output: kwstyle output log
+    :return: number of found warnings
+    """
     warning_count = 0
 
     output_lines = output.split('\n')
@@ -328,7 +374,7 @@ def get_kwstyle_warning_count_from_kwstyle_output(output):
 def run_kwstyle(source_files, lines_of_code):
     """
     Runs KWStyle.
-    :param source_files: The list of source files to analyze.
+    :param source_files: The lst of source files to analyze.
     :param lines_of_code: The lines of pure code count.
     :return: The KWStyle score.
     """
@@ -345,8 +391,8 @@ def run_kwstyle(source_files, lines_of_code):
         cur_kwstyle_call.append(source_file)
         try:
             output += subprocess.check_output(cur_kwstyle_call, universal_newlines=True, stderr=subprocess.STDOUT)
-        except subprocess.CalledProcessError as e:  # Same as with the lizard call. KWStyle exits with status 1 by
-            output += e.output  # default. So catch that, ignore the exception, and keep the output of the command
+        except subprocess.CalledProcessError as error:  # Same as with the lizard call. KWStyle exits with status 1 by
+            output += error.output  # default. So catch that, ignore the exception, and keep the output of the command
         except Exception:  # catch the rest and exclude the analysis tool from the score
             if not skip_on_failure:
                 raise
@@ -368,13 +414,21 @@ def run_kwstyle(source_files, lines_of_code):
 
 
 def get_infer_warnings_from_output(infer_out_path):
+    """
+    Reads Infer report file from 'infer_out_path', counts and weights warnings and returns
+    the content of the report file, summarized warnings, and weighted number of warnings.
+    :param infer_out_path: path to infer report file
+    :return: 1. report lines
+             2. summarized warnings (multi-line string)
+             3. weighted number of warnings
+    """
     warning_num = 0
     warnings = ""
     record = False
     file_out = ""
 
-    with open(infer_out_path) as f:
-        for line in f:
+    with open(infer_out_path) as file:
+        for line in file:
             file_out += line
             line = line.rstrip()
             if not line: continue
@@ -395,6 +449,15 @@ def get_infer_warnings_from_output(infer_out_path):
 
 
 def run_infer_analysis(program_dir_abs, lines_of_code, cmake):
+    """
+    Runs 'infer --analyze' and returns the result if successful.
+    :param program_dir_abs: project folder path
+    :param lines_of_code: number of lines of code
+    :param cmake: does the project use cmake?
+    :return: 1. score
+             2. output log
+             3. boolean - success
+    """
     if cmake: program_dir_abs += "/" + strings.INFER_BUILD_DIR_NAME
 
     infer_analyze = ["infer", "analyze",
@@ -402,10 +465,10 @@ def run_infer_analysis(program_dir_abs, lines_of_code, cmake):
     try:
         subprocess.check_output(infer_analyze, cwd=program_dir_abs, universal_newlines=True,
                                 stderr=subprocess.STDOUT)
-    except subprocess.CalledProcessError as e:
-        print(strings.COMPILATION_CRASHED.format(e.returncode, e.output))
+    except subprocess.CalledProcessError as error:
+        print(strings.COMPILATION_CRASHED.format(error.returncode, error.output))
         template = "An exception of type {0} occurred. Arguments:\n{1!r}"
-        message = template.format(type(e).__name__, e.args)
+        message = template.format(type(error).__name__, error.args)
         print(message)
         if not skip_on_failure:
             raise
@@ -435,9 +498,18 @@ def run_infer_analysis(program_dir_abs, lines_of_code, cmake):
 
 
 def find_file(path, file_name, directory=""):
+    """
+    Finds file 'file_name' in 'path' and its subdirectories and returns full path to that file.
+    If 'directory' is specified, the function tries to find 'directory/file_name'
+    and is only successful if 'file_name' is found in this exact constellation.
+    :param path: path to start looking for the file in
+    :param file_name: file to find
+    :param directory: immediate upper directory of the file to find
+    :return: full path to 'file_name' if successful
+    """
     dirs = []
-    for (_, dir, file) in os.walk(path):
-        dirs.extend(dir)
+    for (_, folder, file) in os.walk(path):
+        dirs.extend(folder)
         if directory == "":
             if file_name in file:
                 return path + "/" + file_name
@@ -445,54 +517,8 @@ def find_file(path, file_name, directory=""):
             if file_name in file and path.split("/")[-1] == directory:
                 return path + "/" + file_name
         break
-    for dir in dirs:
-        file_path = find_file(path + "/" + dir, file_name, directory=directory)
+    for folder in dirs:
+        file_path = find_file(path + "/" + folder, file_name, directory=directory)
         if file_path != "": return file_path
 
     return ""
-
-
-def run_static_analysis(program_dir_abs, source_files, lines_of_code, cpp, custom_asserts=None, cmake=False,
-                        skip_on_failure_flag=True):  # TODO: fix that skip_on_failure_flag and add it to the cmd parser
-    # TODO: maybe do this whole thing from the outside to safe the repeating passing of the same variables
-    #   over and over again for no reason
-    """
-    Run all the static code analysis.
-    :param program_dir_abs: The absolute path to the root directory of the target program.
-    :param source_files: The list of source files to analyze.
-    :param lines_of_code: The lines of pure code count for the source_files.
-    :param cpp: Whether we're using C++ or not. True if C++ is used, False if C is used.
-    :param custom_asserts: A list of custom assertions to be checked by the assertion check.
-    :param cmake: Is the build cmake based? (important for infer)
-    :param skip_on_failure_flag: Allows the exclusion of non functioning analysis tools without raising exceptions
-    :return All the scores: assertion_score, cppcheck_score, clang_tidy_score, cyclomatic_complexity_score,
-    warning_score, unique_score, kwstyle_score.
-    """
-
-    thread_pool = ThreadPool(processes=6)
-    global skip_on_failure
-    skip_on_failure = skip_on_failure_flag
-
-    assertion_score_calc = thread_pool.apply_async(check_assert_usage, (source_files, lines_of_code, custom_asserts))
-    cppcheck_score_calc = thread_pool.apply_async(run_cppcheck, (source_files, lines_of_code, cpp))
-    clang_tidy_score_calc = thread_pool.apply_async(run_clang_tidy, (program_dir_abs, source_files, lines_of_code, cpp))
-    lizard_score_calc = thread_pool.apply_async(run_lizard, (source_files,))
-    kwstyle_score_calc = thread_pool.apply_async(run_kwstyle, (source_files, lines_of_code))
-    infer_score_calc = thread_pool.apply_async(run_infer_analysis, (program_dir_abs, lines_of_code, cmake))
-
-    assertion_score, assertion_log, assertion_successful = assertion_score_calc.get()
-    cppcheck_score, cppcheck_log, cppcheck_successful = cppcheck_score_calc.get()
-    clang_tidy_score, clang_tidy_log, clang_successful = clang_tidy_score_calc.get()
-    cyclomatic_complexity_score, warning_score, unique_score, lizard_log, lizard_successful = lizard_score_calc.get()
-    kwstyle_score, kwstyle_log, kwstyle_successful = kwstyle_score_calc.get()
-    infer_score, infer_log, infer_successful = infer_score_calc.get()
-
-    # TODO: think of a nice way to return tool output with a failure flag
-    return [("assertions", assertion_score, assertion_log, assertion_successful),
-            ("cppcheck", cppcheck_score, cppcheck_log, cppcheck_successful),
-            ("clang_tidy", clang_tidy_score, clang_tidy_log, clang_successful),
-            ("lizard_cyclomatic_complexity", cyclomatic_complexity_score, "", lizard_successful),
-            ("lizard_warnings", warning_score, "", lizard_successful),
-            ("lizard_unique_code", unique_score, lizard_log, lizard_successful),
-            ("kwstyle", kwstyle_score, kwstyle_log, kwstyle_successful),
-            ("infer", infer_score, infer_log, infer_successful)]

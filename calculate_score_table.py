@@ -13,7 +13,7 @@ import scoring
 
 ###########################################################
 # If you add a new program to the benchmark, add the name #
-# of its folder in the results directory to this list!    #
+# of its folder in the results directory to this lst!    #
 ###########################################################
 # FOLDERS = ['dawg', 'mrbayes', 'raxml-ng', 'sf', 'hyperphylo', 'kahypar', 'ms', 'repeatscounter', 'tcoffee', 'bpp',
 #           'indelible', 'mafft', 'prank', 'seq-gen', 'genesis', 'athena', 'gadget', 'iqtree', 'clustal', 'phyml',
@@ -24,10 +24,6 @@ FOLDERS = ['BGSA-1.0/original/BGSA_CPU', 'bindash-1.0', 'copmem-0.2', 'crisflash
            'IQ-TREE-2.0-rc1', 'candy-kingdom', 'glucose-3-drup']  # TODO: add SPRING
 
 SOFTWIPE_OUTPUT_FILE_NAME = "sw_batch.txt"
-
-# For the prototype
-SW_REL_FILE_NAME = "sw_batch.txt"
-SW_ABS_FILE_NAME = "sw_batch.txt"
 
 LOC_KEY = "loc"
 FUNCTIONS_KEY = "functions"
@@ -76,7 +72,7 @@ def get_result_rates(result_directory, folder):
     compiler_and_sanitizer_rate = 0.0  # Special treatment because we may have to add multiple values for this score
     assertion_rate = cppcheck_rate = clang_tidy_rate = ccn = lizard_rate = unique_rate = kwstyle_rate = infer_rate = None
 
-    # fill the failed_tools list with all the available analysis tools and remove the ones that are not available in the report
+    # fill the failed_tools lst with all the available analysis tools and remove the ones that are not available in the report
     # this allows accepting half-finished reports without provoking reading or calculation errors
     failed_tools = [COMPILER_KEY, SANITIZER_KEY, COMPILER_AND_SANITIZER_KEY, INFER_KEY, ASSERTIONS_KEY, CPPCHECK_KEY,
                     CLANG_TIDY_KEY, CYCLOMATIC_COMPLEXITY_KEY, LIZARD_WARNINGS_KEY, UNIQUE_KEY, KWSTYLE_KEY, None]

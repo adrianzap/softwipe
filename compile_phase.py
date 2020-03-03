@@ -34,7 +34,7 @@ def build_cmake_call(program_dir_abs, compiler_flags):
     :param program_dir_abs: The absolute path to the root directory of the target program.
     :param compiler_flags: The flags to be used for compilation. Typically, these should be strings.COMPILE_FLAGS or,
     if no_execution, strings.COMPILER_WARNING_FLAGS.
-    :return: The full CMake call as a list.
+    :return: The full CMake call as a lst.
     """
     # The cmake call activates the compiler warnings we want and the flags that activate the clang sanitizers twice to
     # ensure that they really get activated: via environment variable, and via a new build type. Both activation
@@ -83,9 +83,9 @@ def get_warning_lines_from_make_output(output):
     badcode.cpp:42:15: warning: implicit conversion loses floating-point precision: 'double' to 'float' [-Wconversion]
     float b = a;
           ~   ^
-    All of these lines will be put into the list that is returned.
+    All of these lines will be put into the lst that is returned.
     :param output: The output of make.
-    :return: A list of all warning lines, i.e. lines that are part of the description of warnings in the make output.
+    :return: A lst of all warning lines, i.e. lines that are part of the description of warnings in the make output.
     """
     output_lines = output.split('\n')
     warning_lines = []
@@ -200,7 +200,7 @@ def run_make(build_path, lines_of_code, excluded_paths, dont_check_for_warnings=
     Run the make command and print the warnings that it outputs while compiling.
     :param build_path: The build path, where the Makefile is located.
     :param lines_of_code: The lines of pure code count.
-    :param excluded_paths: A list containing the paths to be excluded.
+    :param excluded_paths: A lst containing the paths to be excluded.
     :param dont_check_for_warnings: Do not check for warnings. Useful for automatically building a dependency,
     in which case you don't want warnings to be extracted from the compilation.
     :param make_flags: A string containing arguments passed to the make command. E.g., if make_flags='-foo BAR',
@@ -283,7 +283,7 @@ def compile_program_make(program_dir_abs, lines_of_code, compiler_flags, exclude
     :param lines_of_code: The lines of pure code count.
     :param compiler_flags: The flags to be used for compilation. Typically, these should be strings.COMPILE_FLAGS or,
     if no_execution, strings.COMPILER_WARNING_FLAGS.
-    :param excluded_paths: A list containing the paths to be excluded.
+    :param excluded_paths: A lst containing the paths to be excluded.
     :param make_command_file: The path to a file containing the commands used to successfully compile the program
     using make.
     :return The weighted sum of compiler warnings.
@@ -317,7 +317,7 @@ def compile_program_cmake(program_dir_abs, lines_of_code, compiler_flags, exclud
     :param lines_of_code: The lines of pure code count.
     :param compiler_flags: The flags to be used for compilation. Typically, these should be strings.COMPILE_FLAGS or,
     if no_execution, strings.COMPILER_WARNING_FLAGS.
-    :param excluded_paths: A list containing the paths to be excluded.
+    :param excluded_paths: A lst containing the paths to be excluded.
     :param dont_check_for_warnings: Do not check for warnings. Useful for automatically building a dependency,
     in which case you don't want warnings to be extracted from the compilation.
     :param make_command_file: The path to a file containing the commands used to successfully compile the program
@@ -347,7 +347,7 @@ def compile_program_clang(program_dir_abs, targets, lines_of_code, compiler_flag
     :param lines_of_code: The lines of pure code count.
     :param compiler_flags: The flags to be used for compilation. Typically, these should be strings.COMPILE_FLAGS or,
     if no_execution, strings.COMPILER_WARNING_FLAGS.
-    :param excluded_paths: A list containing the paths to be excluded.
+    :param excluded_paths: A lst containing the paths to be excluded.
     :param cpp: Whether we're doing C++ or not. True if C++ (so clang++ will be used), False if C (so clang will be
     used).
     :return The weighted sum of compiler warnings.
@@ -380,7 +380,7 @@ def get_infer_exclude_arguments(program_dir_abs, excluded_paths):
     """
     Prepares the arguments to add to the 'infer capture' call to exclude certain files from the analysis.
     :param program_dir_abs: The absolute path to the root directory of the target program.
-    :param excluded_paths: A list containing absolute paths to files to be excluded.
+    :param excluded_paths: A lst containing absolute paths to files to be excluded.
     :return: arguments used to exclude files for the 'infer capture' call
     """
     exclude_command = []
@@ -395,7 +395,7 @@ def compile_program_infer_cmake(program_dir_abs, excluded_paths):
     """
     Compile the program with infer using cmake to allow infer to analyze it later.
     :param program_dir_abs: The absolute path to the root directory of the target program.
-    :param excluded_paths: A list containing files to be excluded.
+    :param excluded_paths: A lst containing files to be excluded.
     :return: True if the compilation was successful
              False if the compilation was not successful
     """
@@ -425,7 +425,7 @@ def compile_program_infer_make(program_dir_abs, excluded_paths):
     """
     Compile the program with infer using make to allow infer to analyze it later.
     :param program_dir_abs: The absolute path to the root directory of the target program.
-    :param excluded_paths: A list containing files to be excluded.
+    :param excluded_paths: A lst containing files to be excluded.
     :return: True if the compilation was successful
              False if the compilation was not successful
     """
