@@ -5,7 +5,6 @@ Functions related to the automatic installation of dependencies.
 import inspect
 import os
 import platform
-import distro
 import shutil
 import subprocess
 import sys
@@ -23,6 +22,7 @@ def detect_user_os():
     """
     system = platform.system()
     if system == 'Linux':
+        import distro
         detected_distro = distro.linux_distribution(full_distribution_name=False)
         detected_os = detected_distro[0]
     else:
