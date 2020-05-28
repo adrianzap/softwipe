@@ -21,7 +21,7 @@ import scoring
 FOLDERS = ['BGSA-1.0/original/BGSA_CPU', 'bindash-1.0', 'copmem-0.2', 'crisflash', 'cryfa-18.06', 'defor', 'dna-nn-0.1',
            'dr_sasa_n', 'emeraLD', 'ExpansionHunter', 'fastspar', 'HLA-LA/src', 'lemon', 'naf-1.1.0/ennaf',
            'naf-1.1.0/unnaf', 'ngsTools/ngsLD', 'ntEdit-1.2.3', 'PopLDdecay', 'virulign-1.0.1', 'axe-0.3.3', 'prequal',
-           'IQ-TREE-2.0-rc1', 'candy-kingdom', 'glucose-3-drup']  # TODO: add SPRING
+           'IQ-TREE-2.0-rc1', 'candy-kingdom', 'glucose-3-drup', 'covid-sim-0.13.0']  # TODO: add SPRING
 
 SOFTWIPE_OUTPUT_FILE_NAME = "sw_batch.txt"
 
