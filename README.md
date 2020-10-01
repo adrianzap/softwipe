@@ -11,7 +11,11 @@ git clone https://github.com/adrianzap/softwipe.git
 ```
 
 #### Dependencies
-There's some dependencies, but fear not! For macOS and Debian-based systems, softwipe can automatically install these dependencies for you. Just run softwipe (`sudo ./softwipe.py` - sudo is most likely required for installing the dependencies); if a dependency cannot be found, it will ask you whether it should automatically install it. Note for Mac users: Homebrew must be installed for the automatic installation of dependencies.
+There are some Python package dependencies:
+* numpy >= 1.17.4
+* scipy >= 1.3.3
+
+And there are also some tool dependencies, but fear not! For macOS and Debian-based systems, softwipe can automatically install the following dependencies for you. Just run softwipe (`sudo ./softwipe.py` - sudo is most likely required for installing the dependencies); if a dependency cannot be found, it will ask you whether it should automatically install it. Note for Mac users: Homebrew must be installed for the automatic installation of dependencies.
 
 The following tools must be installed:
 * Clang (<https://clang.llvm.org>, probably available in your package manager)
