@@ -241,7 +241,8 @@ COMPILER_WORST_FIXED = 0.5664638548004538
 ASSERTIONS_BEST_FIXED = 0.015508042681955726
 ASSERTIONS_WORST_FIXED = 0.0
 
-CPPCHECK_BEST_FIXED = 0.0006172839506172839
+#CPPCHECK_BEST_FIXED = 0.0006172839506172839
+CPPCHECK_BEST_FIXED = 0.0
 CPPCHECK_WORST_FIXED = 0.05527096252359127
 
 CLANG_TIDY_BEST_FIXED = 0.0
@@ -310,11 +311,11 @@ def calculate_assertion_score_absolute(rate):
 
 
 def calculate_cppcheck_score_absolute(rate):
-    return _calculate_score_absolute(rate, CPPCHECK_BEST_FIXED, CPPCHECK_WORST_FIXED)
+    return _calculate_score_absolute(rate, CPPCHECK_BEST_FIXED, CPPCHECK_WORST_FIXED, case=1)
 
 
 def calculate_clang_tidy_score_absolute(rate):
-    return _calculate_score_absolute(rate, CLANG_TIDY_BEST_FIXED, CLANG_TIDY_WORST_FIXED)
+    return _calculate_score_absolute(rate, CLANG_TIDY_BEST_FIXED, CLANG_TIDY_WORST_FIXED, case=1)
 
 
 def calculate_cyclomatic_complexity_score_absolute(ccn):
