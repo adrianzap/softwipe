@@ -361,6 +361,7 @@ def static_analysis(program_dir_abs, source_files, lines_of_code, cpp, custom_as
 
 
 def add_badge_to_file(path, overall_score):
+    #TODO: Clean and test this function
     """
     Experimental function to add a softwipe score badge to a github readme.
     :param path: path of the readme file
@@ -368,42 +369,30 @@ def add_badge_to_file(path, overall_score):
     """
     badge_string = strings.BADGE_LINK.format(round(overall_score, 1))
 
-    file = open(path, 'r')
-
-    softwipe_badge_found = False
-    badge_found = False
-
-    for line in file:
-        if "[![Softwipe Score]" in line:
-            softwipe_badge_found = True
-        if "[![" in line:
-            badge_found = True
-
-    file.close()  # just close and reopen the file to reset the reading pointer
-    file = open(path, 'r')
-
+    lines = ""
     output = ""
-    badge_set = False
+    with open(path, 'r') as file:
+        for line in file:
+            lines += line
 
-    if not badge_found and not softwipe_badge_found:  # if there are no badges at all, just add the softwipe badge in the second line
-        for line in file:
-            output += line
-            if not badge_set:
-                badge_set = True
-                output += badge_string + "\n"
-    elif badge_found and not softwipe_badge_found:  # if there are badges, add the softwipe badge in the same line
-        for line in file:
-            if "[![" in line and not badge_set:
-                badge_set = True
-                line += badge_string
-            output += line
-    elif softwipe_badge_found:  # if there is a softwipe badge already, replace it with a new one
-        for line in file:
+    if "[![Softwipe Score]" in lines:
+        for line in lines.split("\n"):
             if "[![Softwipe Score]" in line:
                 line = re.sub(r'\[!\[Softwipe Score\]\(([^\)\]]+)\)\]\(([^\)\]]+)\)', badge_string,
                               line.rstrip()) + "\n"
             output += line
-    file.close()
+    elif "[![" in lines:
+        for line in lines.split("\n"):
+            if "[![" in line and not badge_set:
+                badge_set = True
+                line += badge_string
+            output += line
+    else:
+        for line in lines.split("\n"):
+            output += line
+            if not badge_set:
+                badge_set = True
+                output += badge_string + "\n"
 
     with open(path, 'w') as modified:
         modified.write(output)
