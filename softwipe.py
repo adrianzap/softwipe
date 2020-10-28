@@ -13,9 +13,9 @@ import automatic_tool_installation
 import compile_phase
 import execution_phase
 import scoring
-import static_analysis_phase
 import strings
 import util
+from analysis_tools import CppcheckTool, ClangTool, ClangTidyTool, KWStyleTool, LizardTool, AssertionTool, InferTool
 
 
 def parse_arguments():
@@ -114,7 +114,8 @@ def parse_arguments():
 
     parser.add_argument('--exclude-assertions', action='store_true', help='Excludes the counting of assertions')
     parser.add_argument('--exclude-infer', action='store_true', help='Excludes Infer from the analysis')
-    parser.add_argument('--exclude-compilation', action='store_true', help='Excludes the compilation of the program from the analysis')
+    parser.add_argument('--exclude-compilation', action='store_true',
+                        help='Excludes the compilation of the program from the analysis')
     parser.add_argument('--exclude-lizard', action='store_true', help='Excludes Lizard from the analysis')
     parser.add_argument('--exclude-cppcheck', action='store_true', help='Excludes Cppcheck from the analysis')
     parser.add_argument('--exclude-kwstyle', action='store_true', help='Excludes KWStyle from the analysis')
@@ -223,7 +224,7 @@ def compile_program_with_infer(args, excluded_paths):
     elif args.make:
         infer_compilation_status = compile_phase.compile_program_infer_make(program_dir_abs, excluded_paths)
     else:
-        #TODO: allow clang compilation as well!!!
+        # TODO: allow clang compilation as well!!!
         print("Only make/cmake supported to analyze the program with Infer right now!")
         infer_compilation_status = False
 
@@ -248,7 +249,7 @@ def execute_program(program_dir_abs, executefile, cmake, lines_of_code):
 
 
 def compile_and_execute_program_with_sanitizers(args, lines_of_code, program_dir_abs, cpp, excluded_paths,
-                                                no_exec=False, exclude_infer=False):
+                                                no_exec=False):
     """
     Automatically compile and execute the program
     :param args: The "args" Namespace as returned from parse_arguments().
@@ -257,7 +258,6 @@ def compile_and_execute_program_with_sanitizers(args, lines_of_code, program_dir
     :param cpp: Whether C++ is used or not. True if C++, False if C.
     :param excluded_paths: A tupel containing the paths to be excluded.
     :param no_exec: If True, skip execution of the program.
-    :param exclude_infer: If True, skip infer compilation.
     :return The compiler + sanitizer score.
     """
     compiler_flags = strings.COMPILER_WARNING_FLAGS if no_exec else strings.COMPILE_FLAGS
@@ -278,90 +278,11 @@ def compile_and_execute_program_with_sanitizers(args, lines_of_code, program_dir
     score = scoring.calculate_compiler_and_sanitizer_score(weighted_warning_rate)
     scoring.print_score(score, 'Compiler + Sanitizer')
 
-    if not exclude_infer:
-        infer_compilation_status = compile_program_with_infer(args, excluded_paths)
-    else:
-        infer_compilation_status = False
-
-    return score, infer_compilation_status
-
-
-def static_analysis(program_dir_abs, source_files, lines_of_code, cpp, custom_asserts=None, cmake=False,
-                    excluded_tools=None):  # TODO: maybe make the tools actual objects someday and remove this abomination of tool management
-    """
-    Run all the static analysis.
-    :param program_dir_abs: The absolute path to the root directory of the target program.
-    :param source_files: The lst of source files to analyze.
-    :param lines_of_code: The lines of pure code count for the source_files.
-    :param cpp: Whether C++ is used or not. True if C++, False if C.
-    :param custom_asserts: A lst of custom assertions to be checked by the assertion check.
-    :param cmake: Tells whether cmake is used or not (needed for infer)
-    :param excluded_tools: Excludes the tools in the lst from the overall score
-    :return: All the static analysis scores: assertion_score, cppcheck_score, clang_tidy_score,
-    cyclomatic_complexity_score, warning_score, unique_score, kwstyle_score.
-    """
-
-    print(strings.RUN_STATIC_ANALYSIS_HEADER)
-    print()
-
-    used_tools = ["assertions", "infer", "clang_tidy", "lizard", "kwstyle", "cppcheck"]
-    if not excluded_tools:
-        excluded_tools = []
-
-    for tool in excluded_tools:
-        if tool in used_tools:
-            used_tools.remove(tool)
-
-    scores = []
-    output = []
-    tools = {}
-    outs = {}
-    instances = {}
-    thread_pool = ThreadPool(processes=6)
-
-    if "assertions" in used_tools:
-        tools["assertions"] = (static_analysis_phase.check_assert_usage, (source_files, lines_of_code, custom_asserts))
-    if "cppcheck" in used_tools:
-        tools["cppcheck"] = (static_analysis_phase.run_cppcheck, (source_files, lines_of_code, cpp))
-    if "clang_tidy" in used_tools:
-        tools["clang_tidy"] = (static_analysis_phase.run_clang_tidy, (program_dir_abs, source_files, lines_of_code, cpp))
-    if "lizard" in used_tools:
-        tools["lizard"] = (static_analysis_phase.run_lizard, (source_files, ))
-    if "kwstyle" in used_tools:
-        tools["kwstyle"] = (static_analysis_phase.run_kwstyle, (source_files, lines_of_code))
-    if "infer" in used_tools:
-        tools["infer"] = (static_analysis_phase.run_infer_analysis, (program_dir_abs, lines_of_code, cmake))
-
-    for key in tools:
-        instances[key] = thread_pool.apply_async(tools[key][0], tools[key][1])
-
-    for key in instances:
-        outs[key] = instances[key].get()
-
-    for key in outs:
-        if key != "lizard":
-            output.append((key, outs[key][0], outs[key][1], outs[key][2]))
-        else:
-            output.append(("lizard_cyclomatic_complexity", outs[key][0], "", outs[key][4]))
-            output.append(("lizard_warnings", outs[key][1], "", outs[key][4]))
-            output.append(("lizard_unique_code", outs[key][2], outs[key][3], outs[key][4]))
-
-    for (name, score, log, stat) in output:
-        if log:
-            print(log)
-        if stat:
-            scores.append(score)
-        else:
-            print("{} failed".format(name))  # TODO: add string constant
-
-    for tool in excluded_tools:
-        print("{} was excluded from the score".format(tool))
-
-    return scores
+    return score
 
 
 def add_badge_to_file(path, overall_score):
-    #TODO: Clean and test this function
+    # TODO: Clean and test this function
     """
     Experimental function to add a softwipe score badge to a github readme.
     :param path: path of the readme file
@@ -371,6 +292,8 @@ def add_badge_to_file(path, overall_score):
 
     lines = ""
     output = ""
+    badge_set = False
+
     with open(path, 'r') as file:
         for line in file:
             lines += line
@@ -423,8 +346,9 @@ def main():
     if not args.allow_running_as_root:
         warn_if_user_is_root()
 
-    cpp = args.cpp
-    cmake = args.cmake
+    use_cpp = args.cpp
+    use_cmake = args.cmake
+    use_make = args.make
     program_dir_abs = os.path.abspath(args.programdir)
     exclude = args.exclude[0] if args.exclude else None
     excluded_paths = util.get_excluded_paths(program_dir_abs, exclude)
@@ -433,38 +357,48 @@ def main():
     source_files = util.find_all_source_files(program_dir_abs, excluded_paths)
     lines_of_code = util.count_lines_of_code(source_files)
 
-    excluded_tools = []
+    analysis_tools = []
     all_scores = []
 
+    data = {"program_dir_abs": program_dir_abs,
+            "args": args,
+            "excluded_paths": excluded_paths,
+            "use_cpp": use_cpp,
+            "use_cmake": use_cmake,
+            "use_make": use_make,
+            "custom_asserts": custom_asserts,
+            "source_files": source_files,
+            "lines_of_code": lines_of_code
+            }
+
     if not args.exclude_compilation:
-        compiler_and_sanitizer_score, infer_compilation_status = compile_and_execute_program_with_sanitizers(
-            args, lines_of_code, program_dir_abs, cpp, excluded_paths, args.no_execution, exclude_infer=args.exclude_infer)
-        if not infer_compilation_status:
-            excluded_tools.append('infer')
+        compiler_and_sanitizer_score = compile_and_execute_program_with_sanitizers(
+            args, lines_of_code, program_dir_abs, use_cpp, excluded_paths, args.no_execution)
         all_scores.append(compiler_and_sanitizer_score)
-    else:
-        excluded_tools.append('compiler_and_sanitizer')
-        excluded_tools.append('infer')
+        if not args.exclude_infer:
+            analysis_tools.append(InferTool)
 
-    if args.exclude_assertions:
-        excluded_tools.append('assertions')
-    if args.exclude_clang_tidy:
-        excluded_tools.append('clang_tidy')
-    if args.exclude_cppcheck:
-        excluded_tools.append('cppcheck')
-    if args.exclude_lizard:
-        excluded_tools.append('lizard')
-    if args.exclude_kwstyle:
-        excluded_tools.append('kwstyle')
-    if args.exclude_infer:
-        excluded_tools.append('infer')
+    if not args.exclude_assertions:
+        analysis_tools.append(AssertionTool)
+    if not args.exclude_clang_tidy:
+        analysis_tools.append(ClangTidyTool)
+    if not args.exclude_cppcheck:
+        analysis_tools.append(CppcheckTool)
+    if not args.exclude_lizard:
+        analysis_tools.append(LizardTool)
+    if not args.exclude_kwstyle:
+        analysis_tools.append(KWStyleTool)
 
-    all_scores.extend(static_analysis(program_dir_abs, source_files, lines_of_code, cpp, custom_asserts,
-                                      cmake=cmake, excluded_tools=excluded_tools))
+    for tool in analysis_tools:
+        scores, log, success = tool.run(data)
+        if success:
+            print(log)
+            all_scores.extend(scores)
+        else:
+            print("excluded {} from analysis\n".format(tool.name()))
 
     overall_score = scoring.average_score(all_scores)
 
-    print()
     scoring.print_score(overall_score, 'Overall program absolute')
 
     if args.add_badge:

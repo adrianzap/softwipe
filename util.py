@@ -166,3 +166,42 @@ def clang_tidy_output_line_is_header(line):
 
 def clang_tidy_output_line_is_trailer(line):
     return line.startswith('Suppressed')
+
+
+def split_in_chunks(lst, size):
+    """
+    Splits a list into chunks of 'size'.
+    :param lst: list to split into chunks
+    :param size: chunk size
+    :return: chunk generator
+    """
+    for i in range(0, len(lst), size):
+        yield lst[i:i + size]
+
+
+def find_file(path, file_name, directory=""):
+    """
+    Finds file 'file_name' in 'path' and its subdirectories and returns full path to that file.
+    If 'directory' is specified, the function tries to find 'directory/file_name'
+    and is only successful if 'file_name' is found in this exact constellation.
+    :param path: path to start looking for the file in
+    :param file_name: file to find
+    :param directory: immediate upper directory of the file to find
+    :return: full path to 'file_name' if successful
+    """
+    dirs = []
+    for (_, folder, file) in os.walk(path):
+        dirs.extend(folder)
+        if directory == "":
+            if file_name in file:
+                return path + "/" + file_name
+        else:
+            if file_name in file and path.split("/")[-1] == directory:
+                return path + "/" + file_name
+        break
+    for folder in dirs:
+        file_path = find_file(path + "/" + folder, file_name, directory=directory)
+        if file_path != "":
+            return file_path
+
+    return ""
