@@ -1,17 +1,18 @@
 """
 Test setup
 """
-
 from setuptools import setup, find_packages
 
 setup(
     name='SoftWipe',
     version='0.1',
-    packages=find_packages(),
+    packages=['softwipe',],
+    package_data={'softwipe': ['KWStyle.xml']},
+    include_package_data=True,
     long_description=open('README.md').read(),
     entry_points={
         'console_scripts': [
-            'softwipe = softwipe:main',
+            'softwipe = softwipe.softwipe:main',
         ],
     }
 )

@@ -9,10 +9,10 @@ import shutil
 import subprocess
 import sys
 
-import compile_phase
-import strings
-import tools_info
-import util
+import softwipe.compile_phase as compile_phase
+import softwipe.strings as strings
+import softwipe.tools_info as tools_info
+import softwipe.util as util
 
 
 def detect_user_os():
@@ -155,7 +155,8 @@ def check_if_all_required_tools_are_installed():
 
         user_os = detect_user_os()
         package_install_command = get_package_install_command_for_os(user_os)
-        if package_install_command is None:
-            sys.exit(1)
+        """if package_install_command is None:
+            print("Cannot install tool automatically")
+            sys.exit(1)"""
 
         auto_install_prompt(missing_tools, package_install_command)

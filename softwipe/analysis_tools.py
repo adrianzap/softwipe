@@ -8,13 +8,13 @@ import os
 import re
 import subprocess
 
-import scoring
-import util
-import strings
-import compile_phase
-import classifications
-import output_classes
-from tools_info import TOOLS
+import softwipe.scoring as scoring
+import softwipe.util as util
+import softwipe.strings as strings
+import softwipe.compile_phase as compile_phase
+import softwipe.classifications as classifications
+import softwipe.output_classes as output_classes
+from softwipe.tools_info import TOOLS
 
 Tool = collections.namedtuple('Tool', ['exe_name', 'install_name', 'install_via'])
 VIA = enum.Enum('VIA', 'PACKAGE_MANAGER PIP DOWNLOAD')

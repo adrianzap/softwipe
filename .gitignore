@@ -1,4 +1,10 @@
-__pycache__/
-.idea/
-.pyre/
+*__pycache__/
+*.idea/
+*.pyre/
+build/
 KWStyle/
+*.egg-info
+dist/
+softwipe/KWStyle/
+softwipe/build/
+softwipe/dist/

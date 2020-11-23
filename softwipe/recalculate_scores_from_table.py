@@ -6,8 +6,8 @@ Calculates the code quality benchmark using scoring.py.
 import sys
 from collections import defaultdict
 
-import compare_results
-import scoring
+import softwipe.compare_results
+import softwipe.scoring
 
 NA_SEQUENCE = "N/A"
 

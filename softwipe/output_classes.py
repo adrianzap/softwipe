@@ -3,9 +3,9 @@ This module contains output classes, that is classes that are used to describe t
 a way that is easy to handle.
 """
 
-import classifications
-import scoring
-import strings
+import softwipe.classifications as classifications
+import softwipe.scoring as scoring
+import softwipe.strings as strings
 
 
 class CppcheckOutput:
