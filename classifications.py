@@ -156,3 +156,11 @@ INFER_WARNINGS = {
     'RESOURCE_LEAK': 3,
     'UNINITIALIZED_VALUE': 3
 }
+
+VALGRIND_WARNINGS = {
+    'uninitialized': 3,
+    'invalid': 3,
+    'mismatched': 3,
+    'overlap': 3,
+    'fishy': 3
+}

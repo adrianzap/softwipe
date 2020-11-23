@@ -15,7 +15,7 @@ import execution_phase
 import scoring
 import strings
 import util
-from analysis_tools import CppcheckTool, ClangTool, ClangTidyTool, KWStyleTool, LizardTool, AssertionTool, InferTool
+from analysis_tools import CppcheckTool, ClangTool, ClangTidyTool, KWStyleTool, LizardTool, AssertionTool, InferTool, ValgrindTool
 
 
 def parse_arguments():
@@ -357,7 +357,7 @@ def main():
     source_files = util.find_all_source_files(program_dir_abs, excluded_paths)
     lines_of_code = util.count_lines_of_code(source_files)
 
-    analysis_tools = []
+    analysis_tools = []  # TODO: maybe add valgrind at some point if we get its error counts normalized somehow
     all_scores = []
 
     data = {"program_dir_abs": program_dir_abs,
@@ -368,7 +368,8 @@ def main():
             "use_make": use_make,
             "custom_asserts": custom_asserts,
             "source_files": source_files,
-            "lines_of_code": lines_of_code
+            "lines_of_code": lines_of_code,
+            "executefile": args.executefile
             }
 
     if not args.exclude_compilation:

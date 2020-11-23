@@ -205,3 +205,17 @@ def find_file(path, file_name, directory=""):
             return file_path
 
     return ""
+
+
+def create_build_directory(program_dir_abs, build_dir_name=strings.SOFTWIPE_BUILD_DIR_NAME):
+    build_path = os.path.join(program_dir_abs, build_dir_name)
+    os.makedirs(build_path, exist_ok=True)
+    return build_path
+
+
+def clear_directory(directory):
+    for path in (os.path.join(directory, file) for file in os.listdir(directory)):
+        if os.path.isdir(path):
+            shutil.rmtree(path)
+        else:
+            os.remove(path)

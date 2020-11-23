@@ -235,6 +235,9 @@ KWSTYLE_WORST = 0.09507575757575758
 INFER_BEST = 0.0
 INFER_WORST = 0.01303453007088955
 
+VALGRIND_BEST = 0.0
+VALGRIND_WORST = 0.01303453007088955
+
 COMPILER_BEST_FIXED = 0.0
 COMPILER_WORST_FIXED = 0.5664638548004538
 
@@ -262,6 +265,9 @@ KWSTYLE_WORST_FIXED = 0.07676685621445979
 
 INFER_BEST_FIXED = 0.0
 INFER_WORST_FIXED = 0.01303453007088955
+
+VALGRIND_BEST_FIXED = 0.0
+VALGRIND_WORST_FIXED = 0.01303453007088955
 
 
 # FUNCTIONS THAT CALCULATE THE SCORES
@@ -302,6 +308,10 @@ def calculate_infer_score(rate):
     return _calculate_score_generic(rate, INFER_BEST, INFER_WORST)
 
 
+def calculate_valgrind_score(rate):
+    return _calculate_score_generic(rate, INFER_BEST, INFER_WORST)
+
+
 def calculate_compiler_and_sanitizer_score_absolute(rate):
     return _calculate_score_absolute(rate, COMPILER_BEST_FIXED, COMPILER_WORST_FIXED, case=1)
 
@@ -335,4 +345,8 @@ def calculate_kwstyle_score_absolute(rate):
 
 
 def calculate_infer_score_absolute(rate):
+    return _calculate_score_absolute(rate, INFER_BEST_FIXED, INFER_WORST_FIXED, case=1)
+
+
+def calculate_valgrind_score_absolute(rate):
     return _calculate_score_absolute(rate, INFER_BEST_FIXED, INFER_WORST_FIXED, case=1)

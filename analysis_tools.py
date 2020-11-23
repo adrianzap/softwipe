@@ -49,14 +49,51 @@ class ClangTool(AnalysisTool):
         return "clang"
 
 
-class MakeTool(AnalysisTool):
+class CompileTool(AnalysisTool):
+    # TODO: put compilation into classes (?)
     @staticmethod
-    def run(data, skip_on_failure=False):
-        pass
+    def run(data, skip_on_failure=False, compiler_flags=strings.COMPILER_WARNING_FLAGS):
+        program_dir_abs = data["program_dir_abs"]
+        args = data["args"]
+        lines_of_code = data["lines_of_code"]
+        excluded_paths = data["excluded_paths"]
+        """
+            Run the automatic compilation of the target project.
+            :param args: The "args" Namespace as returned from parse_arguments().
+            :param lines_of_code: The lines of pure code count.
+            :param cpp: Whether C++ is used or not. True if C++, False if C.
+            :param compiler_flags: The flags to be used for compilation. Typically, these should be strings.COMPILE_FLAGS or,
+            if no_execution, strings.COMPILER_WARNING_FLAGS.
+            :param excluded_paths: A tupel containing the paths to be excluded.
+            :return: The compiler score.
+            """
+        command_file = args.commandfile
+
+        if args.make:
+            if command_file:
+                score = compile_phase.compile_program_make(program_dir_abs, lines_of_code, compiler_flags,
+                                                           excluded_paths,
+                                                           make_command_file=command_file[0])
+            else:
+                score = compile_phase.compile_program_make(program_dir_abs, lines_of_code, compiler_flags,
+                                                           excluded_paths)
+        elif args.clang:
+            score = compile_phase.compile_program_clang(program_dir_abs, args.clang, lines_of_code, compiler_flags,
+                                                        excluded_paths, cpp)
+        else:
+            if command_file:
+                score = compile_phase.compile_program_cmake(program_dir_abs, lines_of_code, compiler_flags,
+                                                            excluded_paths,
+                                                            make_command_file=command_file[0])
+            else:
+                score = compile_phase.compile_program_cmake(program_dir_abs, lines_of_code, compiler_flags,
+                                                            excluded_paths)
+
+        return score
 
     @staticmethod
     def name():
-        return "make"
+        return "Compiler"
 
 
 class AssertionTool(AnalysisTool):
@@ -518,8 +555,8 @@ class InferTool(AnalysisTool):
         :return: True if the compilation was successful
                  False if the compilation was not successful
         """
-        build_path = create_build_directory(program_dir_abs, build_dir_name="infer_build")
-        clear_directory(build_path)
+        build_path = util.create_build_directory(program_dir_abs, build_dir_name="infer_build")
+        util.clear_directory(build_path)
 
         infer_call_compile = ["infer", "compile", "--", "cmake", ".."]
         infer_call_capture = ["infer", "capture"]
@@ -632,3 +669,89 @@ class InferTool(AnalysisTool):
     @staticmethod
     def name():
         return "Infer"
+
+
+class ValgrindTool(AnalysisTool):
+    @staticmethod
+    def get_weighted_warning_count(output):
+        wcount = 0
+        for line in output:
+            for w in classifications.VALGRIND_WARNINGS:
+                if w in line:
+                    wcount += classifications.VALGRIND_WARNINGS[w]
+        return wcount
+
+    @staticmethod
+    def get_warning_log(output):
+        record = False
+        log = ""
+        for line in output.split("\n"):
+            if "HEAP SUMMARY" in line:
+                record = True
+            if "Rerun" in line:
+                record = False
+            if record:
+                log += re.sub('==[^==]+==', '', line) + "\n"
+        return log
+
+    @staticmethod
+    def run(data, skip_on_failure=False):
+        program_dir_abs = data["program_dir_abs"] + "/softwipe_build/" if data["use_cmake"] else data["program_dir_abs"]
+        executefile = data["executefile"][0]
+        lines_of_code = data["lines_of_code"]
+        CompileTool.run(data)
+
+        print(executefile)
+        print("-------- RERUNNING COMPILATION FOR VALGRIND --------")
+        print(strings.RUN_EXECUTION_WITH_SANITIZERS_HEADER)
+
+        command = ["valgrind", "--error-exitcode=123"]
+        output = ""
+
+        print(program_dir_abs)
+
+        if executefile and os.path.isfile(executefile):
+            file = open(executefile, 'r')
+            lines = file.readlines()
+            file.close()
+
+            command_line = os.path.join(program_dir_abs, lines[0])
+            command.extend(command_line.split())
+
+        # Execute and get stderr, which contains the output of the sanitizers
+        print(command)
+
+        try:
+            output = subprocess.check_output(command, cwd=program_dir_abs, universal_newlines=True,
+                                    stderr=subprocess.STDOUT)
+        except FileNotFoundError as e1:
+            print(e1)
+            print(strings.EXECUTION_FILE_NOT_FOUND.format(command[1]))
+            return [], "", False
+        except subprocess.CalledProcessError as error:
+            if error.returncode == 123:
+                pass
+            else:
+                print(error.output)
+                raise
+
+        weighted_warnings = ValgrindTool.get_weighted_warning_count(output)
+        warning_rate = weighted_warnings / lines_of_code
+        warning_log = ValgrindTool.get_warning_log(output)
+        score = scoring.calculate_valgrind_score_absolute(warning_rate)
+
+        util.write_into_file_string(strings.RESULTS_FILENAME_VALGRIND, output)
+
+        log = strings.RUN_VALGRIND_ANALYSIS_HEADER + "\n"
+        log += warning_log + "\n"
+        # TODO: make and print filename to user
+        log += "Weighted Valgrind warning rate: {} ({}/{})".format(weighted_warnings / lines_of_code, weighted_warnings,
+                                                                   lines_of_code) + "\n"
+        log += scoring.get_score_string(score, 'Valgrind') + "\n"
+        log += strings.DETAILLED_RESULTS_WRITTEN_INTO.format(strings.RESULTS_FILENAME_VALGRIND)
+
+        return [score], log, True
+
+    @staticmethod
+    def name():
+        return "Valgrind"
