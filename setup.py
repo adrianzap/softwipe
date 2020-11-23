@@ -8,7 +8,7 @@ setup(
     name='SoftWipe',
     version='0.1',
     packages=find_packages(),
-    long_description=open('README.txt').read(),
+    long_description=open('README.md').read(),
     entry_points={
         'console_scripts': [
             'softwipe = softwipe:main',
