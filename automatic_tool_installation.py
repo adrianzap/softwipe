@@ -155,7 +155,7 @@ def check_if_all_required_tools_are_installed():
 
         user_os = detect_user_os()
         package_install_command = get_package_install_command_for_os(user_os)
-        if package_install_command is None:
-            sys.exit(1)
+        # if package_install_command is None:
+        #    sys.exit(1)
 
         auto_install_prompt(missing_tools, package_install_command)
