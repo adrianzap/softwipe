@@ -9,7 +9,7 @@ all scores.
 import argparse
 import os
 
-import softwipe.scoring
+import scoring
 
 ###########################################################
 # If you add a new program to the benchmark, add the name #

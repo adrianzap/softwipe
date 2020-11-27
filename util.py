@@ -3,7 +3,7 @@ This module contains utility functions.
 """
 
 import os
-import softwipe.strings
+import strings
 
 
 def write_into_file_string(file_name, content, append=False):
@@ -50,7 +50,7 @@ def get_excluded_paths(program_dir_abs, exclude):
     """
     excluded_paths = (os.path.join(program_dir_abs, 'build'), os.path.join(program_dir_abs, 'cmake-build-debug'),
                       os.path.join(program_dir_abs, 'compile'), os.path.join(program_dir_abs,
-                                                                             softwipe.strings.SOFTWIPE_BUILD_DIR_NAME))
+                                                                             strings.SOFTWIPE_BUILD_DIR_NAME))
     if exclude:
         for path in exclude.split(','):
             excluded_paths += (os.path.abspath(path),)
@@ -146,7 +146,7 @@ def count_lines_of_code(source_files):
     for file in source_files:
         lines_of_code += count_lines_of_code_in_one_file(file)
 
-    print(softwipe.strings.LINES_OF_PURE_CODE_ARE.format(lines_of_code))
+    print(strings.LINES_OF_PURE_CODE_ARE.format(lines_of_code))
     print()
 
     return lines_of_code
@@ -207,7 +207,7 @@ def find_file(path, file_name, directory=""):
     return ""
 
 
-def create_build_directory(program_dir_abs, build_dir_name=softwipe.strings.SOFTWIPE_BUILD_DIR_NAME):
+def create_build_directory(program_dir_abs, build_dir_name=strings.SOFTWIPE_BUILD_DIR_NAME):
     build_path = os.path.join(program_dir_abs, build_dir_name)
     os.makedirs(build_path, exist_ok=True)
     return build_path

@@ -6,8 +6,8 @@ import os
 import re
 import subprocess
 
-import softwipe.strings as strings
-import softwipe.util as util
+import strings
+import util
 
 
 class ExecutionFailedException(Exception):

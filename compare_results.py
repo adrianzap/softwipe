@@ -8,8 +8,9 @@ code quality benchmark, and sorts them.
 import argparse
 import operator
 
-import softwipe.calculate_score_table
-from softwipe.calculate_score_table import FOLDERS, SOFTWIPE_OUTPUT_FILE_NAME
+import calculate_score_table
+from calculate_score_table import FOLDERS
+from calculate_score_table import SOFTWIPE_OUTPUT_FILE_NAME
 
 
 def parse_arguments():

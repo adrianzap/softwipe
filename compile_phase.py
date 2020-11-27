@@ -8,10 +8,10 @@ import shutil
 import subprocess
 import sys
 
-import softwipe.classifications as classifications
-import softwipe.strings as strings
-import softwipe.util as util
-from softwipe.tools_info import TOOLS
+import classifications
+import strings
+import util
+from tools_info import TOOLS
 
 
 def create_build_directory(program_dir_abs, build_dir_name=strings.SOFTWIPE_BUILD_DIR_NAME):
