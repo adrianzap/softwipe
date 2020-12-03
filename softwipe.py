@@ -407,6 +407,7 @@ def main():
             args, lines_of_code, program_dir_abs, use_cpp, excluded_paths, args.no_execution)
         all_scores.append(compiler_and_sanitizer_score)
         if args.use_infer:      # TODO: maybe completely remove Infer since it requires a lot of disk space
+            add_infer_to_path_variable()
             analysis_tools.append(InferTool)
 
     if not args.exclude_assertions:
