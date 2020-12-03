@@ -58,15 +58,15 @@ class CompileTool(AnalysisTool):
         lines_of_code = data["lines_of_code"]
         excluded_paths = data["excluded_paths"]
         """
-            Run the automatic compilation of the target project.
-            :param args: The "args" Namespace as returned from parse_arguments().
-            :param lines_of_code: The lines of pure code count.
-            :param cpp: Whether C++ is used or not. True if C++, False if C.
-            :param compiler_flags: The flags to be used for compilation. Typically, these should be strings.COMPILE_FLAGS or,
-            if no_execution, strings.COMPILER_WARNING_FLAGS.
-            :param excluded_paths: A tupel containing the paths to be excluded.
-            :return: The compiler score.
-            """
+        Run the automatic compilation of the target project.
+        :param args: The "args" Namespace as returned from parse_arguments().
+        :param lines_of_code: The lines of pure code count.
+        :param cpp: Whether C++ is used or not. True if C++, False if C.
+        :param compiler_flags: The flags to be used for compilation. Typically, these should be strings.COMPILE_FLAGS
+            or, if no_execution, strings.COMPILER_WARNING_FLAGS.
+        :param excluded_paths: A tuple containing the paths to be excluded.
+        :return: The compiler score.
+        """
         command_file = args.commandfile
 
         if args.make:
@@ -723,7 +723,7 @@ class ValgrindTool(AnalysisTool):
 
         try:
             output = subprocess.check_output(command, cwd=program_dir_abs, universal_newlines=True,
-                                    stderr=subprocess.STDOUT)
+                                             stderr=subprocess.STDOUT)
         except FileNotFoundError as e1:
             print(e1)
             print(strings.EXECUTION_FILE_NOT_FOUND.format(command[1]))

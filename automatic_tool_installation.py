@@ -70,16 +70,29 @@ def handle_kwstyle_download():
     print()
 
 
+def handle_lizard_download():
+    softwipe_dir = util.get_softwipe_directory()
+    version = '1.17.7'
+    url = "https://github.com/terryyin/lizard/archive/{v}.tar.gz".format(v=version)
+    print("Downloading lizard...")
+    process = subprocess.Popen(('curl', '-sSL', url), cwd=softwipe_dir, stdout=subprocess.PIPE)
+    output = subprocess.Popen(('sudo', 'tar', "-C", softwipe_dir, "-xz"), stdin=process.stdout)
+    output.wait()
+    print("Done!\n")
+
+
 def handle_infer_download():
+    softwipe_dir = util.get_softwipe_directory()
     # TODO: properly select newest version
-    version = '0.17.0'
+    version = '1.0.0'
     url = "https://github.com/facebook/infer/releases/download/v{v}/infer-linux64-v{v}.tar.xz".format(v=version)
     process = subprocess.Popen(('curl', '-sSL', url), stdout=subprocess.PIPE)
-    output = subprocess.Popen(('sudo', 'tar', "-C", "/opt", "-xJ"), stdin=process.stdout)
+    # output = subprocess.Popen(('sudo', 'tar', "-C", "/opt", "-xJ"), stdin=process.stdout)
+    output = subprocess.Popen(('sudo', 'tar', "-C", softwipe_dir, "-xJ"), stdin=process.stdout)
     output.wait()
-    process = subprocess.Popen(
-        ("sudo", "ln", "-s", "/opt/infer-linux64-v{}/bin/infer".format(version), "/usr/local/bin/infer"))
-    process.wait()
+    # process = subprocess.Popen(
+    #     ("sudo", "ln", "-s", "/opt/infer-linux64-v{}/bin/infer".format(version), "/usr/local/bin/infer"))
+    # process.wait()
 
 
 def handle_tool_download(tool_name):
@@ -143,12 +156,16 @@ def check_if_all_required_tools_are_installed():
     Check if clang etc. (all the tools used in the pipeline) are installed on the system and can be used. If
     something is missing, print a warning and exit.
     """
-    tools = [tool for tool in inspect.getmembers(tools_info.TOOLS) if not tool[0].startswith('_')]
+    tools = [tool for tool in inspect.getmembers(tools_info.TOOLS) if not tool[0].startswith('_')
+             and 'infer' not in tool[1].exe_name
+             and 'lizard' not in tool[1].exe_name
+             and 'KWStyle' not in tool[1].exe_name]
     missing_tools = []
     for tool in tools:
         which_result = shutil.which(tool[1].exe_name)
         if which_result is None:  # if the tool is not installed / not accessible
             missing_tools.append(tool[1])
+            print("missing: {}".format(tool[1].exe_name))
 
     if missing_tools:
         print_missing_tools(missing_tools)

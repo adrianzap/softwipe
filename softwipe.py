@@ -113,7 +113,9 @@ def parse_arguments():
     parser.add_argument('--add-badge', nargs=1)
 
     parser.add_argument('--exclude-assertions', action='store_true', help='Excludes the counting of assertions')
-    parser.add_argument('--exclude-infer', action='store_true', help='Excludes Infer from the analysis')
+    # parser.add_argument('--exclude-infer', action='store_true', help='Excludes Infer from the analysis')
+    parser.add_argument('--use-infer', action='store_true', help='Uses Infer static analysis. This requires a'
+                                                                 'lengthy download for the first usage.')
     parser.add_argument('--exclude-compilation', action='store_true',
                         help='Excludes the compilation of the program from the analysis')
     parser.add_argument('--exclude-lizard', action='store_true', help='Excludes Lizard from the analysis')
@@ -146,6 +148,29 @@ def add_kwstyle_to_path_variable():
     kwstyle_dir = os.path.join(util.get_softwipe_directory(), 'KWStyle')
     if os.path.isdir(kwstyle_dir):
         add_to_path_variable(os.path.join(kwstyle_dir, strings.SOFTWIPE_BUILD_DIR_NAME))
+    else:
+        automatic_tool_installation.handle_kwstyle_download()
+        add_kwstyle_to_path_variable()
+
+
+def add_lizard_to_path_variable():
+    # TODO: fix versioning
+    lizard_dir = os.path.join(util.get_softwipe_directory(), 'lizard-1.17.7')
+    if os.path.isdir(lizard_dir):
+        add_to_path_variable(lizard_dir)
+    else:
+        automatic_tool_installation.handle_lizard_download()
+        add_lizard_to_path_variable()
+
+
+def add_infer_to_path_variable():
+    # TODO: fix versioning
+    infer_dir = os.path.join(util.get_softwipe_directory(), 'infer-linux64-v1.0.0')
+    if os.path.isdir(infer_dir):
+        add_to_path_variable(infer_dir)
+    else:
+        automatic_tool_installation.handle_infer_download()
+        add_infer_to_path_variable()
 
 
 def add_user_paths_to_path_variable(args):
@@ -325,9 +350,11 @@ def main():
     """
     Main function: Runs compilation, static analysis and prints results.
     """
-    add_kwstyle_to_path_variable()
+    add_kwstyle_to_path_variable()  # TODO: hopefully get a conda package for this sometime
+    add_lizard_to_path_variable()
 
     # Allow the user to auto-install the dependencies by just running "./softwipe.py" without any arguments
+    # Should not be needed if conda is used. TODO: maybe remove this
     if len(sys.argv) == 1:
         automatic_tool_installation.check_if_all_required_tools_are_installed()
 
@@ -340,6 +367,9 @@ def main():
     # Normal check for the dependencies
     if len(sys.argv) != 1:
         automatic_tool_installation.check_if_all_required_tools_are_installed()
+
+    if args.use_infer:
+        add_infer_to_path_variable()
 
     add_user_paths_to_path_variable(args)
 
@@ -376,7 +406,7 @@ def main():
         compiler_and_sanitizer_score = compile_and_execute_program_with_sanitizers(
             args, lines_of_code, program_dir_abs, use_cpp, excluded_paths, args.no_execution)
         all_scores.append(compiler_and_sanitizer_score)
-        if not args.exclude_infer:
+        if args.use_infer:      # TODO: maybe completely remove Infer since it requires a lot of disk space
             analysis_tools.append(InferTool)
 
     if not args.exclude_assertions:
