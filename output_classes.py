@@ -26,7 +26,7 @@ class CppcheckOutput:
         self.total_weighted_count = 0
 
         for line in warning_lines:
-            split_line = line.split()
+            """split_line = line.split()
             warning_type = [substring for substring in split_line if substring.startswith('(') and substring.endswith(
                 ')')][0]
 
@@ -42,10 +42,32 @@ class CppcheckOutput:
             elif warning_type == '(information)':
                 self.information_count += 1
             elif warning_type == '(performance)':
+                self.performance_count += 1"""
+            warning_type_without_parentheses = ""
+            if "error:" in line:
+                self.error_count += 1
+                warning_type_without_parentheses = "error"
+            elif "warning:" in line:
+                self.warning_count += 1
+                warning_type_without_parentheses = "warning"
+            elif "style:" in line:
+                self.style_count += 1
+                warning_type_without_parentheses = "style"
+            elif "portability:" in line:
+                self.portability_count += 1
+                warning_type_without_parentheses = "portability"
+            elif "information:" in line:
+                self.information_count += 1
+                warning_type_without_parentheses = "information"
+            elif "note:" in line:
+                self.information_count += 1
+                warning_type_without_parentheses = "information"
+            elif "performance:" in line:
                 self.performance_count += 1
+                warning_type_without_parentheses = "performance"
 
-            # Add to the total weighted count
-            warning_type_without_parentheses = warning_type[1:-1]
+                # Add to the total weighted count
+            # warning_type_without_parentheses = warning_type[1:-1]
             warning_level = 1
             if warning_type_without_parentheses in classifications.CPPCHECK_WARNINGS:
                 warning_level = classifications.CPPCHECK_WARNINGS[warning_type_without_parentheses]

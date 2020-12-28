@@ -150,7 +150,7 @@ def add_kwstyle_to_path_variable():
         add_to_path_variable(os.path.join(kwstyle_dir, strings.SOFTWIPE_BUILD_DIR_NAME))
     else:
         automatic_tool_installation.handle_kwstyle_download()
-        add_kwstyle_to_path_variable()
+        #add_kwstyle_to_path_variable()
 
 
 def add_lizard_to_path_variable():
@@ -160,17 +160,19 @@ def add_lizard_to_path_variable():
         add_to_path_variable(lizard_dir)
     else:
         automatic_tool_installation.handle_lizard_download()
-        add_lizard_to_path_variable()
+        #add_lizard_to_path_variable()
 
 
 def add_infer_to_path_variable():
     # TODO: fix versioning
-    infer_dir = os.path.join(util.get_softwipe_directory(), 'infer-linux64-v1.0.0')
+    infer_dir = os.path.join(util.get_softwipe_directory(), 'infer-linux64-v0.17.0')
+    infer_dir = os.path.join(infer_dir, "lib/infer/infer/bin")
+    automatic_tool_installation.install_apt_package_if_needed("libtinfo5")
     if os.path.isdir(infer_dir):
         add_to_path_variable(infer_dir)
     else:
         automatic_tool_installation.handle_infer_download()
-        add_infer_to_path_variable()
+        #add_infer_to_path_variable()
 
 
 def add_user_paths_to_path_variable(args):
@@ -368,8 +370,8 @@ def main():
     if len(sys.argv) != 1:
         automatic_tool_installation.check_if_all_required_tools_are_installed()
 
-    if args.use_infer:
-        add_infer_to_path_variable()
+    # if args.use_infer:
+    #    add_infer_to_path_variable()
 
     add_user_paths_to_path_variable(args)
 

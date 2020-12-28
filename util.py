@@ -4,6 +4,7 @@ This module contains utility functions.
 
 import os
 import strings
+import shutil
 
 
 def write_into_file_string(file_name, content, append=False):

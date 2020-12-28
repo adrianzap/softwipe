@@ -55,6 +55,33 @@ def print_and_run_install_command(install_command):
     print()
 
 
+def handle_libtinfo_download():
+    print('Infer requires the libtinfo5 package to run, which I could not find. Should I try to install it now? (Y/n)')
+    while True:
+        user_in = input('>>> ')
+        if user_in in ('Y', 'Yes'):
+            install_command = ["sudo", "apt", "install", "libtinfo5"]
+            subprocess.run(install_command)
+            print('Done!')
+            # print()
+            # sys.exit(0)
+            return
+        elif user_in in ('n', 'no'):
+            return
+            # sys.exit(1)
+        else:
+            print('Please answer with "Y" (Yes) or "n" (no)!')
+
+
+def install_apt_package_if_needed(package_name):
+    command = ["dpkg", "-s", package_name]
+    try:
+        subprocess.check_output(command, stderr=subprocess.STDOUT)
+    except subprocess.CalledProcessError as error:
+        if error.returncode == 1:
+            handle_libtinfo_download()
+
+
 def handle_kwstyle_download():
     git_link = 'https://github.com/Kitware/KWStyle.git'
     git_clone_command = ['git', 'clone', git_link]
@@ -84,15 +111,11 @@ def handle_lizard_download():
 def handle_infer_download():
     softwipe_dir = util.get_softwipe_directory()
     # TODO: properly select newest version
-    version = '1.0.0'
+    version = '0.17.0'
     url = "https://github.com/facebook/infer/releases/download/v{v}/infer-linux64-v{v}.tar.xz".format(v=version)
     process = subprocess.Popen(('curl', '-sSL', url), stdout=subprocess.PIPE)
-    # output = subprocess.Popen(('sudo', 'tar', "-C", "/opt", "-xJ"), stdin=process.stdout)
     output = subprocess.Popen(('sudo', 'tar', "-C", softwipe_dir, "-xJ"), stdin=process.stdout)
     output.wait()
-    # process = subprocess.Popen(
-    #     ("sudo", "ln", "-s", "/opt/infer-linux64-v{}/bin/infer".format(version), "/usr/local/bin/infer"))
-    # process.wait()
 
 
 def handle_tool_download(tool_name):
@@ -104,6 +127,8 @@ def handle_tool_download(tool_name):
         handle_kwstyle_download()
     elif tool_name == 'infer':
         handle_infer_download()
+    elif tool_name == 'lizard.py':
+        handle_lizard_download()
 
 
 def handle_clang_tidy_installation(package_install_command):

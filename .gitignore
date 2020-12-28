@@ -5,3 +5,5 @@ KWStyle/
 *.egg-info/
 build/
 dist/
+infer*
+lizard*

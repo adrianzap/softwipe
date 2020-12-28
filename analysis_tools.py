@@ -220,7 +220,7 @@ class ClangTidyTool(AnalysisTool):
         return beautified_lines
 
     @staticmethod
-    def run(data, skip_on_failure=False):
+    def run(data, skip_on_failure=False, num_tries=5):
         program_dir_abs = data["program_dir_abs"]
         source_files = data["source_files"]
         lines_of_code = data["lines_of_code"]
@@ -253,7 +253,7 @@ class ClangTidyTool(AnalysisTool):
                 return [0], "", False
 
             if error.returncode == -11:  # clang-tidy seems to run into segfaults sometimes, so rerun it if that happens
-                return ClangTidyTool.run(data)
+                return ClangTidyTool.run(data, num_tries=num_tries-1)
             # clang-tidy can exit with exit code 1 if there is no compilation database, which might be the case when
             # compiling with just clang. Thus, ignore the exception here.
         except Exception:  # catch the rest and exclude the analysis tool from the score
@@ -376,7 +376,9 @@ class CppcheckTool(AnalysisTool):
 
         output_lines = output.split('\n')
         for line in output_lines:
-            if line.startswith('['):  # Informative lines start with "[/path/to/file.c] (error/warning) ..."
+            # if line.startswith('['):  # Informative lines start with "[/path/to/file.c] (error/warning) ..."
+            # changed with newer version of cppcheck
+            if '[' in line:
                 warning_lines.append(line)
 
         return warning_lines
@@ -397,10 +399,10 @@ class CppcheckTool(AnalysisTool):
         try:
             argument_chunks = util.split_in_chunks(source_files, chunk_size)
             for chunk in argument_chunks:
-                temp_call = cppcheck_call
+                temp_call = cppcheck_call   # TODO: check this again
                 temp_call.extend(chunk)
                 output += subprocess.check_output(cppcheck_call, universal_newlines=True,
-                                                  stderr=subprocess.STDOUT) + "\n"
+                                                  stderr=subprocess.STDOUT, encoding='utf-8', errors='ignore') + "\n"
             warning_lines = CppcheckTool.get_warning_lines(output)
             cppcheck_output = output_classes.CppcheckOutput(warning_lines)
         except subprocess.CalledProcessError as error:
@@ -587,7 +589,7 @@ class InferTool(AnalysisTool):
                  False if the compilation was not successful
         """
         exclude_args = InferTool.prepare_exclude_arguments(program_dir_abs, excluded_paths)
-        infer_call = ["infer", "capture"]
+        infer_call = [TOOLS.INFER.exe_name, "capture"]
         infer_call.extend(exclude_args)
         infer_call.extend(["--", "make"])
         make_clean_call = ["make", "clean"]
@@ -628,7 +630,7 @@ class InferTool(AnalysisTool):
             return [0], "", False
 
         # TODO: maybe fix the error handling differently (not by the --keep-going flag)
-        infer_analyze = ["infer", "analyze", "--keep-going"]
+        infer_analyze = [TOOLS.INFER.exe_name, "analyze", "--keep-going"]
 
         try:
             subprocess.check_output(infer_analyze, cwd=program_dir_abs, universal_newlines=True,
