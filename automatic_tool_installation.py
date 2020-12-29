@@ -83,6 +83,7 @@ def install_apt_package_if_needed(package_name):
 
 
 def handle_kwstyle_download():
+    print("Downloading KWStyle...")
     git_link = 'https://github.com/Kitware/KWStyle.git'
     git_clone_command = ['git', 'clone', git_link]
     softwipe_dir = util.get_softwipe_directory()
@@ -109,6 +110,7 @@ def handle_lizard_download():
 
 
 def handle_infer_download():
+    print("Downloading Infer... (this might take a while)")
     softwipe_dir = util.get_softwipe_directory()
     # TODO: properly select newest version
     version = '0.17.0'
