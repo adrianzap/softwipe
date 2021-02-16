@@ -22,6 +22,13 @@ FOLDERS = ['BGSA-1.0/original/BGSA_CPU', 'bindash-1.0', 'copmem-0.2', 'crisflash
            'dr_sasa_n', 'emeraLD', 'ExpansionHunter', 'fastspar', 'HLA-LA/src', 'lemon', 'naf-1.1.0/ennaf',
            'naf-1.1.0/unnaf', 'ngsTools/ngsLD', 'ntEdit-1.2.3', 'PopLDdecay', 'virulign-1.0.1', 'axe-0.3.3', 'prequal',
            'IQ-TREE-2.0-rc1', 'candy-kingdom', 'glucose-3-drup', 'covid-sim-0.13.0']  # TODO: add SPRING
+FOLDERS.extend(
+            ["INDELibleV1.03/src", "ms", "mafft-7.475/core", "MrBayes-3.2.7a", "bpp-4.3.8/src", "prank-msa/src",
+             "SF2", "Seq-Gen-1.3.4/source", "dawg-1.2", "RepeatsCounter/RepeatsCounter", "raxml-ng_v1.0.1",
+             "genesis-0.24.0", "minimap2-2.17", "clustal-omega-1.2.4", "samtools-1.11", "vsearch-2.15.1",
+             "swarm-3.0.0", "phyml-3.3.20200621", "IQ-TREE-2.0.6", "cellcoal-1.0.0"]
+)
+
 
 SOFTWIPE_OUTPUT_FILE_NAME = "sw_batch.txt"
 

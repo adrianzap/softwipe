@@ -56,11 +56,11 @@ def print_and_run_install_command(install_command):
 
 
 def handle_libtinfo_download():
-    print('Infer requires the libtinfo5 package to run, which I could not find. Should I try to install it now? (Y/n)')
+    print('Infer requires libtinfo5 and opam packages to run. Should I try to install these now? (Y/n)')
     while True:
         user_in = input('>>> ')
         if user_in in ('Y', 'Yes'):
-            install_command = ["sudo", "apt", "install", "libtinfo5"]
+            install_command = ["sudo", "apt", "install", "libtinfo5", "opam"]
             subprocess.run(install_command)
             print('Done!')
             # print()
