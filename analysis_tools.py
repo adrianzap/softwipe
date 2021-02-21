@@ -57,6 +57,7 @@ class CompileTool(AnalysisTool):
         args = data["args"]
         lines_of_code = data["lines_of_code"]
         excluded_paths = data["excluded_paths"]
+        cpp = data["use_cpp"]
         """
         Run the automatic compilation of the target project.
         :param args: The "args" Namespace as returned from parse_arguments().

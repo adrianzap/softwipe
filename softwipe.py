@@ -7,7 +7,6 @@ import argparse
 import os
 import re
 import sys
-from multiprocessing.pool import ThreadPool
 
 import automatic_tool_installation
 import compile_phase
@@ -15,8 +14,8 @@ import execution_phase
 import scoring
 import strings
 import util
-from analysis_tools import CppcheckTool, ClangTool, ClangTidyTool, KWStyleTool, LizardTool, AssertionTool, InferTool, \
-                           ValgrindTool, TestCountTool
+from analysis_tools import CppcheckTool, ClangTidyTool, KWStyleTool, LizardTool, AssertionTool, InferTool, \
+                           TestCountTool
 
 
 def parse_arguments():
