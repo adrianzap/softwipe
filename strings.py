@@ -102,7 +102,7 @@ RESULT_WEIGHTED_CLANG_TIDY_WARNING_RATE = 'Weighted Clang-tidy warning rate: ' +
 RESULT_KWSTYLE_WARNING_RATE = 'KWStyle warning rate: ' + RATE_COUNT_TOTAL
 
 DETAILLED_RESULTS_WRITTEN_INTO = 'Detailled results have been written into {}'
-LINES_OF_PURE_CODE_ARE = 'Lines of pure code (excluding blank and comment lines): {}'
+LINES_OF_PURE_CODE_ARE = 'Lines of pure code (LOC, excludes blank and comment lines): {}'
 
 FAILED_TO_FIND_TOOLS = 'Failed to find the following tools:'
 MAKE_SURE_TOOLS_ARE_INSTALLED = 'Make sure all tools are installed on your system and accessible. Either put their ' \

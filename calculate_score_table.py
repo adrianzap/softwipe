@@ -19,16 +19,17 @@ import scoring
 #           'indelible', 'mafft', 'prank', 'seq-gen', 'genesis', 'athena', 'gadget', 'iqtree', 'clustal', 'phyml',
 #           'minimap', 'samtools', 'vsearch', 'swarm', 'cellcoal', 'treerecs']
 FOLDERS = ['BGSA-1.0/original/BGSA_CPU', 'bindash-1.0', 'copmem-0.2', 'crisflash', 'cryfa-18.06', 'defor', 'dna-nn-0.1',
-           'dr_sasa_n', 'emeraLD', 'ExpansionHunter', 'fastspar', 'HLA-LA/src', 'lemon', 'naf-1.1.0/ennaf',
+           'dr_sasa_n', 'emeraLD', 'ExpansionHunter-4.0.2', 'fastspar', 'HLA-LA/src', 'lemon', 'naf-1.1.0/ennaf',
            'naf-1.1.0/unnaf', 'ngsTools/ngsLD', 'ntEdit-1.2.3', 'PopLDdecay', 'virulign-1.0.1', 'axe-0.3.3', 'prequal',
-           'IQ-TREE-2.0-rc1', 'candy-kingdom', 'glucose-3-drup', 'covid-sim-0.13.0']  # TODO: add SPRING
+           'candy-kingdom', 'glucose-3-drup', 'covid-sim-0.13.0']  # TODO: add SPRING
 FOLDERS.extend(
-            ["INDELibleV1.03/src", "ms", "mafft-7.475/core", "MrBayes-3.2.7a", "bpp-4.3.8/src", "prank-msa/src",
-             "SF2", "Seq-Gen-1.3.4/source", "dawg-1.2", "RepeatsCounter/RepeatsCounter", "raxml-ng_v1.0.1",
-             "genesis-0.24.0", "minimap2-2.17", "clustal-omega-1.2.4", "samtools-1.11", "vsearch-2.15.1",
-             "swarm-3.0.0", "phyml-3.3.20200621", "IQ-TREE-2.0.6", "cellcoal-1.0.0"]
+    ["INDELibleV1.03/src", "ms", "mafft-7.475/core", "MrBayes-3.2.7a", "bpp-4.3.8/src", "prank-msa/src",
+     "SF2", "Seq-Gen-1.3.4/source", "dawg-1.2", "RepeatsCounter/RepeatsCounter", "raxml-ng_v1.0.1",
+     "genesis-0.24.0", "minimap2-2.17", "clustal-omega-1.2.4", "samtools-1.11", "vsearch-2.15.1",
+     "swarm-3.0.0", "phyml-3.3.20200621", "IQ-TREE-2.0.6", "cellcoal-1.0.0", "kahypar",
+     "athena-public-version-21.0", "Gadget-2.0.7/Gadget2", "Treerecs-v1.2", "sumo", "llvm-project-main/openmp",
+     "llvm-project-main/pstl"]
 )
-
 
 SOFTWIPE_OUTPUT_FILE_NAME = "sw_batch.txt"
 
@@ -45,6 +46,7 @@ LIZARD_WARNINGS_KEY = "lizard_warnings"
 UNIQUE_KEY = "unique"
 KWSTYLE_KEY = "kwstyle"
 INFER_KEY = "infer"
+TESTCOUNT_KEY = "test_count"
 
 SCORE_KEYS = [LOC_KEY, FUNCTIONS_KEY, COMPILER_KEY, SANITIZER_KEY, COMPILER_AND_SANITIZER_KEY, ASSERTIONS_KEY,
               CPPCHECK_KEY, CLANG_TIDY_KEY, CYCLOMATIC_COMPLEXITY_KEY, LIZARD_WARNINGS_KEY,
@@ -77,12 +79,14 @@ def get_result_rates(result_directory, folder):
 
     # Init
     compiler_and_sanitizer_rate = 0.0  # Special treatment because we may have to add multiple values for this score
-    assertion_rate = cppcheck_rate = clang_tidy_rate = ccn = lizard_rate = unique_rate = kwstyle_rate = infer_rate = None
+    assertion_rate = cppcheck_rate = clang_tidy_rate = ccn = lizard_rate = unique_rate = kwstyle_rate = infer_rate = \
+        test_count_rate = None
 
     # fill the failed_tools lst with all the available analysis tools and remove the ones that are not available in the report
     # this allows accepting half-finished reports without provoking reading or calculation errors
     failed_tools = [COMPILER_KEY, SANITIZER_KEY, COMPILER_AND_SANITIZER_KEY, INFER_KEY, ASSERTIONS_KEY, CPPCHECK_KEY,
-                    CLANG_TIDY_KEY, CYCLOMATIC_COMPLEXITY_KEY, LIZARD_WARNINGS_KEY, UNIQUE_KEY, KWSTYLE_KEY, None]
+                    CLANG_TIDY_KEY, CYCLOMATIC_COMPLEXITY_KEY, LIZARD_WARNINGS_KEY, UNIQUE_KEY, KWSTYLE_KEY,
+                    TESTCOUNT_KEY, None]
 
     # Iterate through the softwipe output
     for line in cur_lines:
@@ -123,10 +127,12 @@ def get_result_rates(result_directory, folder):
         elif line.startswith('Weighted Infer warning rate:'):
             infer_rate = float(split_line[4])
             if INFER_KEY in failed_tools: failed_tools.remove(INFER_KEY)
-
+        elif line.startswith('Amount of unit test LOC compared to overall LOC:'):
+            test_count_rate = float(split_line[-2])
+            if TESTCOUNT_KEY in failed_tools: failed_tools.remove(TESTCOUNT_KEY)
 
     return compiler_and_sanitizer_rate, assertion_rate, cppcheck_rate, clang_tidy_rate, ccn, lizard_rate, \
-           unique_rate, kwstyle_rate, infer_rate, failed_tools
+           unique_rate, kwstyle_rate, infer_rate, test_count_rate, failed_tools
 
 
 def get_result_values(result_directory, folder):
@@ -140,16 +146,17 @@ def get_result_values(result_directory, folder):
     # Init
     sanitizer_warnings = 0
     loc = functions = compiler_warnings = assertions = cppcheck_warnings = clang_tidy_warnings = \
-        ccn = lizard_warnings = unique = kwstyle_warnings = infer_warnings = None
+        ccn = lizard_warnings = unique = kwstyle_warnings = infer_warnings = test_count_loc = None
 
     failed_tools = [COMPILER_KEY, SANITIZER_KEY, INFER_KEY, ASSERTIONS_KEY, CPPCHECK_KEY, COMPILER_AND_SANITIZER_KEY,
-                    CLANG_TIDY_KEY, CYCLOMATIC_COMPLEXITY_KEY, LIZARD_WARNINGS_KEY, UNIQUE_KEY, KWSTYLE_KEY, None]
+                    CLANG_TIDY_KEY, CYCLOMATIC_COMPLEXITY_KEY, LIZARD_WARNINGS_KEY, UNIQUE_KEY, KWSTYLE_KEY,
+                    TESTCOUNT_KEY, None]
 
     # Iterate through the softwipe output
     for line in cur_lines:
         split_line = line.split()
 
-        if line.startswith('Lines of pure'):
+        if line.startswith('Lines of pure') and not loc:
             loc = int(split_line[-1])
         elif line.startswith('Weighted compiler warning rate:'):
             compiler_warnings = get_absolute_value(split_line[-1])
@@ -184,9 +191,12 @@ def get_result_values(result_directory, folder):
         elif line.startswith('Weighted Infer warning rate:'):
             infer_warnings = get_absolute_value(split_line[-1])
             if INFER_KEY in failed_tools: failed_tools.remove(INFER_KEY)
+        elif line.startswith('Amount of unit test LOC compared to overall LOC:'):
+            test_count_loc = get_absolute_value(split_line[-1])
+            if TESTCOUNT_KEY in failed_tools: failed_tools.remove(TESTCOUNT_KEY)
 
     return loc, functions, compiler_warnings, sanitizer_warnings, assertions, cppcheck_warnings, clang_tidy_warnings, \
-           ccn, lizard_warnings, unique, kwstyle_warnings, infer_warnings, failed_tools
+           ccn, lizard_warnings, unique, kwstyle_warnings, infer_warnings, test_count_loc, failed_tools
 
 
 def calculate_scores(result_directory, absolute):
@@ -204,7 +214,8 @@ def calculate_scores(result_directory, absolute):
             'lizard_warnings': {},
             'unique': {},
             'kwstyle': {},
-            'infer': {}
+            'infer': {},
+            TESTCOUNT_KEY: {}
         }
     else:
         scores = {
@@ -217,7 +228,8 @@ def calculate_scores(result_directory, absolute):
             'lizard_warnings': {},
             'unique': {},
             'kwstyle': {},
-            'infer': {}
+            'infer': {},
+            TESTCOUNT_KEY: {}
         }
 
     failed_tools_dict = {}
@@ -232,7 +244,7 @@ def calculate_scores(result_directory, absolute):
         if absolute:
             # Get values
             loc, functions, compiler_warnings, sanitizer_warnings, assertions, cppcheck_warnings, clang_tidy_warnings, \
-            ccn, lizard_warnings, unique, kwstyle_warnings, infer_warnings, failed_tools = get_result_values(
+            ccn, lizard_warnings, unique, kwstyle_warnings, infer_warnings, test_count_loc, failed_tools = get_result_values(
                 result_directory, folder)
 
             scores['loc'][folder] = loc
@@ -247,22 +259,36 @@ def calculate_scores(result_directory, absolute):
             scores['unique'][folder] = unique
             scores['kwstyle'][folder] = kwstyle_warnings
             scores['infer'][folder] = infer_warnings
+            scores[TESTCOUNT_KEY][folder] = test_count_loc
 
         else:
             # Get rates
             compiler_and_sanitizer_rate, assertion_rate, cppcheck_rate, clang_tidy_rate, ccn, lizard_rate, \
-            unique_rate, kwstyle_rate, infer_rate, failed_tools = get_result_rates(result_directory, folder)
+            unique_rate, kwstyle_rate, infer_rate, test_count_rate, failed_tools = get_result_rates(result_directory,
+                                                                                                    folder)
 
             # Get scores
-            if COMPILER_KEY not in failed_tools: scores['compiler_and_sanitizer'][folder] = scoring.calculate_compiler_and_sanitizer_score_absolute(compiler_and_sanitizer_rate)
-            if ASSERTIONS_KEY not in failed_tools: scores['assertions'][folder] = scoring.calculate_assertion_score_absolute(assertion_rate)
-            if CPPCHECK_KEY not in failed_tools: scores['cppcheck'][folder] = scoring.calculate_cppcheck_score_absolute(cppcheck_rate)
-            if CLANG_TIDY_KEY not in failed_tools: scores['clang_tidy'][folder] = scoring.calculate_clang_tidy_score_absolute(clang_tidy_rate)
-            if CYCLOMATIC_COMPLEXITY_KEY not in failed_tools: scores['cyclomatic_complexity'][folder] = scoring.calculate_cyclomatic_complexity_score_absolute(ccn)
-            if LIZARD_WARNINGS_KEY not in failed_tools: scores['lizard_warnings'][folder] = scoring.calculate_lizard_warning_score_absolute(lizard_rate)
-            if UNIQUE_KEY not in failed_tools: scores['unique'][folder] = scoring.calculate_unique_score_absolute(unique_rate)
-            if KWSTYLE_KEY not in failed_tools: scores['kwstyle'][folder] = scoring.calculate_kwstyle_score_absolute(kwstyle_rate)
-            if INFER_KEY not in failed_tools: scores['infer'][folder] = scoring.calculate_infer_score_absolute(infer_rate)
+            if COMPILER_KEY not in failed_tools:
+                scores['compiler_and_sanitizer'][folder] = \
+                    scoring.calculate_compiler_and_sanitizer_score_absolute(compiler_and_sanitizer_rate)
+            if ASSERTIONS_KEY not in failed_tools:
+                scores['assertions'][folder] = scoring.calculate_assertion_score_absolute(assertion_rate)
+            if CPPCHECK_KEY not in failed_tools:
+                scores['cppcheck'][folder] = scoring.calculate_cppcheck_score_absolute(cppcheck_rate)
+            if CLANG_TIDY_KEY not in failed_tools:
+                scores['clang_tidy'][folder] = scoring.calculate_clang_tidy_score_absolute(clang_tidy_rate)
+            if CYCLOMATIC_COMPLEXITY_KEY not in failed_tools:
+                scores['cyclomatic_complexity'][folder] = scoring.calculate_cyclomatic_complexity_score_absolute(ccn)
+            if LIZARD_WARNINGS_KEY not in failed_tools:
+                scores['lizard_warnings'][folder] = scoring.calculate_lizard_warning_score_absolute(lizard_rate)
+            if UNIQUE_KEY not in failed_tools:
+                scores['unique'][folder] = scoring.calculate_unique_score_absolute(unique_rate)
+            if KWSTYLE_KEY not in failed_tools:
+                scores['kwstyle'][folder] = scoring.calculate_kwstyle_score_absolute(kwstyle_rate)
+            if INFER_KEY not in failed_tools:
+                scores['infer'][folder] = scoring.calculate_infer_score_absolute(infer_rate)
+            if TESTCOUNT_KEY not in failed_tools:
+                scores[TESTCOUNT_KEY][folder] = scoring.calculate_testcount_score_absolute(test_count_rate)
 
             # Calculate the overall score
             list_of_scores = [scores[score][folder] for score in scores.keys()
@@ -281,11 +307,11 @@ def calculate_scores(result_directory, absolute):
 
 def print_score_csv(scores, absolute, failed_tools, print_only_overall=False):
     if absolute:
-        last_column = 'infer'
-        space_pattern = [17, 8, 11, 10, 11, 12, 10, 12, 23, 17, 20, 9, 7]
+        last_column = TESTCOUNT_KEY
+        space_pattern = [17, 8, 11, 10, 11, 12, 10, 12, 23, 17, 20, 9, 7, len(TESTCOUNT_KEY) + 2]
     else:
-        last_column = 'infer'
-        space_pattern = [22, 9, 24, 12, 10, 12, 23, 17, 8, 9, 7]
+        last_column = TESTCOUNT_KEY
+        space_pattern = [22, 9, 24, 12, 10, 12, 23, 17, 8, 9, 7, len(TESTCOUNT_KEY) + 2]
 
     print('program', end=',')
     for score in scores:

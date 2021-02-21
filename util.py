@@ -7,6 +7,12 @@ import strings
 import shutil
 
 
+def is_testfile(path):
+    if "test" in path.lower():
+        return True
+    return False
+
+
 def write_into_file_string(file_name, content, append=False):
     """
     Writes 'content' string into a file specified by 'file_name'. The file will be created if it does not exist.
@@ -50,8 +56,9 @@ def get_excluded_paths(program_dir_abs, exclude):
     :return: A tupel containing all excluded paths.
     """
     excluded_paths = (os.path.join(program_dir_abs, 'build'), os.path.join(program_dir_abs, 'cmake-build-debug'),
-                      os.path.join(program_dir_abs, 'compile'), os.path.join(program_dir_abs,
-                                                                             strings.SOFTWIPE_BUILD_DIR_NAME))
+                      os.path.join(program_dir_abs, 'compile'),
+                      os.path.join(program_dir_abs, strings.SOFTWIPE_BUILD_DIR_NAME),
+                      os.path.join(program_dir_abs, strings.INFER_BUILD_DIR_NAME))
     if exclude:
         for path in exclude.split(','):
             excluded_paths += (os.path.abspath(path),)
@@ -146,9 +153,6 @@ def count_lines_of_code(source_files):
 
     for file in source_files:
         lines_of_code += count_lines_of_code_in_one_file(file)
-
-    print(strings.LINES_OF_PURE_CODE_ARE.format(lines_of_code))
-    print()
 
     return lines_of_code
 

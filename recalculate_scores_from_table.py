@@ -14,8 +14,8 @@ NA_SEQUENCE = "N/A"
 
 def main():
     file_path = sys.argv[1]
-    space_pattern = [22, 9, 16, 24, 12, 10, 12, 23, 17, 8, 9, 7]
-    space_pattern_constant = [17, 8, 11, 10, 11, 12, 10, 12, 23, 17, 20, 9, 7]
+    space_pattern = [22, 9, 16, 24, 12, 10, 12, 23, 17, 8, 9, 7, len("test_count") + 2]
+    space_pattern_constant = [17, 8, 11, 10, 11, 12, 10, 12, 23, 17, 20, 9, 7, len("test_count") + 2]
 
     scores = defaultdict()
     scores["compiler_and_sanitizer"] = {}
@@ -27,6 +27,7 @@ def main():
     scores["unique"] = {}
     scores["kwstyle"] = {}
     scores["infer"] = {}
+    scores["test_count"] = {}
     scores["overall"] = {}
 
     scores_absolute = defaultdict()
@@ -40,6 +41,7 @@ def main():
     scores_absolute["unique"] = {}
     scores_absolute["kwstyle"] = {}
     scores_absolute["infer"] = {}
+    scores_absolute["test_count"] = {}
     scores_absolute["overall"] = {}
 
     rates = {
@@ -51,7 +53,8 @@ def main():
         'lizard_warnings': [],
         'unique': [],
         'kwstyle': [],
-        'infer': []
+        'infer': [],
+        "test_count": []
     }
 
     d = defaultdict()
@@ -68,7 +71,7 @@ def main():
     with open(file_path) as file:
         for line in file:
             line = line.rstrip().replace(" ", "").split("|")
-            if len(line) < 14: continue
+            if len(line) < 15: continue
 
             skip_round = False
             for i in range(1, 4):  # if we can't even get the loc or function numbers, we just skip the tool
@@ -81,9 +84,9 @@ def main():
             compiler = int(line[4])
             sanitizer = int(line[5])
 
-            if len(line) == 14:  # TODO: fix this, this was used to add a new category to the table
+            if len(line) == 15:  # TODO: fix this, this was used to add a new category to the table
                 line.append("")
-                if not line[13]: line[13] = NA_SEQUENCE
+                if not line[14]: line[14] = NA_SEQUENCE
             else:
                 if folder in folder_included: folder_included.remove(folder)  # update old value
 
@@ -158,6 +161,14 @@ def main():
                 scores_absolute['infer'][folder] = scoring.calculate_infer_score_absolute(infer_rate)
                 available_categories[folder].append('infer')
                 rates['infer'].append((folder, infer_rate))
+
+            if NA_SEQUENCE not in line[14]:
+                test_count = int(line[14])
+                test_count_rate = test_count / loc
+                scores['test_count'][folder] = scoring.calculate_testcount_score(test_count_rate)
+                scores_absolute['test_count'][folder] = scoring.calculate_testcount_score_absolute(test_count_rate)
+                available_categories[folder].append('test_count')
+                rates['test_count'].append((folder, test_count_rate))
 
             compiler_and_sanitizer_rate = (compiler + sanitizer) / loc
             scores['compiler_and_sanitizer'][folder] = scoring.calculate_compiler_and_sanitizer_score(

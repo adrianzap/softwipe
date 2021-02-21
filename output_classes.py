@@ -137,17 +137,17 @@ class LizardOutput:
         log = ""
 
         log += 'Average cyclomatic complexity: {}'.format(self.average_cyclomatic_complexity) + "\n"
-        cyclomatic_complexity_score = scoring.calculate_cyclomatic_complexity_score(self.average_cyclomatic_complexity)
+        cyclomatic_complexity_score = scoring.calculate_cyclomatic_complexity_score_absolute(self.average_cyclomatic_complexity)
         log += scoring.get_score_string(cyclomatic_complexity_score, 'Cyclomatic complexity') + "\n"
 
         warning_rate = self.warning_count / self.function_count
         log += 'Lizard warning rate (~= rate of functions that are too complex): ' + strings.RATE_COUNT_TOTAL.format(
             warning_rate, self.warning_count, self.function_count) + "\n"
-        warning_score = scoring.calculate_lizard_warning_score(warning_rate)
+        warning_score = scoring.calculate_lizard_warning_score_absolute(warning_rate)
         log += scoring.get_score_string(warning_score, 'Lizard warning') + "\n"
 
         log += 'Unique code rate: {}'.format(self.unique_rate) + "\n"
-        unique_score = scoring.calculate_unique_score(self.unique_rate)
+        unique_score = scoring.calculate_unique_score_absolute(self.unique_rate)
         log += scoring.get_score_string(unique_score, 'Unique (code duplication)') + "\n"
 
         return cyclomatic_complexity_score, warning_score, unique_score, log

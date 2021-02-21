@@ -749,7 +749,7 @@ class ValgrindTool(AnalysisTool):
         # TODO: make and print filename to user
         log += "Weighted Valgrind warning rate: {} ({}/{})".format(weighted_warnings / lines_of_code, weighted_warnings,
                                                                    lines_of_code) + "\n"
-        log += scoring.get_score_string(score, 'Valgrind') + "\n"
+        log += scoring.get_score_string(score, ValgrindTool.name()) + "\n"
         log += strings.DETAILLED_RESULTS_WRITTEN_INTO.format(strings.RESULTS_FILENAME_VALGRIND)
 
         return [score], log, True
@@ -757,3 +757,27 @@ class ValgrindTool(AnalysisTool):
     @staticmethod
     def name():
         return "Valgrind"
+
+
+class TestCountTool(AnalysisTool):
+    @staticmethod
+    def run(data, skip_on_failure=False):
+        loc = data["lines_of_code"]
+        source_files = data["source_files"]
+
+        source_files_wo_tests = [x for x in source_files if not util.is_testfile(x)]
+        loc_wo_tests = util.count_lines_of_code(source_files_wo_tests)
+
+        rate = (loc - loc_wo_tests) / loc
+        score = scoring.calculate_testcount_score_absolute(rate)
+
+        log = " --- TEST COUNT --- \n"
+        log += strings.LINES_OF_PURE_CODE_ARE.format(loc)
+        log += "Amount of unit test LOC compared to overall LOC: {} ({}/{})\n".format(rate, (loc - loc_wo_tests), loc)
+        log += scoring.get_score_string(score, TestCountTool.name()) + "\n"
+
+        return [score], log, True
+
+    @staticmethod
+    def name():
+        return "TestCount"

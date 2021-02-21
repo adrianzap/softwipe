@@ -15,7 +15,8 @@ import execution_phase
 import scoring
 import strings
 import util
-from analysis_tools import CppcheckTool, ClangTool, ClangTidyTool, KWStyleTool, LizardTool, AssertionTool, InferTool, ValgrindTool
+from analysis_tools import CppcheckTool, ClangTool, ClangTidyTool, KWStyleTool, LizardTool, AssertionTool, InferTool, \
+                           ValgrindTool, TestCountTool
 
 
 def parse_arguments():
@@ -422,6 +423,7 @@ def main():
         analysis_tools.append(LizardTool)
     if not args.exclude_kwstyle:
         analysis_tools.append(KWStyleTool)
+    analysis_tools.append(TestCountTool)
 
     for tool in analysis_tools:
         scores, log, success = tool.run(data)
