@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='SoftWipe',
-    version='0.1',
+    version='0.2',
     packages=[''],
     package_data={'': ['KWStyle.xml']},
     include_package_data=True,
