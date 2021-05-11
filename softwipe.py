@@ -7,6 +7,7 @@ import argparse
 import os
 import re
 import sys
+from multiprocessing.pool import ThreadPool
 
 import automatic_tool_installation
 import compile_phase
@@ -14,8 +15,8 @@ import execution_phase
 import scoring
 import strings
 import util
-from analysis_tools import CppcheckTool, ClangTidyTool, KWStyleTool, LizardTool, AssertionTool, InferTool, \
-                           TestCountTool
+from analysis_tools import CppcheckTool, ClangTool, ClangTidyTool, KWStyleTool, LizardTool, AssertionTool, InferTool, \
+                           ValgrindTool, TestCountTool
 
 
 def parse_arguments():
@@ -150,6 +151,7 @@ def add_kwstyle_to_path_variable():
         add_to_path_variable(os.path.join(kwstyle_dir, strings.SOFTWIPE_BUILD_DIR_NAME))
     else:
         automatic_tool_installation.handle_kwstyle_download()
+        add_to_path_variable(os.path.join(kwstyle_dir, strings.SOFTWIPE_BUILD_DIR_NAME))
         #add_kwstyle_to_path_variable()
 
 

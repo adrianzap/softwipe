@@ -773,7 +773,7 @@ class TestCountTool(AnalysisTool):
         score = scoring.calculate_testcount_score_absolute(rate)
 
         log = " --- TEST COUNT --- \n"
-        log += strings.LINES_OF_PURE_CODE_ARE.format(loc)
+        log += strings.LINES_OF_PURE_CODE_ARE.format(loc) + "\n"
         log += "Amount of unit test LOC compared to overall LOC: {} ({}/{})\n".format(rate, (loc - loc_wo_tests), loc)
         log += scoring.get_score_string(score, TestCountTool.name()) + "\n"
 

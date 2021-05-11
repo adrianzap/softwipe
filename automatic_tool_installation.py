@@ -83,19 +83,23 @@ def install_apt_package_if_needed(package_name):
 
 
 def handle_kwstyle_download():
-    print("Downloading KWStyle...")
-    git_link = 'https://github.com/Kitware/KWStyle.git'
-    git_clone_command = ['git', 'clone', git_link]
     softwipe_dir = util.get_softwipe_directory()
-
-    subprocess.run(git_clone_command, cwd=softwipe_dir)
-
     kwstyle_dir = os.path.join(softwipe_dir, 'KWStyle')
-    print('Building KWStyle...')
-    compile_phase.compile_program_cmake(kwstyle_dir, 1, dont_check_for_warnings=True, compiler_flags="",
-                                        excluded_paths=())  # The argument lines_of_code does not matter here
-    print('Done!')
-    print()
+    try:
+        print("Downloading KWStyle...")
+        git_link = 'https://github.com/Kitware/KWStyle.git'
+        git_clone_command = ['git', 'clone', git_link]
+
+        subprocess.run(git_clone_command, cwd=softwipe_dir)
+        
+        print('Building KWStyle...')
+        compile_phase.compile_program_cmake(kwstyle_dir, 1, dont_check_for_warnings=True, compiler_flags="",
+                                            excluded_paths=())  # The argument lines_of_code does not matter here
+        print('Done!')
+        print()
+    except Exception as e:
+        print(e)
+        shutil.rmtree(kwstyle_dir)
 
 
 def handle_lizard_download():
@@ -104,7 +108,7 @@ def handle_lizard_download():
     url = "https://github.com/terryyin/lizard/archive/{v}.tar.gz".format(v=version)
     print("Downloading lizard...")
     process = subprocess.Popen(('curl', '-sSL', url), cwd=softwipe_dir, stdout=subprocess.PIPE)
-    output = subprocess.Popen(('sudo', 'tar', "-C", softwipe_dir, "-xz"), stdin=process.stdout)
+    output = subprocess.Popen(('tar', "-C", softwipe_dir, "-xz"), stdin=process.stdout)
     output.wait()
     print("Done!\n")
 
@@ -116,7 +120,7 @@ def handle_infer_download():
     version = '0.17.0'
     url = "https://github.com/facebook/infer/releases/download/v{v}/infer-linux64-v{v}.tar.xz".format(v=version)
     process = subprocess.Popen(('curl', '-sSL', url), stdout=subprocess.PIPE)
-    output = subprocess.Popen(('sudo', 'tar', "-C", softwipe_dir, "-xJ"), stdin=process.stdout)
+    output = subprocess.Popen(('tar', "-C", softwipe_dir, "-xJ"), stdin=process.stdout)
     output.wait()
 
 
