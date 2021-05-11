@@ -5,6 +5,7 @@ SoftWipe runs various checks to produce a software quality score: it compiles yo
 
 ## Installation & Usage
 
+We developed and tested SoftWipe mainly on Ubuntu 20.04 LTS, some of the used code analysis tools might be affected on other OS versions.
 Clone this repository to download SoftWipe:
 ```
 git clone https://github.com/adrianzap/softwipe.git
@@ -44,6 +45,10 @@ conda install softwipe -c angtft -c conda-forge -c Sarcasm -n softwipe_env
 Then, before running SoftWipe, you need to activate the environment with:
 ```
 conda activate softwipe_env
+```
+Close the environment again with:
+```
+conda deactivate
 ```
 
 #### Basic usage
