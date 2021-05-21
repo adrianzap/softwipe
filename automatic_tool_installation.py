@@ -34,7 +34,7 @@ def get_package_install_command_for_os(user_os):
     command = None
     if user_os == strings.OS_MACOS:
         command = ['brew', 'install']
-    elif user_os in (strings.OS_DEBIAN, strings.OS_UBUNTU):
+    elif user_os.lower() in (strings.OS_DEBIAN.lower(), strings.OS_UBUNTU.lower()):
         command = ['apt-get', 'install']
     return command
 
@@ -154,7 +154,9 @@ def auto_tool_install(missing_tools, package_install_command):
     for tool in missing_tools:
         install_command = []
         if tool.install_via == tools_info.VIA.PACKAGE_MANAGER:
-            install_command = package_install_command[:]
+            print(package_install_command[:])
+            install_command = ["sudo"] + package_install_command[:]
+            print(install_command)
         elif tool.install_via == tools_info.VIA.PIP:
             install_command = pip_install_command[:]
         elif tool.install_via == tools_info.VIA.DOWNLOAD:

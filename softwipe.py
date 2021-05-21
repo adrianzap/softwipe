@@ -94,7 +94,12 @@ def parse_arguments():
     parser.add_argument('-x', '--exclude', nargs=1, help='a comma separated lst of files and directories that should '
                                                          'be excluded from being analyzed by this program. If you '
                                                          'specify relative paths, they should be relative to the '
-                                                         'directory you are running softwipe from')
+                                                         'target program path.')
+
+    parser.add_argument('-X', nargs=1, help='a file containing a list of files and directories that '
+                                            'should be excluded from the analysis. Each file and directory in the list '
+                                            'has to be noted in a separate line. The paths in the list have to be '
+                                            'absolute, or relative to the target program path.')
 
     parser.add_argument('-p', '--path', nargs=1, help='a comma separated lst of paths that should be added to the '
                                                       'PATH environment variable. Use this if you have a dependency '
@@ -385,7 +390,8 @@ def main():
     use_make = args.make
     program_dir_abs = os.path.abspath(args.programdir)
     exclude = args.exclude[0] if args.exclude else None
-    excluded_paths = util.get_excluded_paths(program_dir_abs, exclude)
+    exclude_file = args.X[0] if args.X else None
+    excluded_paths = util.get_excluded_paths(program_dir_abs, exclude, exclude_file)
     custom_asserts = args.custom_assert[0].split(',') if args.custom_assert else None
 
     source_files = util.find_all_source_files(program_dir_abs, excluded_paths)

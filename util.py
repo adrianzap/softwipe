@@ -48,12 +48,14 @@ def print_lines(lines):
         print(line)
 
 
-def get_excluded_paths(program_dir_abs, exclude):
+def get_excluded_paths(program_dir_abs, exclude, exclude_file_path=None):
     """
     Return the paths (files and dirs) that should be excluded from being analyzed by softwipe.
     :param program_dir_abs: The absolute path to the root directory of the program.
-    :param exclude: A comma separated lst of files and directories to exclude, as given via command line (-x option).
-    :return: A tupel containing all excluded paths.
+    :param exclude: A comma separated list of files and directories to exclude, as given via command line (-x option).
+    :param exclude_file_path: A file containing a list of files and directories to exclude, each noted
+                    in a separate line.
+    :return: A tuple containing all excluded paths.
     """
     excluded_paths = (os.path.join(program_dir_abs, 'build'), os.path.join(program_dir_abs, 'cmake-build-debug'),
                       os.path.join(program_dir_abs, 'compile'),
@@ -61,7 +63,19 @@ def get_excluded_paths(program_dir_abs, exclude):
                       os.path.join(program_dir_abs, strings.INFER_BUILD_DIR_NAME))
     if exclude:
         for path in exclude.split(','):
-            excluded_paths += (os.path.abspath(path),)
+            excluded_paths += (os.path.join(program_dir_abs, path),)
+
+    try:
+        if exclude_file_path:
+            with open(exclude_file_path) as file:
+                for line in file:
+                    line = line.rstrip()
+                    if os.path.isabs(line):
+                        excluded_paths += (line,)
+                    else:
+                        excluded_paths += (os.path.join(program_dir_abs, line),)
+    except Exception as e:
+        print(e)
 
     return excluded_paths
 
