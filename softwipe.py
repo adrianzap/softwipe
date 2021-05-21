@@ -74,7 +74,7 @@ def parse_arguments():
 
     parser.add_argument('-e', '--executefile', nargs=1, help='path to an "execute file" which contains a command line '
                                                              'that executes your program')
-    parser.add_argument('--executefilehelp', action='store_true', help='print detailled information about how the '
+    parser.add_argument('--executefilehelp', action='store_true', help='print detailed information about how the '
                                                                        'execute file works and exit')
 
     parser.add_argument('-f', '--commandfile', nargs=1, help='path to a "command file" which can be used to provide '
@@ -91,7 +91,7 @@ def parse_arguments():
                                                                                'the compiler options file works and '
                                                                                'exit')
 
-    parser.add_argument('-x', '--exclude', nargs=1, help='a comma separated lst of files and directories that should '
+    parser.add_argument('-x', '--exclude', nargs=1, help='a comma separated list of files and directories that should '
                                                          'be excluded from being analyzed by this program. If you '
                                                          'specify relative paths, they should be relative to the '
                                                          'target program path.')
@@ -120,7 +120,7 @@ def parse_arguments():
 
     parser.add_argument('--exclude-assertions', action='store_true', help='Excludes the counting of assertions')
     # parser.add_argument('--exclude-infer', action='store_true', help='Excludes Infer from the analysis')
-    parser.add_argument('--use-infer', action='store_true', help='Uses Infer static analysis. This requires a'
+    parser.add_argument('--use-infer', action='store_true', help='Uses Infer static analysis. This requires a '
                                                                  'lengthy download for the first usage.')
     parser.add_argument('--exclude-compilation', action='store_true',
                         help='Excludes the compilation of the program from the analysis')
