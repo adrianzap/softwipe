@@ -154,9 +154,7 @@ def auto_tool_install(missing_tools, package_install_command):
     for tool in missing_tools:
         install_command = []
         if tool.install_via == tools_info.VIA.PACKAGE_MANAGER:
-            print(package_install_command[:])
             install_command = ["sudo"] + package_install_command[:]
-            print(install_command)
         elif tool.install_via == tools_info.VIA.PIP:
             install_command = pip_install_command[:]
         elif tool.install_via == tools_info.VIA.DOWNLOAD:

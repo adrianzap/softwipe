@@ -167,6 +167,7 @@ def add_lizard_to_path_variable():
         add_to_path_variable(lizard_dir)
     else:
         automatic_tool_installation.handle_lizard_download()
+        add_to_path_variable(lizard_dir)
         #add_lizard_to_path_variable()
 
 
