@@ -34,13 +34,13 @@ Also, if the program you want to check uses make oder CMake as build system, mak
 #### Conda
 There is a conda package for SoftWipe, which can be installed using:
 ```
-conda install softwipe -c angtft -c conda-forge -c Sarcasm
+conda install softwipe -c angtft -c conda-forge
 ```
 On the first execution of SoftWipe, it will install KWStyle, Lizard and Infer locally (as there are no conda packages for these tools yet).
 We recommend installing SoftWipe in a separate conda environment, which can be done with:
 ```
 conda create --name softwipe_env
-conda install softwipe -c angtft -c conda-forge -c Sarcasm -n softwipe_env
+conda install softwipe -c angtft -c conda-forge -n softwipe_env
 ```
 Then, before running SoftWipe, you need to activate the environment with:
 ```
