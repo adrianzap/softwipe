@@ -72,3 +72,26 @@ softwipe.py -CM path/to/program -e path/to/executefile
 ```
 
 For more options and further information, run `softwipe.py --help`.
+
+#### Docker usage
+
+Docker enables an awesome way to use a out-of-the-box installation by calling 
+
+```
+docker run -it --rm -u <USER_ID>:<GROUP_ID> -w /work -v $PWD:/work softwipe/softwipe softwipe.py <SOFTWIPE_ARGS>
+```
+
+where `USER_ID`/`GROUP_ID` should be the owner of the host directory to have write permissions within the docker container.
+The same image can also be used for continuous integration, shown here for the example of a Jenkins pipeline:
+
+```
+stage('Softwipe') {
+  agent {
+    docker {
+      image 'softwipe/softwipe:0.1'
+    }
+  }
+  steps {
+    sh 'softwipe.py -CM -e run_softwipe.sh . 2>&1 |tee softwipe_general.txt'
+  }
+}
