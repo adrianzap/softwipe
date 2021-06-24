@@ -7,6 +7,7 @@ import argparse
 import os
 import re
 import sys
+import time
 from multiprocessing.pool import ThreadPool
 
 import automatic_tool_installation
@@ -413,6 +414,8 @@ def main():
             "executefile": args.executefile
             }
 
+    """t1 = time.perf_counter()"""
+
     if not args.exclude_compilation:
         compiler_and_sanitizer_score = compile_and_execute_program_with_sanitizers(
             args, lines_of_code, program_dir_abs, use_cpp, excluded_paths, args.no_execution)
@@ -420,6 +423,10 @@ def main():
         if args.use_infer:      # TODO: maybe completely remove Infer since it requires a lot of disk space
             add_infer_to_path_variable()
             analysis_tools.append(InferTool)
+
+    """t2 = time.perf_counter()
+    print("Compilation time: {}s".format(t2 - t1))
+    sys.exit()"""
 
     if not args.exclude_assertions:
         analysis_tools.append(AssertionTool)
@@ -433,13 +440,36 @@ def main():
         analysis_tools.append(KWStyleTool)
     analysis_tools.append(TestCountTool)
 
-    for tool in analysis_tools:
-        scores, log, success = tool.run(data)
+    thread_pool = ThreadPool(processes=len(analysis_tools))
+    instances = []
+    outs = []
+
+    """t1 = time.perf_counter()"""
+
+    for i in range(len(analysis_tools)):
+        instances.append(thread_pool.apply_async(analysis_tools[i].run, (data, )))
+
+    for i in range(len(instances)):
+        outs.append(instances[i].get())
+
+    for i in range(len(outs)):
+        scores, log, success = outs[i]
         if success:
             print(log)
             all_scores.extend(scores)
         else:
             print("excluded {} from analysis\n".format(tool.name()))
+
+    """for tool in analysis_tools:
+        scores, log, success = tool.run(data)
+        if success:
+            print(log)
+            all_scores.extend(scores)
+        else:
+            print("excluded {} from analysis\n".format(tool.name()))"""
+
+    """t2 = time.perf_counter()
+    print("Time static analysis: {}s".format(t2 - t1))"""
 
     overall_score = scoring.average_score(all_scores)
 
