@@ -8,6 +8,7 @@ import os
 import re
 import sys
 import time
+import itertools
 from multiprocessing.pool import ThreadPool
 
 import automatic_tool_installation
@@ -95,7 +96,8 @@ def parse_arguments():
     parser.add_argument('-x', '--exclude', nargs=1, help='a comma separated list of files and directories that should '
                                                          'be excluded from being analyzed by this program. If you '
                                                          'specify relative paths, they should be relative to the '
-                                                         'target program path.')
+                                                         'target program path.',
+                        action="append")
 
     parser.add_argument('-X', nargs=1, help='a file containing a list of files and directories that '
                                             'should be excluded from the analysis. Each file and directory in the list '
@@ -361,8 +363,8 @@ def main():
     """
     Main function: Runs compilation, static analysis and prints results.
     """
-    add_kwstyle_to_path_variable()  # TODO: hopefully get a conda package for this sometime
-    add_lizard_to_path_variable()
+    # add_kwstyle_to_path_variable()  # TODO: hopefully get a conda package for this sometime
+    # add_lizard_to_path_variable()
 
     # Allow the user to auto-install the dependencies by just running "./softwipe.py" without any arguments
     # Should not be needed if conda is used. TODO: maybe remove this
@@ -391,7 +393,10 @@ def main():
     use_cmake = args.cmake
     use_make = args.make
     program_dir_abs = os.path.abspath(args.programdir)
-    exclude = args.exclude[0] if args.exclude else None
+    if args.exclude:
+        exclude = list(itertools.chain.from_iterable(args.exclude))
+        exclude = ",".join(exclude)
+
     exclude_file = args.X[0] if args.X else None
     excluded_paths = util.get_excluded_paths(program_dir_abs, exclude, exclude_file)
     custom_asserts = args.custom_assert[0].split(',') if args.custom_assert else None
@@ -458,7 +463,7 @@ def main():
             print(log)
             all_scores.extend(scores)
         else:
-            print("excluded {} from analysis\n".format(tool.name()))
+            print("excluded {} from analysis\n".format(analysis_tools[i].name()))
 
     """for tool in analysis_tools:
         scores, log, success = tool.run(data)

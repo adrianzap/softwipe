@@ -46,7 +46,7 @@ def build_cmake_call(program_dir_abs, compiler_flags):
                   TOOLS.CLANG.exe_name, '-DCMAKE_C_COMPILER=' + TOOLS.CLANG.exe_name,  # Ensure that clang is used
                   '-DCMAKE_EXPORT_COMPILE_COMMANDS=1',  # Ensure that the compilation database JSON that is required
                   # for most clang tools is exported
-                  program_dir_abs
+                  program_dir_abs  # TODO: add '-O cmake_opt_file_path' argument for additional cmake flags
                   ]
     # NOTE verbosity may be enabled via '-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON' and run_make(make_verbose=True) (this shows
     # all commands that are called by cmake & make, respectively.

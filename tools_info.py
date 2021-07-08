@@ -22,7 +22,7 @@ class TOOLS:
     COMPILEDB = Tool('compiledb', 'compiledb', VIA.PIP)
     CPPCHECK = Tool('cppcheck', 'cppcheck', VIA.PACKAGE_MANAGER)
     CLANG_TIDY = Tool('clang-tidy', 'llvm', VIA.PACKAGE_MANAGER)
-    LIZARD = Tool('lizard.py', 'lizard', VIA.PIP)
+    LIZARD = Tool('lizard', 'lizard', VIA.PIP)
     KWSTYLE = Tool('KWStyle', 'KWStyle', VIA.DOWNLOAD)
     INFER = Tool('infer', 'infer', VIA.DOWNLOAD)
     # NOTINSTALLED0 = Tool('jshgjhsdhg', 'jshjlgbkjvjkshg', Via.PACKAGE_MANAGER)

@@ -28,7 +28,7 @@ FOLDERS.extend(
      "genesis-0.24.0", "minimap2-2.17", "clustal-omega-1.2.4", "samtools-1.11", "vsearch-2.15.1",
      "swarm-3.0.0", "phyml-3.3.20200621", "IQ-TREE-2.0.6", "cellcoal-1.0.0", "kahypar",
      "athena-public-version-21.0", "Gadget-2.0.7/Gadget2", "Treerecs-v1.2", "sumo", "llvm-project-main/openmp",
-     "llvm-project-main/pstl"]
+     "llvm-project-main/pstl", "usher-0.3.2"]
 )
 
 SOFTWIPE_OUTPUT_FILE_NAME = "sw_batch.txt"

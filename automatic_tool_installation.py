@@ -188,8 +188,7 @@ def check_if_all_required_tools_are_installed():
     something is missing, print a warning and exit.
     """
     tools = [tool for tool in inspect.getmembers(tools_info.TOOLS) if not tool[0].startswith('_')
-             and 'infer' not in tool[1].exe_name
-             and 'lizard' not in tool[1].exe_name]  # and 'KWStyle' not in tool[1].exe_name]
+             and 'infer' not in tool[1].exe_name]
     missing_tools = []
     for tool in tools:
         which_result = shutil.which(tool[1].exe_name)
