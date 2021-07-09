@@ -89,6 +89,8 @@ def parse_arguments():
                                                                      'contains one line with options that must be '
                                                                      'passed to the compiler for correct compilation '
                                                                      'of your program')
+    parser.add_argument("-O", nargs=1, help="path to a file containing necessary options to successfully run cmake"
+                                            "(works similar to the '-o' or '--compileroptionsfile' argument)")
     parser.add_argument('--compileroptionsfilehelp', action='store_true', help='print detailed information about how '
                                                                                'the compiler options file works and '
                                                                                'exit')
@@ -228,6 +230,11 @@ def compile_program(args, lines_of_code, cpp, compiler_flags, excluded_paths):
     program_dir_abs = os.path.abspath(args.programdir)
     command_file = args.commandfile
 
+    if args.O:
+        additional_args = open(args.O[0], 'r').read().rstrip().split()
+    else:
+        additional_args = []
+
     if args.make:
         if command_file:
             score = compile_phase.compile_program_make(program_dir_abs, lines_of_code, compiler_flags, excluded_paths,
@@ -240,9 +247,11 @@ def compile_program(args, lines_of_code, cpp, compiler_flags, excluded_paths):
     else:
         if command_file:
             score = compile_phase.compile_program_cmake(program_dir_abs, lines_of_code, compiler_flags, excluded_paths,
-                                                        make_command_file=command_file[0])
+                                                        make_command_file=command_file[0],
+                                                        additional_args=additional_args)
         else:
-            score = compile_phase.compile_program_cmake(program_dir_abs, lines_of_code, compiler_flags, excluded_paths)
+            score = compile_phase.compile_program_cmake(program_dir_abs, lines_of_code, compiler_flags, excluded_paths,
+                                                        additional_args=additional_args)
 
     return score
 
@@ -396,6 +405,8 @@ def main():
     if args.exclude:
         exclude = list(itertools.chain.from_iterable(args.exclude))
         exclude = ",".join(exclude)
+    else:
+        exclude = None
 
     exclude_file = args.X[0] if args.X else None
     excluded_paths = util.get_excluded_paths(program_dir_abs, exclude, exclude_file)
