@@ -85,7 +85,7 @@ def find_all_source_files(program_dir_abs, excluded_paths):
     Find all source files in program_dir_abs. Traverses the directory recursively and returns all source files,
     i.e. all *.c or *.cpp or *.h or *.hpp files.
     :param program_dir_abs: The absolute path to the root directory of the program.
-    :param excluded_paths: A tupel containing the paths to be excluded. The tupel should be obtained via the
+    :param excluded_paths: A tuple containing the paths to be excluded. The tuple should be obtained via the
     get_excluded_paths() function.
     :return: A lst containing absolute paths to all source files.
     """

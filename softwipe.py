@@ -218,7 +218,7 @@ def compile_program(args, lines_of_code, cpp, compiler_flags, excluded_paths):
     :param cpp: Whether C++ is used or not. True if C++, False if C.
     :param compiler_flags: The flags to be used for compilation. Typically, these should be strings.COMPILE_FLAGS or,
     if no_execution, strings.COMPILER_WARNING_FLAGS.
-    :param excluded_paths: A tupel containing the paths to be excluded.
+    :param excluded_paths: A tuple containing the paths to be excluded.
     :return: The compiler score.
     """
     print(strings.RUN_COMPILER_HEADER)
@@ -291,7 +291,7 @@ def compile_and_execute_program_with_sanitizers(args, lines_of_code, program_dir
     :param lines_of_code: The lines of pure code count.
     :param program_dir_abs: The absolute path to the root directory of the target program.
     :param cpp: Whether C++ is used or not. True if C++, False if C.
-    :param excluded_paths: A tupel containing the paths to be excluded.
+    :param excluded_paths: A tuple containing the paths to be excluded.
     :param no_exec: If True, skip execution of the program.
     :return The compiler + sanitizer score.
     """

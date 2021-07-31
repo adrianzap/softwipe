@@ -13,7 +13,7 @@ COMPILE_FLAGS = COMPILER_WARNING_FLAGS + ' ' + COMPILER_SANITIZER_FLAGS
 
 def create_make_flags(compiler_flags):
     """
-    Creates a sting of flags to use on Make-based projects overwriting
+    Creates a string of flags to use on Make-based projects overwriting
     :param compiler_flags:
     :return:
     """

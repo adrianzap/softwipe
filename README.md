@@ -29,7 +29,7 @@ The following tools must be installed:
 For make-based projects, you also need:
 * compiledb (<https://github.com/nickdiego/compiledb-generator>, available in pip)
 
-Also, if the program you want to check uses make oder CMake as build system, make and CMake must be installed respectively.
+Also, if the program you want to check uses make or CMake as build system, make and CMake must be installed respectively.
 
 #### Conda
 There is a conda package for SoftWipe, which can be installed using:
