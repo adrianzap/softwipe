@@ -17,6 +17,7 @@ def create_make_flags(compiler_flags):
     :param compiler_flags:
     :return:
     """
+    set_make_args = ""  # TODO: add -j. currently this makes the compiler score inconsistent for some reason
     set_cflags = 'CFLAGS="{}"'.format(compiler_flags)
     set_cxxflags = 'CXXFLAGS="{}"'.format(compiler_flags)
     set_cppflags = 'CPPFLAGS="{}"'.format(compiler_flags)
@@ -25,7 +26,8 @@ def create_make_flags(compiler_flags):
     set_cc = 'CC="clang"'
     set_cxx = 'CXX="clang++"'
 
-    return set_cc + ' ' + set_cxx + ' ' + set_cflags + ' ' + set_cxxflags + ' ' + set_cppflags + ' ' + set_ldflags
+    return set_make_args + ' ' + set_cc + ' ' + set_cxx + ' ' + set_cflags + ' ' + set_cxxflags + ' ' + set_cppflags + \
+        ' ' + set_ldflags
 
 
 NO_MAKE_CLEAN_TARGET_FOUND = 'Seems like there is no "make clean" target :( Please make sure the build directory is ' \

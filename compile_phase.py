@@ -28,7 +28,7 @@ def clear_directory(directory):
             os.remove(path)
 
 
-def build_cmake_call(program_dir_abs, compiler_flags):
+def build_cmake_call(program_dir_abs, compiler_flags, additional_args=[]):
     """
     Build the CMake call.
     :param program_dir_abs: The absolute path to the root directory of the target program.
@@ -48,12 +48,13 @@ def build_cmake_call(program_dir_abs, compiler_flags):
                   # for most clang tools is exported
                   program_dir_abs
                   ]
+    cmake_call.extend(additional_args)
     # NOTE verbosity may be enabled via '-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON' and run_make(make_verbose=True) (this shows
     # all commands that are called by cmake & make, respectively.
     return cmake_call
 
 
-def run_cmake(program_dir_abs, build_path, compiler_flags):
+def run_cmake(program_dir_abs, build_path, compiler_flags, additional_args=[]):
     """
     Run the cmake command for the program in program_dir_abs as if pwd would be build_path.
     :param program_dir_abs: The absolute path to the root directory of the target program.
@@ -61,7 +62,7 @@ def run_cmake(program_dir_abs, build_path, compiler_flags):
     :param compiler_flags: The flags to be used for compilation. Typically, these should be strings.COMPILE_FLAGS or,
     if no_execution, strings.COMPILER_WARNING_FLAGS.
     """
-    cmake_call = build_cmake_call(program_dir_abs, compiler_flags)
+    cmake_call = build_cmake_call(program_dir_abs, compiler_flags, additional_args=additional_args)
     try:
         subprocess.check_output(cmake_call, cwd=build_path, universal_newlines=True, stderr=subprocess.STDOUT)
     except subprocess.CalledProcessError as e:
@@ -309,7 +310,7 @@ def compile_program_make(program_dir_abs, lines_of_code, compiler_flags, exclude
 
 
 def compile_program_cmake(program_dir_abs, lines_of_code, compiler_flags, excluded_paths, dont_check_for_warnings=False,
-                          make_command_file=None):
+                          make_command_file=None, additional_args=[]):
     """
     Compile the program using CMake.
     :param program_dir_abs: The absolute path to the root directory of the target program, where the CMakeLists.txt
@@ -326,7 +327,7 @@ def compile_program_cmake(program_dir_abs, lines_of_code, compiler_flags, exclud
     """
     build_path = create_build_directory(program_dir_abs)
     clear_directory(build_path)  # If the path already existed, it should be cleared to ensure a fresh compilation
-    run_cmake(program_dir_abs, build_path, compiler_flags)
+    run_cmake(program_dir_abs, build_path, compiler_flags, additional_args=additional_args)
     if make_command_file:
         weighted_sum_of_warnings = parse_make_command_file_and_run_all_commands_in_it(make_command_file,
                                                                                       program_dir_abs, build_path,

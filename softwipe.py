@@ -7,6 +7,8 @@ import argparse
 import os
 import re
 import sys
+import time
+import itertools
 from multiprocessing.pool import ThreadPool
 
 import automatic_tool_installation
@@ -87,6 +89,8 @@ def parse_arguments():
                                                                      'contains one line with options that must be '
                                                                      'passed to the compiler for correct compilation '
                                                                      'of your program')
+    parser.add_argument("-O", nargs=1, help="path to a file containing necessary options to successfully run cmake"
+                                            "(works similar to the '-o' or '--compileroptionsfile' argument)")
     parser.add_argument('--compileroptionsfilehelp', action='store_true', help='print detailed information about how '
                                                                                'the compiler options file works and '
                                                                                'exit')
@@ -94,7 +98,8 @@ def parse_arguments():
     parser.add_argument('-x', '--exclude', nargs=1, help='a comma separated list of files and directories that should '
                                                          'be excluded from being analyzed by this program. If you '
                                                          'specify relative paths, they should be relative to the '
-                                                         'target program path.')
+                                                         'target program path.',
+                        action="append")
 
     parser.add_argument('-X', nargs=1, help='a file containing a list of files and directories that '
                                             'should be excluded from the analysis. Each file and directory in the list '
@@ -225,6 +230,11 @@ def compile_program(args, lines_of_code, cpp, compiler_flags, excluded_paths):
     program_dir_abs = os.path.abspath(args.programdir)
     command_file = args.commandfile
 
+    if args.O:
+        additional_args = open(args.O[0], 'r').read().rstrip().split()
+    else:
+        additional_args = []
+
     if args.make:
         if command_file:
             score = compile_phase.compile_program_make(program_dir_abs, lines_of_code, compiler_flags, excluded_paths,
@@ -237,9 +247,11 @@ def compile_program(args, lines_of_code, cpp, compiler_flags, excluded_paths):
     else:
         if command_file:
             score = compile_phase.compile_program_cmake(program_dir_abs, lines_of_code, compiler_flags, excluded_paths,
-                                                        make_command_file=command_file[0])
+                                                        make_command_file=command_file[0],
+                                                        additional_args=additional_args)
         else:
-            score = compile_phase.compile_program_cmake(program_dir_abs, lines_of_code, compiler_flags, excluded_paths)
+            score = compile_phase.compile_program_cmake(program_dir_abs, lines_of_code, compiler_flags, excluded_paths,
+                                                        additional_args=additional_args)
 
     return score
 
@@ -360,8 +372,8 @@ def main():
     """
     Main function: Runs compilation, static analysis and prints results.
     """
-    add_kwstyle_to_path_variable()  # TODO: hopefully get a conda package for this sometime
-    add_lizard_to_path_variable()
+    # add_kwstyle_to_path_variable()  # TODO: hopefully get a conda package for this sometime
+    # add_lizard_to_path_variable()
 
     # Allow the user to auto-install the dependencies by just running "./softwipe.py" without any arguments
     # Should not be needed if conda is used. TODO: maybe remove this
@@ -390,7 +402,12 @@ def main():
     use_cmake = args.cmake
     use_make = args.make
     program_dir_abs = os.path.abspath(args.programdir)
-    exclude = args.exclude[0] if args.exclude else None
+    if args.exclude:
+        exclude = list(itertools.chain.from_iterable(args.exclude))
+        exclude = ",".join(exclude)
+    else:
+        exclude = None
+
     exclude_file = args.X[0] if args.X else None
     excluded_paths = util.get_excluded_paths(program_dir_abs, exclude, exclude_file)
     custom_asserts = args.custom_assert[0].split(',') if args.custom_assert else None
@@ -413,6 +430,8 @@ def main():
             "executefile": args.executefile
             }
 
+    """t1 = time.perf_counter()"""
+
     if not args.exclude_compilation:
         compiler_and_sanitizer_score = compile_and_execute_program_with_sanitizers(
             args, lines_of_code, program_dir_abs, use_cpp, excluded_paths, args.no_execution)
@@ -420,6 +439,10 @@ def main():
         if args.use_infer:      # TODO: maybe completely remove Infer since it requires a lot of disk space
             add_infer_to_path_variable()
             analysis_tools.append(InferTool)
+
+    """t2 = time.perf_counter()
+    print("Compilation time: {}s".format(t2 - t1))
+    sys.exit()"""
 
     if not args.exclude_assertions:
         analysis_tools.append(AssertionTool)
@@ -433,13 +456,28 @@ def main():
         analysis_tools.append(KWStyleTool)
     analysis_tools.append(TestCountTool)
 
-    for tool in analysis_tools:
-        scores, log, success = tool.run(data)
+    thread_pool = ThreadPool(processes=len(analysis_tools))
+    instances = []
+    outs = []
+
+    """t1 = time.perf_counter()"""
+
+    for i in range(len(analysis_tools)):
+        instances.append(thread_pool.apply_async(analysis_tools[i].run, (data, )))
+
+    for i in range(len(instances)):
+        outs.append(instances[i].get())
+
+    for i in range(len(outs)):
+        scores, log, success = outs[i]
         if success:
             print(log)
             all_scores.extend(scores)
         else:
-            print("excluded {} from analysis\n".format(tool.name()))
+            print("excluded {} from analysis\n".format(analysis_tools[i].name()))
+
+    """t2 = time.perf_counter()
+    print("Time static analysis: {}s".format(t2 - t1))"""
 
     overall_score = scoring.average_score(all_scores)
 

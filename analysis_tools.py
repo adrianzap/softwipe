@@ -694,7 +694,7 @@ class ValgrindTool(AnalysisTool):
             if "Rerun" in line:
                 record = False
             if record:
-                log += re.sub('==[^==]+==', '', line) + "\n"
+                log += re.sub('==[^=]+==', '', line) + "\n"
         return log
 
     @staticmethod
