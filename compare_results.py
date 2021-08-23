@@ -195,8 +195,8 @@ def print_softwipe_scoring_values(sorted_rates):
             best_string = 'INFER_BEST'
             worst_string = 'INFER_WORST'
         elif rate == 'test_count':
-            best_string = 'INFER_BEST'
-            worst_string = 'INFER_WORST'
+            best_string = 'TEST_COUNT_BEST'
+            worst_string = 'TEST_COUNT_WORST'
 
         print(best_string + ' = ' + str(best))
         print(worst_string + ' = ' + str(worst))
