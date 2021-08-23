@@ -8,9 +8,7 @@ code quality benchmark, and sorts them.
 import argparse
 import operator
 
-import calculate_score_table
-from calculate_score_table import FOLDERS
-from calculate_score_table import SOFTWIPE_OUTPUT_FILE_NAME
+from calculate_score_table import FOLDERS, SOFTWIPE_OUTPUT_FILE_NAME
 
 
 def parse_arguments():
@@ -42,6 +40,8 @@ def parse_arguments():
 
 
 def get_all_rates(result_directory):
+    # TODO: file was not touched after test_count was added to benchmark -> check if everything is fine with this file
+
     # Init
     rates = {
         'compiler_and_sanitizer': [],
@@ -52,13 +52,15 @@ def get_all_rates(result_directory):
         'lizard_warnings': [],
         'unique': [],
         'kwstyle': [],
-        'infer': []
+        'infer': [],
+        'test_count': []
     }
 
     # Get all the rates
     for folder in FOLDERS:
         compiler_and_sanitizer_rate, assertion_rate, cppcheck_rate, clang_tidy_rate, ccn, lizard_rate, unique_rate, \
-        kwstyle_rate, infer_rate, failed_tools = calculate_score_table.get_result_rates(result_directory, folder)
+            kwstyle_rate, infer_rate, test_count_rate, \
+            failed_tools = calculate_score_table.get_result_rates(result_directory, folder)
 
         rates['compiler_and_sanitizer'].append((folder, compiler_and_sanitizer_rate))
         rates['assertions'].append((folder, assertion_rate))
@@ -69,6 +71,7 @@ def get_all_rates(result_directory):
         rates['unique'].append((folder, unique_rate))
         rates['kwstyle'].append((folder, kwstyle_rate))
         rates['infer'].append((folder, infer_rate))
+        rates['test_count'].append((folder, test_count_rate))
 
     return rates
 
@@ -189,6 +192,9 @@ def print_softwipe_scoring_values(sorted_rates):
             best_string = 'KWSTYLE_BEST'
             worst_string = 'KWSTYLE_WORST'
         elif rate == 'infer':
+            best_string = 'INFER_BEST'
+            worst_string = 'INFER_WORST'
+        elif rate == 'test_count':
             best_string = 'INFER_BEST'
             worst_string = 'INFER_WORST'
 

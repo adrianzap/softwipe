@@ -476,14 +476,6 @@ def main():
         else:
             print("excluded {} from analysis\n".format(analysis_tools[i].name()))
 
-    """for tool in analysis_tools:
-        scores, log, success = tool.run(data)
-        if success:
-            print(log)
-            all_scores.extend(scores)
-        else:
-            print("excluded {} from analysis\n".format(tool.name()))"""
-
     """t2 = time.perf_counter()
     print("Time static analysis: {}s".format(t2 - t1))"""
 
