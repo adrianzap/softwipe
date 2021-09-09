@@ -4,8 +4,9 @@ A tool for automatically checking the software quality of a C/C++ program and gi
 SoftWipe runs various checks to produce a software quality score: it compiles your program using clang and checks for compiler warnings; it activates almost all available warnings here. It runs your program with clang sanitizers activated, which detect memory errors and undefined behavior. It checks for the usage of assertions. It runs the following static code analyzers: cppcheck, clang-tidy, KWStyle, and lizard. Lizard is also used to find your programs average cyclomatic complexity and code duplication.
 
 ## Installation & Usage
+We highly recommend to use the conda package (see below) for a cleaner installation of the dependencies.
 
-We developed and tested SoftWipe mainly on Ubuntu 20.04 LTS, some of the used code analysis tools might be affected on other OS versions.
+SoftWipe was mainly developed on Ubuntu 20.04 LTS. Some of the used code analysis tools might be affected on other OS versions.
 Clone this repository to download SoftWipe:
 ```
 git clone https://github.com/adrianzap/softwipe.git
@@ -36,7 +37,7 @@ There is a conda package for SoftWipe, which can be installed using:
 ```
 conda install softwipe -c angtft -c conda-forge
 ```
-On the first execution of SoftWipe, it will install KWStyle, Lizard and Infer locally (as there are no conda packages for these tools yet).
+On the first execution of SoftWipe, it will install Infer locally (if Infer is enabled), as there is no conda package for this tool yet.
 We recommend installing SoftWipe in a separate conda environment, which can be done with:
 ```
 conda create --name softwipe_env
