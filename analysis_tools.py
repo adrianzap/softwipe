@@ -237,32 +237,45 @@ class ClangTidyTool(AnalysisTool):
                  2. output log
                  3. boolean success
         """
-        clang_tidy_call = [TOOLS.CLANG_TIDY.exe_name]
-        clang_tidy_call.extend(source_files)
+        n = 100
+        file_blocks = util.split_in_chunks(source_files, n)
+        concat_output = ""
 
-        # Create checks lst
-        clang_tidy_checks = strings.CLANG_TIDY_CHECKS_CPP if cpp else strings.CLANG_TIDY_CHECKS_C
-        clang_tidy_call.append('-checks=' + clang_tidy_checks)
-        clang_tidy_call.extend(['-p', program_dir_abs])
+        for file_block in file_blocks:
+            clang_tidy_call = [TOOLS.CLANG_TIDY.exe_name]
+            clang_tidy_call.extend(file_block)
 
-        try:
-            output = subprocess.check_output(clang_tidy_call, universal_newlines=True, stderr=subprocess.STDOUT)
-        except subprocess.CalledProcessError as error:
-            output = error.output
+            # Create checks lst
+            clang_tidy_checks = strings.CLANG_TIDY_CHECKS_CPP if cpp else strings.CLANG_TIDY_CHECKS_C
+            clang_tidy_call.append('-checks=' + clang_tidy_checks)
+            clang_tidy_call.extend(['-p', program_dir_abs])
 
-            if num_tries < 0:  # make clang-tidy return a failure status if it has no tries left
-                return [0], "", False
+            for i in range(num_tries):
+                try:
+                    output = subprocess.check_output(clang_tidy_call, universal_newlines=True, stderr=subprocess.STDOUT)
+                    concat_output += output
+                    break
+                except subprocess.CalledProcessError as error:
+                    if error.returncode == -11:
+                        if i == num_tries-1:
+                            if not skip_on_failure:
+                                raise
+                            return [0], "", False
+                    else:
+                        output = error.output
+                        concat_output += output
+                        break
+                    #if error.returncode == -11:  # clang-tidy seems to run into segfaults sometimes, so rerun it if that happens
+                    #    return ClangTidyTool.run(data, num_tries=num_tries - 1)
 
-            if error.returncode == -11:  # clang-tidy seems to run into segfaults sometimes, so rerun it if that happens
-                return ClangTidyTool.run(data, num_tries=num_tries-1)
-            # clang-tidy can exit with exit code 1 if there is no compilation database, which might be the case when
-            # compiling with just clang. Thus, ignore the exception here.
-        except Exception:  # catch the rest and exclude the analysis tool from the score
-            if not skip_on_failure:
-                raise
-            return [0], "", False
+                    # clang-tidy can exit with exit code 1 if there is no compilation database, which might be the case when
+                    # compiling with just clang. Thus, ignore the exception here.
+                except Exception:  # catch the rest and exclude the analysis tool from the score
+                    if not skip_on_failure:
+                        raise
+                    return [0], "", False
 
-        warning_lines = ClangTidyTool.get_warning_lines(output)
+        warning_lines = ClangTidyTool.get_warning_lines(concat_output)
         weighted_warning_count = ClangTidyTool.get_weighted_warning_count(warning_lines)
         warning_rate = weighted_warning_count / lines_of_code
 
@@ -395,14 +408,14 @@ class CppcheckTool(AnalysisTool):
         cppcheck_call = [TOOLS.CPPCHECK.exe_name, '--enable=all', '--force', '--language=' + language, "-v"]
 
         output = ""
-        chunk_size = 1000  # should fix that "OSError: [Errno 7] Argument lst too long: 'cppcheck'" thing
+        chunk_size = 100  # should fix that "OSError: [Errno 7] Argument lst too long: 'cppcheck'" thing
 
         try:
             argument_chunks = util.split_in_chunks(source_files, chunk_size)
             for chunk in argument_chunks:
                 temp_call = cppcheck_call   # TODO: check this again
                 temp_call.extend(chunk)
-                output += subprocess.check_output(cppcheck_call, universal_newlines=True,
+                output += subprocess.check_output(temp_call, universal_newlines=True,
                                                   stderr=subprocess.STDOUT, encoding='utf-8', errors='ignore') + "\n"
             warning_lines = CppcheckTool.get_warning_lines(output)
             cppcheck_output = output_classes.CppcheckOutput(warning_lines)
