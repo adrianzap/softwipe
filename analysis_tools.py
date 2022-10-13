@@ -3,6 +3,7 @@ This module contains all information concerning the tools that are used by softw
 """
 
 import collections
+import copy
 import enum
 import os
 import re
@@ -413,7 +414,7 @@ class CppcheckTool(AnalysisTool):
         try:
             argument_chunks = util.split_in_chunks(source_files, chunk_size)
             for chunk in argument_chunks:
-                temp_call = cppcheck_call   # TODO: check this again
+                temp_call = copy.deepcopy(cppcheck_call)   # TODO: check this again
                 temp_call.extend(chunk)
                 output += subprocess.check_output(temp_call, universal_newlines=True,
                                                   stderr=subprocess.STDOUT, encoding='utf-8', errors='ignore') + "\n"
