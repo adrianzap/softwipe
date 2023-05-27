@@ -96,3 +96,12 @@ stage('Softwipe') {
     sh 'softwipe.py -CM -e run_softwipe.sh . 2>&1 |tee softwipe_general.txt'
   }
 }
+```
+
+## Citation
+
+A. Zapletal, D. Höhler, C. Sinz, A. Stamatakis (2021)
+**The SoftWipe tool and benchmark for assessing coding standards adherence of scientific software**
+*Sci Rep* 11, 10015 (2021).
+[https://doi.org/10.1038/s41598-021-89495-8](https://doi.org/10.1038/s41598-021-89495-8)
+
